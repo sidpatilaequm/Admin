@@ -1,0 +1,168 @@
+{% extends "pages/auth_base.html" %}
+{% load static %}
+
+{% block title %}Register - Invoika{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card card">
+        <div class="card-header">
+            <h3 class="mb-0">Create an Account</h3>
+        </div>
+        <div class="card-body">
+            <div id="alert-container"></div>
+            
+            <form id="registerForm" method="post">
+                {% csrf_token %}
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="firstName" name="firstName" placeholder="First Name" required>
+                    <label for="firstName">First Name</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Last Name" required>
+                    <label for="lastName">Last Name</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
+                    <label for="email">Email address</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Phone Number" 
+                           pattern="[0-9]{10}" maxlength="10" required
+                           title="Please enter a valid 10-digit phone number">
+                    <label for="phoneNumber">Phone Number</label>
+                    <div class="invalid-feedback">
+                        Please enter a valid 10-digit phone number.
+                    </div>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                    <label for="password">Password</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <select class="form-select" id="role" name="role" required>
+                        <option value="" selected disabled>Select your role</option>
+                        <option value="customer">Customer</option>
+                        <option value="vendor">Vendor</option>
+                    </select>
+                    <label for="role">Select Role</label>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                    </label>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" id="registerButton">
+                        <i class="fas fa-user-plus me-2"></i>Sign Up
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer">
+            <div class="small">
+                <a href="{% url 'pages:login' %}" class="text-decoration-none">
+                    <i class="fas fa-sign-in-alt me-1"></i>Already have an account? Sign in!
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phoneNumber');
+    const registerForm = document.getElementById('registerForm');
+    const registerButton = document.getElementById('registerButton');
+    const alertContainer = document.getElementById('alert-container');
+    
+    function showAlert(message, type) {
+        alertContainer.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    }
+    
+    // Phone number validation
+    phoneInput.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value.length > 10) {
+            this.value = this.value.slice(0, 10);
+        }
+    });
+    
+    // Form submission
+    registerForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!registerForm.checkValidity()) {
+            registerForm.classList.add('was-validated');
+            return;
+        }
+        
+        // Check phone number
+        if (phoneInput.value.length !== 10) {
+            phoneInput.classList.add('is-invalid');
+            return;
+        }
+        
+        // Check terms
+        if (!document.getElementById('terms').checked) {
+            showAlert('Please accept the Terms of Service and Privacy Policy', 'danger');
+            return;
+        }
+
+        // Check role
+        const role = document.getElementById('role').value;
+        if (!role) {
+            showAlert('Please select a role', 'danger');
+            return;
+        }
+        
+        registerButton.disabled = true;
+        registerButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing up...';
+        
+        const formData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            phoneNumber: document.getElementById('phoneNumber').value,
+            password: document.getElementById('password').value,
+            authKey: document.getElementById('role').value // Map role to authKey
+        };
+        
+        try {
+            const response = await fetch('/register/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showAlert('Registration successful! Redirecting to login...', 'success');
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
+            } else {
+                showAlert(data.error || 'Registration failed. Please try again.', 'danger');
+                registerButton.disabled = false;
+                registerButton.innerHTML = '<i class="fas fa-user-plus me-2"></i>Sign Up';
+            }
+        } catch (error) {
+            showAlert('An error occurred. Please try again.', 'danger');
+            registerButton.disabled = false;
+            registerButton.innerHTML = '<i class="fas fa-user-plus me-2"></i>Sign Up';
+        }
+    });
+});
+</script>
+{% endblock %} 

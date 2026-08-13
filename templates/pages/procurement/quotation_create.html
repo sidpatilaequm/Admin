@@ -1,0 +1,480 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Create Vendor Quotation - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header {
+        background-color: #0d6efd !important;
+        /* Blue header for Quotation */
+        padding: 1rem;
+    }
+
+    .btn-theme {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .btn-theme:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+        color: #fff;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0.5rem;
+    }
+
+    /* SAP-like Grid Styles */
+    #quotationItemsTable input.form-control {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    #quotationItemsTable th {
+        font-size: 0.85rem;
+        font-weight: 600;
+        background-color: #f8f9fa;
+        text-transform: uppercase;
+    }
+
+    .summary-card {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        padding: 1.5rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .summary-row.total {
+        font-size: 1.25rem;
+        font-weight: 700;
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
+        margin-top: 1rem;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumbs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="las la-file-invoice me-2"></i>Create Vendor Quotation
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="#">Procurement</a></li>
+                        <li class="breadcrumb-item active">Create Quotation</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title text-white mb-0">New Vendor Quotation</h4>
+                </div>
+
+                <div class="card-body px-4 py-4 pb-5">
+                    <form id="quotationCreateForm">
+                        {% csrf_token %}
+
+                        <!-- Section 1 — Header Details -->
+                        <h5 class="section-title">Section 1 — Header Information</h5>
+                        <div class="row g-3 mb-5">
+                            <div class="col-md-3">
+                                <label for="vendor" class="form-label">Vendor *</label>
+                                <select class="form-select" id="vendor" name="vendor" required>
+                                    <option value="">Select Vendor</option>
+                                    <!-- Options will be loaded dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="vendorQuoteNo" class="form-label">Vendor Quote No *</label>
+                                <input type="text" class="form-control" id="vendorQuoteNo" name="vendor_quote_no"
+                                    placeholder="Enter Quote Number" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="quoteDate" class="form-label">Quotation Date *</label>
+                                <input type="date" class="form-control" id="quoteDate" name="quote_date" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="validUntil" class="form-label">Valid Until</label>
+                                <input type="date" class="form-control" id="validUntil" name="valid_until">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="paymentTerms" class="form-label">Payment Terms</label>
+                                <select class="form-select" id="paymentTerms" name="payment_terms">
+                                    <option value="">Select Terms</option>
+                                    <option value="Net 30">Net 30</option>
+                                    <option value="Net 45">Net 45</option>
+                                    <option value="Net 60">Net 60</option>
+                                    <option value="Advanced">Advanced</option>
+                                </select>
+                            </div>
+                            <div class="col-md-9">
+                                <label for="remarks" class="form-label">Remarks</label>
+                                <textarea class="form-control" id="remarks" name="remarks" rows="1"
+                                    placeholder="Enter any additional remarks..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Section 2 — Items Grid -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="section-title mb-0 border-0">Section 2 — Item Details</h5>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addItemBtn"
+                                data-bs-toggle="modal" data-bs-target="#searchMaterialModal">
+                                <i class="mdi mdi-plus me-1"></i> Add Item
+                            </button>
+                        </div>
+
+                        <div class="table-responsive mb-4">
+                            <table class="table align-middle table-nowrap table-bordered" id="quotationItemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" style="width: 20%">Material/Service</th>
+                                        <th scope="col">SKU</th>
+                                        <th scope="col" style="width: 12%">HSN/SAC</th>
+                                        <th scope="col" style="width: 10%">Qty</th>
+                                        <th scope="col" style="width: 8%">Unit</th>
+                                        <th scope="col" style="width: 12%">Unit Price</th>
+                                        <th scope="col" style="width: 8%">Disc (%)</th>
+                                        <th scope="col" style="width: 8%">Tax (%)</th>
+                                        <th scope="col" style="width: 12%">Total</th>
+                                        <th scope="col" style="width: 5%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr id="emptyRowMessage">
+                                        <td colspan="9" class="text-center text-muted py-4">
+                                            No items added yet. Click "Add Item" to list materials or services.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Section 3 — Summary & Footer -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <!-- Place for Terms or Attachments -->
+                                <div class="mb-3">
+                                    <label for="attachments" class="form-label">Attachments (PDF/Images)</label>
+                                    <input class="form-control form-control-sm" type="file" id="attachments" multiple>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card">
+                                    <div class="summary-row">
+                                        <span>Subtotal</span>
+                                        <bold id="summarySubtotal">₹0.00</bold>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Discount</span>
+                                        <bold id="summaryDiscount" class="text-danger">- ₹0.00</bold>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Tax</span>
+                                        <bold id="summaryTax" class="text-success">+ ₹0.00</bold>
+                                    </div>
+                                    <div class="summary-row">
+                                        <span>Shipping & Handling</span>
+                                        <div style="width: 120px;">
+                                            <input type="number" class="form-control form-control-sm text-end"
+                                                id="shippingCost" value="0.00" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="summary-row total">
+                                        <span>Grand Total</span>
+                                        <span id="summaryGrandTotal">₹0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2 border-top pt-4 mt-4">
+                            <a href="#" class="btn btn-light">Cancel</a>
+                            <button type="button" class="btn btn-secondary" id="saveDraftBtn">Save as Draft</button>
+                            <button type="button" class="btn btn-theme" id="submitQuoteBtn">Submit Quotation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search Material Modal -->
+<div class="modal fade" id="searchMaterialModal" tabindex="-1" aria-labelledby="searchMaterialModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(13, 110, 253, 0.1);">
+                <h5 class="modal-title" id="searchMaterialModalLabel">Search and Add Materials</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4">
+                <div class="search-box mb-3">
+                    <input type="text" class="form-control" placeholder="Search by Material Name, SKU...">
+                    <i class="las la-search search-icon"></i>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="modalMaterialsTable">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>Material Name</th>
+                                <th>SKU</th>
+                                <th>Unit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Mockup data -->
+                            <tr>
+                                <td><input class="form-check-input" type="checkbox" value="1"></td>
+                                <td>Aluminum Cooker</td>
+                                <td>ALU-001</td>
+                                <td>NOS</td>
+                            </tr>
+                            <tr>
+                                <td><input class="form-check-input" type="checkbox" value="2"></td>
+                                <td>Steel Trousers</td>
+                                <td>STL-TR-002</td>
+                                <td>PAIRS</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-theme" id="confirmAddItemsBtn" data-bs-dismiss="modal">Add
+                    Selected</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Item Modal -->
+<div class="modal fade" id="deleteItemModal" tabindex="-1" aria-labelledby="deleteItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteItemModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to remove this item from the quotation?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteItemBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showToast(title, message, type = 'success') {
+        var toastClass = type === 'danger' ? 'bg-danger text-white' : 'bg-success text-white';
+        var toast = `
+            <div class="toast d-flex align-items-center ${toastClass} border-0 rounded p-2 mb-2" style="min-width: 250px;">
+                <div class="toast-body flex-grow-1">
+                    <strong>${title}</strong><br>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        $('.toast-container').append(toast);
+        var toastEl = $('.toast-container .toast').last();
+        var bsToast = new bootstrap.Toast(toastEl[0], { delay: 3000 });
+        bsToast.show();
+        setTimeout(() => toastEl.remove(), 3500);
+    }
+
+    $(document).ready(function () {
+        // Load Vendors Mockup/API Call
+        loadVendors();
+
+        function loadVendors() {
+            // Reusing existing API if possible or Mockup
+            $.ajax({
+                url: '{% url "pages:vendors_list_proxy" %}',
+                method: 'GET',
+                success: function (response) {
+                    const vendorSelect = $('#vendor');
+                    vendorSelect.empty().append('<option value="">Select Vendor</option>');
+                    const vendors = response.data?.vendors || response.vendors || [];
+                    vendors.forEach(v => {
+                        vendorSelect.append(`<option value="${v.id}">${v.companyName || v.name}</option>`);
+                    });
+                },
+                error: function () {
+                    // Fallback Mockup
+                    $('#vendor').append('<option value="1">Vendor A</option><option value="2">Vendor B</option>');
+                }
+            });
+        }
+
+        // Add Items from Modal
+        $('#confirmAddItemsBtn').on('click', function () {
+            $('#modalMaterialsTable tbody input[type="checkbox"]:checked').each(function () {
+                const tr = $(this).closest('tr');
+                const id = $(this).val();
+                if ($(`#quotationItemsTable tr[data-id="${id}"]`).length > 0) return;
+
+                const name = tr.find('td:eq(1)').text();
+                const sku = tr.find('td:eq(2)').text();
+                const uom = tr.find('td:eq(3)').text();
+
+                addItemToGrid({ id, name, sku, uom, price: 0, qty: 1, disc: 0, tax: 0 });
+                $(this).prop('checked', false);
+            });
+            recalculate();
+        });
+
+        const hsnTaxRates = {
+            '7615': 18, // e.g. Aluminum Cooker
+            '6203': 12, // e.g. Steel Trousers
+            '8517': 18,
+            '9018': 12
+        };
+
+        function addItemToGrid(item) {
+            $('#emptyRowMessage').hide();
+            // Mock default HSN based on item ID for demonstration
+            const defaultHsn = item.id == 1 ? '7615' : (item.id == 2 ? '6203' : '8517');
+            const defaultTax = hsnTaxRates[defaultHsn] || item.tax || 0;
+
+            const rowHtml = `
+                <tr data-id="${item.id}">
+                    <td class="fw-medium">${item.name}</td>
+                    <td>${item.sku}</td>
+                    <td><input type="text" class="form-control item-hsn" value="${defaultHsn}" placeholder="HSN/SAC"></td>
+                    <td><input type="number" class="form-control item-qty" min="1" value="${item.qty}" step="0.01"></td>
+                    <td>${item.uom}</td>
+                    <td>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" class="form-control item-price" min="0" value="${item.price}" step="0.01">
+                        </div>
+                    </td>
+                    <td><input type="number" class="form-control item-discount" min="0" max="100" value="${item.disc}" step="0.1"></td>
+                    <td><input type="number" class="form-control item-tax" min="0" max="100" value="${defaultTax}" step="0.1"></td>
+                    <td class="fw-bold item-total text-dark">₹0.00</td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-soft-danger remove-item-btn"><i class="las la-trash fs-16"></i></button>
+                    </td>
+                </tr>
+            `;
+            $('#quotationItemsTable tbody').append(rowHtml);
+        }
+
+        // Remove Item logic
+        let rowToDelete = null;
+        $('#quotationItemsTable').on('click', '.remove-item-btn', function () {
+            rowToDelete = $(this).closest('tr');
+            const modal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+            modal.show();
+        });
+
+        $('#confirmDeleteItemBtn').on('click', function () {
+            if (rowToDelete) {
+                rowToDelete.remove();
+                if ($('#quotationItemsTable tbody tr[data-id]').length === 0) {
+                    $('#emptyRowMessage').show();
+                }
+                recalculate();
+                bootstrap.Modal.getInstance(document.getElementById('deleteItemModal')).hide();
+            }
+        });
+
+        // Auto-populate tax based on HSN
+        $('#quotationItemsTable').on('input', '.item-hsn', function () {
+            const hsn = $(this).val().trim();
+            const tr = $(this).closest('tr');
+            if (hsnTaxRates[hsn] !== undefined) {
+                tr.find('.item-tax').val(hsnTaxRates[hsn]);
+                recalculate();
+                showToast('Tax Updated', `GST set to ${hsnTaxRates[hsn]}% based on HSN ${hsn}`);
+            }
+        });
+
+        // Recalculate on inputs
+        $('#quotationItemsTable').on('input', '.item-qty, .item-price, .item-discount, .item-tax', recalculate);
+        $('#shippingCost').on('input', recalculate);
+
+        function recalculate() {
+            let subtotal = 0;
+            let totalDiscount = 0;
+            let totalTax = 0;
+
+            $('#quotationItemsTable tbody tr[data-id]').each(function () {
+                const qty = parseFloat($(this).find('.item-qty').val()) || 0;
+                const price = parseFloat($(this).find('.item-price').val()) || 0;
+                const discRate = parseFloat($(this).find('.item-discount').val()) || 0;
+                const taxRate = parseFloat($(this).find('.item-tax').val()) || 0;
+
+                const rSubtotal = qty * price;
+                const rDiscount = rSubtotal * (discRate / 100);
+                const rNet = rSubtotal - rDiscount;
+                const rTax = rNet * (taxRate / 100);
+                const rTotal = rNet + rTax;
+
+                $(this).find('.item-total').text(`₹${rTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
+
+                subtotal += rSubtotal;
+                totalDiscount += rDiscount;
+                totalTax += rTax;
+            });
+
+            $('#summarySubtotal').text(`₹${subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
+            $('#summaryDiscount').text(`- ₹${totalDiscount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
+            $('#summaryTax').text(`+ ₹${totalTax.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
+
+            const shipping = parseFloat($('#shippingCost').val()) || 0;
+            const grandTotal = (subtotal - totalDiscount + totalTax) + shipping;
+            $('#summaryGrandTotal').text(`₹${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`);
+        }
+
+        // Submitting Mockup
+        $('#submitQuoteBtn').on('click', function () {
+            const vendor = $('#vendor').val();
+            if (!vendor) {
+                showToast('Validation Error', 'Please select a vendor', 'danger');
+                return;
+            }
+            showToast('Success', 'Vendor Quotation created successfully (UI Interaction)');
+        });
+    });
+</script>
+{% endblock %}

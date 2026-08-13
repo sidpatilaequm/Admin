@@ -1,0 +1,1056 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}Material Channel Mapping{% endblock %}
+
+{% block content %}
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">Material Channel Mapping</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Material Channel Mapping</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <!-- Left Side: Material List -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Materials Inventory</h5>
+                    
+                    <!-- Location Filter -->
+                    <div class="mb-3">
+                        <label for="locationFilter" class="form-label">Filter by Location</label>
+                        <select class="form-select" id="locationFilter">
+                            <option value="">Loading locations...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="materialSearch" placeholder="Search materials...">
+                    </div>
+                                         <div class="material-list" style="max-height: 600px; overflow-y: auto;" id="materialList">
+                         <div class="text-center py-4">
+                             <i class="mdi mdi-loading mdi-spin" style="font-size: 2rem; color: #6c757d;"></i>
+                             <p class="text-muted mt-2">Loading materials...</p>
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Channel Mapping -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div id="noMaterialSelected" class="text-center py-5">
+                        <i class="mdi mdi-arrow-left" style="font-size: 4rem; color: #6c757d;"></i>
+                        <h5 class="mt-3">Select a Material</h5>
+                        <p class="text-muted">Choose a material from the left to manage its channel mappings</p>
+                    </div>
+
+                    <div id="materialMappingSection" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">
+                                Channel Mapping for: <span id="selectedMaterialName"></span>
+                            </h5>
+                            <button type="button" class="btn btn-success" id="saveAllMappings" >
+                                <i class="mdi mdi-content-save"></i> Save All
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Channel</th>
+                                        <th>Category</th>
+                                        <th>Price (₹)</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="channelMappingTable">
+                                    <!-- Channel mappings will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Mapping Confirmation Modal -->
+<div class="modal fade" id="deleteMappingModal" tabindex="-1" aria-labelledby="deleteMappingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMappingModalLabel">Delete Channel Mapping</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the channel mapping for "<span id="deleteMappingChannelName"></span>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteMapping">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Mapping Modal -->
+<div class="modal fade" id="mappingModal" tabindex="-1" aria-labelledby="mappingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="mappingModalLabel">Channel Mapping</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="mappingForm">
+                <div class="modal-body">
+                    <input type="hidden" id="mappingId" name="mapping_id">
+                    <input type="hidden" id="mappingMaterialId" name="material_id">
+                    <input type="hidden" id="mappingChannelId" name="channel_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Material</label>
+                        <input type="text" class="form-control" id="mappingMaterialName" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Channel</label>
+                        <input type="text" class="form-control" id="mappingChannelName" readonly>
+                    </div>
+                    
+                                         <div class="mb-3">
+                         <label for="mappingCategory" class="form-label">Category</label>
+                         <select class="form-select" id="mappingCategory" name="category" required>
+                             <option value="">Select Category</option>
+                             <option value="Men's Wear">Men's Wear</option>
+                             <option value="Women's Wear">Women's Wear</option>
+                             <option value="Casuals">Casuals</option>
+                             <option value="Formals">Formals</option>
+                             <option value="Jeans & Pants">Jeans & Pants</option>
+                             <option value="Shirts">Shirts</option>
+                             <option value="T-Shirts">T-Shirts</option>
+                             <option value="Shoes">Shoes</option>
+                             <option value="Footwear">Footwear</option>
+                             <option value="Accessories">Accessories</option>
+                             <option value="Electronics">Electronics</option>
+                             <option value="Gadgets">Gadgets</option>
+                             <option value="Home & Living">Home & Living</option>
+                             <option value="Lifestyle">Lifestyle</option>
+                             <option value="Beauty">Beauty</option>
+                             <option value="Personal Care">Personal Care</option>
+                          
+                         </select>
+                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="mappingPrice" class="form-label">Price (₹)</label>
+                        <input type="number" class="form-control" id="mappingPrice" name="price" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="mappingStock" class="form-label">Stock</label>
+                        <input type="number" class="form-control" id="mappingStock" name="stock" min="0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="mappingStatus" name="status" checked>
+                            <label class="form-check-label" for="mappingStatus">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Mapping</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Auth Token Script -->
+<script id="auth-token" type="application/json">"{{ request.session.auth_token|default:'' }}"</script>
+<!-- Channels Data Script -->
+{{ channels|json_script:"channels-data" }}
+<script>
+console.log('=== MATERIAL CHANNEL MAPPING JS LOADED ===');
+console.log('Current URL:', window.location.href);
+console.log('Document ready state:', document.readyState);
+
+// Get CSRF token from cookie
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Custom toast notification function (same as Material page)
+function showToast(title, message, type = 'info') {
+    var isSuccess = type === 'success';
+    var iconHtml = isSuccess
+        ? '<span class="toast-icon"><i class="mdi mdi-check-circle-outline"></i></span>'
+        : '<span class="toast-icon"><i class="mdi mdi-alert-circle-outline"></i></span>';
+    var toastClass = isSuccess ? '' : 'toast-warning';
+    var toast = `
+        <div class="toast-custom d-flex align-items-center position-relative p-3 mb-2 ${toastClass}">
+            ${iconHtml}
+            <div class="flex-grow-1">${message}</div>
+            <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            <div class="toast-progress"></div>
+        </div>
+    `;
+    $('.toast-container').empty();
+    $('.toast-container').append(toast);
+    var $toast = $('.toast-custom').last();
+    setTimeout(function() {
+        $toast.find('.toast-progress').css('width', '0%');
+    }, 50);
+    setTimeout(function() {
+        $toast.fadeOut(300, function() { $(this).remove(); });
+    }, 2000);
+}
+
+$(document).ready(function() {
+    console.log('=== DOCUMENT READY ===');
+    console.log('jQuery version:', $.fn.jquery);
+    console.log('Auth token from script:', JSON.parse(document.getElementById('auth-token').textContent));
+    let selectedMaterialId = null;
+    let channels = [];
+    try {
+        channels = JSON.parse(document.getElementById('channels-data').textContent);
+        console.log('Channels data:', channels);
+        console.log('Number of channels:', channels.length);
+        console.log('First channel:', channels[0]);
+        
+        // Log categories for each channel
+        channels.forEach(channel => {
+            console.log(`Channel ${channel.channel_name} categories:`, channel.categories);
+        });
+    } catch (error) {
+        console.error('Error parsing channels data:', error);
+        // Fallback to empty array if parsing fails
+        channels = [];
+        console.log('Using empty channels array due to parsing error');
+    }
+    let materialMappings = {};
+    let materials = [];
+    let currentLocationId = null;
+
+    // Get channel count for a material from API data
+    function getChannelCount(materialId) {
+        // This will be updated when we load mappings from API
+        // For now, return 0 - will be updated dynamically
+        return 0;
+    }
+    
+    // Update channel count for a specific material
+    function updateMaterialChannelCount(materialId, count) {
+        const materialItem = $(`.material-item[data-material-id="${materialId}"]`);
+        const badge = materialItem.find('.badge');
+        if (badge.length > 0) {
+            badge.text(`${count} channels`);
+        }
+    }
+
+    // Load materials from API
+    function loadMaterials() {
+        console.log('=== LOAD MATERIALS FUNCTION CALLED ===');
+        console.log('Loading materials from API...');
+        console.log('CSRF Token:', getCookie('csrftoken'));
+        console.log('Auth Token:', getCookie('auth_token'));
+        
+        // Test if jQuery AJAX is working
+        console.log('jQuery AJAX available:', typeof $.ajax);
+        
+        $.ajax({
+            url: '/api/materials',
+            type: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Authorization': 'Bearer ' + getCookie('auth_token'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('API Response:', response);
+                if (response.status === "200" && response.data && response.data.materials) {
+                    materials = response.data.materials;
+                    console.log('Materials loaded:', materials.length);
+                    renderMaterials(materials);
+                    
+                    // Load channel counts for all materials
+                    loadAllMaterialChannelCounts();
+                    
+                    // Auto-select first material if available
+                    if (materials.length > 0) {
+                        $('.material-item:first').click();
+                    }
+                } else {
+                    console.log('Invalid response format:', response);
+                    $('#materialList').html(`
+                        <div class="text-center py-4">
+                            <i class="mdi mdi-alert-circle" style="font-size: 3rem; color: #dc3545;"></i>
+                            <p class="text-muted mt-2">Error loading materials</p>
+                        </div>
+                    `);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error loading materials:', xhr);
+                console.error('Status:', xhr.status);
+                console.error('Response:', xhr.responseText);
+                $('#materialList').html(`
+                    <div class="text-center py-4">
+                        <i class="mdi mdi-alert-circle" style="font-size: 3rem; color: #dc3545;"></i>
+                        <p class="text-muted mt-2">Error loading materials (${xhr.status})</p>
+                    </div>
+                `);
+            }
+        });
+    }
+
+    // Render materials list
+    function renderMaterials(materialsList) {
+        const materialList = $('#materialList');
+        
+        if (materialsList.length === 0) {
+            materialList.html(`
+                <div class="text-center py-4">
+                    <i class="mdi mdi-package-variant" style="font-size: 3rem; color: #6c757d;"></i>
+                    <p class="text-muted mt-2">No materials found</p>
+                </div>
+            `);
+            return;
+        }
+
+        let html = '';
+        materialsList.forEach(material => {
+            html += `
+                <div class="material-item border rounded p-3 mb-2 cursor-pointer" 
+                     data-material-id="${material.materialId}"
+                     data-material-name="${material.materialName || ''}"
+                     data-sku="${material.sku || ''}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${material.materialName || 'Unnamed Material'}</h6>
+                            <p class="text-muted small mb-1">SKU: ${material.sku || 'N/A'}</p>
+                            <p class="text-muted small mb-0">ID: ${material.materialId}</p>
+                        </div>
+                                                 <span class="badge bg-primary">0 channels</span>
+                    </div>
+                </div>
+            `;
+        });
+        materialList.html(html);
+
+        // Re-attach click events
+        attachMaterialClickEvents();
+    }
+
+    // Attach click events to material items
+    function attachMaterialClickEvents() {
+        $('.material-item').off('click').on('click', function() {
+            $('.material-item').removeClass('active bg-primary text-white');
+            $(this).addClass('active bg-primary text-white');
+            
+            selectedMaterialId = $(this).data('material-id');
+            const materialName = $(this).data('material-name');
+            
+            $('#selectedMaterialName').text(materialName);
+            $('#noMaterialSelected').hide();
+            $('#materialMappingSection').show();
+            
+            loadMaterialMappings(selectedMaterialId);
+        });
+    }
+
+    // Material search functionality
+    $('#materialSearch').on('keyup', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        $('.material-item').each(function() {
+            const materialName = $(this).data('material-name').toLowerCase();
+            const sku = $(this).data('sku').toLowerCase();
+            
+            if (materialName.includes(searchTerm) || sku.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+
+    // Load material mappings from API
+    function loadMaterialMappings(materialId) {
+      
+        // Show loading state
+        $('#channelMappingTable tbody').html(`
+            <tr>
+                <td colspan="6" class="text-center py-4">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    Loading mappings...
+                </td>
+            </tr>
+        `);
+        
+        // Call Django proxy to get material mappings
+        $.ajax({
+            url: `/api/materials/${materialId}/mappings`,
+            type: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('Mappings API Response:', response);
+                
+                if (response.status === 'SUCCESS' && response.data && response.data.mappings) {
+                    const apiMappings = response.data.mappings;
+                    materialMappings = [];
+                    
+                    // Map API response to our format
+                    apiMappings.forEach(mapping => {
+                        materialMappings.push({
+                            channel_id: mapping.channelId,
+                            channel_name: mapping.channelName,
+                            channel_code: mapping.channelCode,
+                            category: mapping.categoryName,
+                            category_id: mapping.categoryId,
+                            category_code: mapping.categoryCode,
+                            price: mapping.price,
+                            stock: mapping.stock,
+                            status: mapping.status,
+                            id: mapping.id
+                        });
+                    });
+                    
+                   
+                    
+                    // Update the channel count badge for this material
+                    updateMaterialChannelCount(materialId, materialMappings.length);
+                    
+                    renderChannelMappings();
+                } else {
+                    console.log('No mappings found or invalid response format');
+                    materialMappings = [];
+                    
+                    // Update the channel count badge to 0 for this material
+                    updateMaterialChannelCount(materialId, 0);
+                    
+                    renderChannelMappings();
+                }
+            },
+            error: function(xhr) {
+                console.error('Error loading mappings:', xhr);
+                console.error('Status:', xhr.status);
+                console.error('Response:', xhr.responseText);
+                
+                // If API fails, show all channels with empty fields (as requested)
+                console.log('API failed, showing all channels with empty fields');
+                materialMappings = [];
+                
+                // Update the channel count badge to 0 for this material
+                updateMaterialChannelCount(materialId, 0);
+                
+                renderChannelMappings();
+                
+                // Show a warning toast
+                showToast('Warning', 'Could not load existing mappings. Showing all channels with empty fields.', 'warning');
+            }
+        });
+    }
+
+    // Render channel mappings table
+    function renderChannelMappings() {
+        const tbody = $('#channelMappingTable');
+        tbody.empty();
+        
+        console.log('Rendering channel mappings for material:', selectedMaterialId);
+        console.log('Available channels:', channels);
+        console.log('Material mappings:', materialMappings);
+
+        if (channels.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <i class="mdi mdi-alert-circle text-warning me-2"></i>
+                        No channels available. Please add channels first.
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+
+        console.log('About to render', channels.length, 'channels');
+        channels.forEach((channel, index) => {
+            console.log('Rendering channel', index + 1, ':', channel);
+            const existingMapping = materialMappings.find(m => m.channel_id === channel.id);
+            
+            const row = `
+                <tr data-channel-id="${channel.id}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <i class="mdi mdi-store" style="font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <strong>${channel.channel_name}</strong>
+                                <br><small class="text-muted">${channel.channel_code}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <select class="form-select form-select-sm mapping-category" ${existingMapping ? '' : 'disabled'}>
+                            <option value="">Select Category</option>
+                            ${channel.categories ? channel.categories.map(cat => 
+                                `<option value="${cat.category_id}" ${existingMapping?.category_id === cat.category_id ? 'selected' : ''}>${cat.category_name}</option>`
+                            ).join('') : ''}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm mapping-price" 
+                               value="${existingMapping?.price || ''}" 
+                               placeholder="0.00" 
+                               step="0.01" 
+                               min="0"
+                               ${existingMapping ? '' : 'disabled'}>
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm mapping-stock" 
+                               value="${existingMapping?.stock || ''}" 
+                               placeholder="0" 
+                               min="0"
+                               ${existingMapping ? '' : 'disabled'}>
+                    </td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input mapping-status" type="checkbox" 
+                                   ${existingMapping?.status ? 'checked' : ''}
+                                   ${existingMapping ? '' : 'disabled'}>
+                        </div>
+                    </td>
+                    <td>
+                        ${existingMapping ? 
+                            `<button type="button" class="btn btn-sm btn-outline-danger remove-mapping" title="Remove">
+                                <i class="mdi mdi-delete"></i>
+                            </button>` :
+                            `<button type="button" class="btn btn-sm btn-outline-success add-mapping" title="Add">
+                                <i class="mdi mdi-plus"></i>
+                            </button>`
+                        }
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+        
+        console.log('Finished rendering', channels.length, 'channels');
+
+        // Enable/disable row inputs based on mapping status
+        $('.mapping-status').on('change', function() {
+            const row = $(this).closest('tr');
+            const isChecked = $(this).is(':checked');
+            row.find('.mapping-category, .mapping-price, .mapping-stock').prop('disabled', !isChecked);
+        });
+
+        // Add mapping
+        $(document).on('click', '.add-mapping', function() {
+            const row = $(this).closest('tr');
+            const channelId = row.data('channel-id');
+            const channelName = row.find('td:first strong').text();
+            
+            row.find('.mapping-category, .mapping-price, .mapping-stock, .mapping-status').prop('disabled', false);
+            row.find('.mapping-status').prop('checked', true);
+            $(this).replaceWith(`
+                <button type="button" class="btn btn-sm btn-outline-danger remove-mapping" title="Remove">
+                    <i class="mdi mdi-delete"></i>
+                </button>
+            `);
+        });
+
+        // Remove mapping
+        $(document).on('click', '.remove-mapping', function() {
+            const row = $(this).closest('tr');
+            const channelId = row.data('channel-id');
+            const channelName = row.find('td:first strong').text();
+            
+            // Show delete confirmation modal
+            $('#deleteMappingChannelName').text(channelName);
+            $('#confirmDeleteMapping').data('channel-id', channelId);
+            $('#deleteMappingModal').modal('show');
+        });
+    }
+
+    // Confirm delete mapping
+    $('#confirmDeleteMapping').on('click', function() {
+        const channelId = $(this).data('channel-id');
+        const row = $(`#channelMappingTable tr[data-channel-id="${channelId}"]`);
+        
+        // Show loading state
+        const deleteBtn = $(this);
+        const originalText = deleteBtn.text();
+        deleteBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
+
+        // Call Django proxy to delete mapping
+        $.ajax({
+            url: `/api/materials/${selectedMaterialId}/mappings/${channelId}`,
+            type: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                // Reset loader state
+                deleteBtn.prop('disabled', false).text(originalText);
+                
+                if (response.status === 'SUCCESS') {
+                    // Show success toast with statusMsg
+                    showToast('Success', response.statusMsg || 'Mapping deleted successfully', 'success');
+                    
+                    // Close modal
+                    $('#deleteMappingModal').modal('hide');
+                    
+                    // Update UI - convert to add mapping button
+                    row.find('.mapping-category, .mapping-price, .mapping-stock').prop('disabled', true).val('');
+                    row.find('.mapping-status').prop('disabled', true).prop('checked', false);
+                    row.find('.remove-mapping').replaceWith(`
+                        <button type="button" class="btn btn-sm btn-outline-success add-mapping" title="Add">
+                            <i class="mdi mdi-plus"></i>
+                        </button>
+                    `);
+                    
+                    // Reload material mappings to refresh the data
+                    loadMaterialMappings(selectedMaterialId);
+                } else {
+                    showToast('Error', response.statusMsg || 'Error deleting mapping', 'danger');
+                }
+            },
+            error: function(xhr) {
+                // Reset loader state
+                deleteBtn.prop('disabled', false).text(originalText);
+                
+                const response = xhr.responseJSON;
+                showToast('Error', response?.statusMsg || response?.message || 'Error deleting mapping', 'danger');
+            }
+        });
+    });
+
+    // Save all mappings
+    $('#saveAllMappings').on('click', function() {
+        if (!selectedMaterialId) {
+            showToast('Error', 'Please select a material first', 'danger');
+            return;
+        }
+
+        const mappings = [];
+        
+        $('#channelMappingTable tr').each(function() {
+            const row = $(this);
+            const channelId = row.data('channel-id');
+            const categoryId = row.find('.mapping-category').val();
+            const price = row.find('.mapping-price').val();
+            const stock = row.find('.mapping-stock').val();
+            const status = row.find('.mapping-status').is(':checked');
+            
+            if (categoryId && price && stock) {
+                mappings.push({
+                    channelId: parseInt(channelId),
+                    categoryId: parseInt(categoryId),
+                    price: parseFloat(price),
+                    stock: parseInt(stock),
+                    status: status
+                });
+            }
+        });
+
+        if (mappings.length === 0) {
+            showToast('Warning', 'Please add at least one channel mapping', 'warning');
+            return;
+        }
+
+        // Show loading state
+        const saveBtn = $(this);
+        const originalText = saveBtn.html();
+        saveBtn.prop('disabled', true).html('<div class="spinner-border spinner-border-sm me-2"></div>Saving...');
+
+        // Prepare payload
+        const payload = {
+            materialId: parseInt(selectedMaterialId),
+            mappings: mappings
+        };
+
+        console.log('Saving mappings with payload:', payload);
+
+        // Call Django proxy to save mappings
+        $.ajax({
+            url: `/api/materials/${selectedMaterialId}/mappings/save`,
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            data: JSON.stringify(payload),
+            success: function(response) {
+                console.log('Save mappings API response:', response);
+                
+                if (response.status === 'SUCCESS') {
+                    const successCount = response.data ? response.data.successCount : mappings.length;
+                    showToast('Success', `Channel mappings saved successfully! (${successCount} mappings)`, 'success');
+                    
+                    // Update material count badge with actual saved count
+                    updateMaterialChannelCount(selectedMaterialId, successCount);
+                } else {
+                    showToast('Error', response.statusMsg || 'Failed to save mappings', 'danger');
+                }
+            },
+            error: function(xhr) {
+                console.error('Error saving mappings:', xhr);
+                console.error('Status:', xhr.status);
+                console.error('Response:', xhr.responseText);
+                
+                let errorMessage = 'Failed to save mappings';
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    errorMessage = errorResponse.statusMsg || errorResponse.message || errorMessage;
+                } catch (e) {
+                    errorMessage = `Error ${xhr.status}: ${errorMessage}`;
+                }
+                
+                showToast('Error', errorMessage, 'danger');
+            },
+            complete: function() {
+                // Reset button state
+                saveBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
+    // Load channel counts for all materials
+    function loadAllMaterialChannelCounts() {
+        console.log('Loading channel counts for all materials...');
+        
+        materials.forEach(material => {
+            // Load mappings for each material to get channel count
+            $.ajax({
+                url: `/api/materials/${material.materialId}/mappings`,
+                type: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    if (response.status === 'SUCCESS' && response.data && response.data.mappings) {
+                        const count = response.data.mappings.length;
+                        updateMaterialChannelCount(material.materialId, count);
+                    } else {
+                        updateMaterialChannelCount(material.materialId, 0);
+                    }
+                },
+                error: function(xhr) {
+                    console.log(`Could not load mappings for material ${material.materialId}`);
+                    updateMaterialChannelCount(material.materialId, 0);
+                }
+            });
+        });
+    }
+
+    // Load locations for dropdown
+    function loadLocations() {
+        $.ajax({
+            url: '{% url "pages:locations_list_proxy" %}',
+            type: 'GET',
+            success: function(response) {
+                const locationSelect = $('#locationFilter');
+                locationSelect.empty();
+                
+                if (response && response.length > 0) {
+                    response.forEach(location => {
+                        locationSelect.append(`<option value="${location.locationId}">${location.locationName}</option>`);
+                    });
+                    
+                    // Auto-select first location and load its materials
+                    if (response.length > 0) {
+                        currentLocationId = response[0].locationId;
+                        locationSelect.val(currentLocationId);
+                        loadMaterialsByLocation(currentLocationId);
+                    }
+                } else {
+                    locationSelect.append('<option value="">No locations found</option>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading locations:', error);
+                $('#locationFilter').html('<option value="">Error loading locations</option>');
+            }
+        });
+    }
+    
+    // Load materials by location
+    function loadMaterialsByLocation(locationId) {
+        if (!locationId) {
+            return;
+        }
+        
+        console.log('Loading materials for location:', locationId);
+        currentLocationId = locationId;
+        
+        $.ajax({
+            url: '{% url "pages:materials_list_proxy" %}?locationId=' + locationId,
+            type: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Authorization': 'Bearer ' + getCookie('auth_token'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('Location-specific materials response:', response);
+                if (response.status === "200" && response.data && response.data.materials) {
+                    materials = response.data.materials;
+                    console.log('Materials loaded for location:', materials.length);
+                    renderMaterials(materials);
+                    
+                    // Load channel counts for all materials
+                    loadAllMaterialChannelCounts();
+                    
+                    // Auto-select first material if available
+                    if (materials.length > 0) {
+                        selectMaterial(materials[0].materialId);
+                    }
+                } else {
+                    console.log('No materials found for location');
+                    renderMaterials([]);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading materials for location:', error);
+                showToast('Error', 'Failed to load materials for selected location', 'danger');
+                renderMaterials([]);
+            }
+        });
+    }
+    
+    // Location dropdown change handler
+    $('#locationFilter').on('change', function() {
+        const selectedLocationId = $(this).val();
+        if (selectedLocationId) {
+            loadMaterialsByLocation(selectedLocationId);
+        }
+    });
+
+    // Initialize by loading locations first, then materials
+    console.log('=== ABOUT TO CALL LOAD LOCATIONS ===');
+    loadLocations();
+    console.log('=== LOAD LOCATIONS CALLED ===');
+});
+</script>
+
+<style>
+.material-item {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: 1px solid #e9ecef !important;
+}
+
+.material-item:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-color: #dee2e6 !important;
+}
+
+.material-item.active {
+    background-color: #e3f2fd !important;
+    color: #1976d2 !important;
+    border-color: #2196f3 !important;
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+}
+
+.material-item.active .text-muted {
+    color: #1976d2 !important;
+}
+
+.material-item.active h6 {
+    color: #1976d2 !important;
+    font-weight: 600;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Minimal color scheme for buttons */
+.btn-success {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.btn-success:hover {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+.btn-outline-success {
+    color:  #198754!important;
+    border-color: #198754 !important;
+}
+
+.btn-outline-success:hover {
+    background-color: #4caf50 !important;
+    border-color: #4caf50 !important;
+}
+
+.btn-outline-danger {
+    color: #f44336 !important;
+    border-color: #f44336 !important;
+}
+
+.btn-outline-danger:hover {
+    background-color: #f44336 !important;
+    border-color: #f44336 !important;
+}
+
+/* Table styling */
+.table th {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #495057 !important;
+    font-weight: 600;
+}
+
+.table td {
+    border-color: #e9ecef !important;
+}
+
+/* Form controls */
+.form-control:focus, .form-select:focus {
+    border-color: #2196f3 !important;
+    box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25) !important;
+}
+
+/* Badge styling */
+.badge.bg-primary {
+    background-color: #2196f3 !important;
+}
+
+/* Switch styling */
+.form-check-input:checked {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+}
+
+/* Delete modal styling */
+#deleteMappingModal .modal-body {
+    text-align: center;
+}
+
+#deleteMappingModal .modal-body p {
+    margin-bottom: 0.5rem;
+}
+
+#deleteMappingModal .text-danger {
+    color: #dc3545 !important;
+}
+
+#deleteMappingModal .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Custom Toast Styling (same as Material page) */
+.toast-custom {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-width: 320px;
+    max-width: 400px;
+    background: #e6f9ed;
+    color: #198754;
+    border: 1px solid #b6e2c6;
+    font-size: 1rem;
+    position: relative;
+}
+
+.toast-custom.toast-warning {
+    background: #fffbe6;
+    color: #b8860b;
+    border: 1px solid #ffe58f;
+}
+
+.toast-custom .toast-icon {
+    background: #198754;
+    color: #fff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-right: 12px;
+}
+
+.toast-custom.toast-warning .toast-icon {
+    background: #ffc107;
+    color: #fff;
+}
+
+.toast-custom .toast-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.toast-custom .toast-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background: #198754;
+    width: 100%;
+    border-radius: 0 0 10px 10px;
+    transition: width 2s linear;
+}
+
+.toast-custom.toast-warning .toast-progress {
+    background: #ffc107;
+}
+</style>
+{% endblock %}

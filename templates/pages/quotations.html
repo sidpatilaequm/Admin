@@ -1,0 +1,431 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}My Quotations{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div>
+                <h4 class="fw-bold text-uppercase mb-1">My Quotations</h4>
+                <p class="text-muted mb-0">Create, edit and track all your quotations — with or without a PR reference</p>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            {% if user_data.role|default_if_none:''|upper == 'VENDOR' %}
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <a href="{% url 'pages:new_quotation' %}" class="btn btn-white border shadow-sm"><i class="ri-add-line me-1"></i> New Quotation (Standalone)</a>
+                <button class="btn btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#selectPRModal"><i class="ri-file-list-3-line me-1"></i> Create from PR</button>
+            </div>
+            {% else %}
+            <!-- Admin PR Selector -->
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <select name="pr_id" class="form-select border-light shadow-sm" onchange="this.form.submit()" style="min-width: 250px;">
+                    <option value="">-- Select PR to view Quotations --</option>
+                    {% for pr in released_prs %}
+                        <option value="{{ pr.id }}" {% if request.GET.pr_id == pr.id|stringformat:"s" %}selected{% endif %}>{{ pr.pr_number }} - {{ pr.description|truncatechars:30 }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-2 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase fs-11 fw-bold mb-2">Total</p>
+                    <h3 class="fw-bold mb-0">3</h3>
+                    <p class="text-muted fs-11 mb-0">All quotations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase fs-11 fw-bold mb-2">Draft</p>
+                    <h3 class="fw-bold text-warning mb-0">1</h3>
+                    <p class="text-muted fs-11 mb-0">Not yet submitted</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase fs-11 fw-bold mb-2">Submitted</p>
+                    <h3 class="fw-bold text-info mb-0">1</h3>
+                    <p class="text-muted fs-11 mb-0">Awaiting buyer</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-2 col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase fs-11 fw-bold mb-2">Awarded</p>
+                    <h3 class="fw-bold text-success mb-0">1</h3>
+                    <p class="text-muted fs-11 mb-0">Won</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-md-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <p class="text-muted text-uppercase fs-11 fw-bold mb-2">Total Value</p>
+                    <h3 class="fw-bold mb-0">₹ 2,06,23,600</h3>
+                    <p class="text-muted fs-11 mb-0">Submitted quotations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="row mb-3">
+        <div class="col-lg-12">
+            <div class="d-flex align-items-center gap-3">
+                <div class="flex-grow-1 position-relative">
+                    <input type="text" class="form-control bg-light border-0 ps-4" placeholder="Search quotation, PR, description...">
+                    <i class="ri-search-line position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
+                </div>
+                
+                <!-- Status Filter Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-white border dropdown-toggle" type="button" id="statusFilter" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ri-filter-2-line me-1"></i> Status: All
+                    </button>
+                    <ul class="dropdown-menu shadow" aria-labelledby="statusFilter">
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterQTNs('all', 'All')">All <span class="badge bg-soft-info text-info float-end ms-2">3</span></a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterQTNs('draft', 'Draft')">Draft <span class="badge bg-soft-warning text-warning float-end ms-2">1</span></a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterQTNs('submitted', 'Submitted')">Submitted <span class="badge bg-soft-info text-info float-end ms-2">1</span></a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterQTNs('awarded', 'Awarded')">Awarded <span class="badge bg-soft-success text-success float-end ms-2">1</span></a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterQTNs('rejected', 'Rejected')">Rejected <span class="badge bg-soft-danger text-danger float-end ms-2">0</span></a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-white btn-sm border dropdown-toggle" data-bs-toggle="dropdown">Date — Newest</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">Date — Newest</a></li>
+                        <li><a class="dropdown-item" href="#">Date — Oldest</a></li>
+                    </ul>
+                </div>
+                <span class="text-muted fs-12 ms-auto">3 results</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quotations Table -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-nowrap align-middle mb-0 fs-13">
+                            <thead class="bg-light text-muted text-uppercase fs-11">
+                                <tr>
+                                    <th>Quotation No / Version</th>
+                                    {% if user_data.role|default_if_none:''|upper != 'VENDOR' %}
+                                    <th>Vendor Name</th>
+                                    {% endif %}
+                                    <th>Description</th>
+                                    <th>PR Reference</th>
+                                    <th>Date</th>
+                                    <th>Valid Until</th>
+                                    <th>Payment Terms</th>
+                                    <th class="text-center">Lines</th>
+                                    <th class="text-end">Grand Total</th>
+                                    <th class="text-center">Status</th>
+                                    {% if user_data.role|default_if_none:''|upper != 'VENDOR' %}
+                                    <th class="text-center">Action</th>
+                                    {% endif %}
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for qtn in quotations %}
+                                <tr class="qtn-item cursor-pointer" data-status="{{ qtn.status_lower }}" data-url="{% url 'pages:quotation_detail' qtn.quotation_id %}">
+                                    <td onclick="window.location.href=this.parentElement.getAttribute('data-url')">
+                                        <div class="fw-bold text-success">{{ qtn.display_number }}</div>
+                                        <div class="fs-11 text-muted">v1 · 1 version</div>
+                                    </td>
+                                    {% if user_data.role|default_if_none:''|upper != 'VENDOR' %}
+                                    <td class="fw-semibold text-dark" onclick="window.location.href=this.parentElement.getAttribute('data-url')">
+                                        {{ qtn.vendor_name }}
+                                    </td>
+                                    {% endif %}
+                                    <td onclick="window.location.href=this.parentElement.getAttribute('data-url')">
+                                        <div class="fw-medium">{{ qtn.remarks.cover_note|default:'Quotation'|truncatechars:40 }}</div>
+                                        <div class="fs-11 text-muted">{% if qtn.pr_id %}PR: {{ qtn.pr_id }}{% else %}Standalone (no PR){% endif %}</div>
+                                    </td>
+                                    <td onclick="window.location.href=this.parentElement.getAttribute('data-url')">
+                                        {% if qtn.pr_id %}
+                                            <span class="text-primary">{{ qtn.pr_id }}</span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td onclick="window.location.href=this.parentElement.getAttribute('data-url')">{{ qtn.display_date }}</td>
+                                    <td onclick="window.location.href=this.parentElement.getAttribute('data-url')">{{ qtn.display_valid_until }}</td>
+                                    <td onclick="window.location.href=this.parentElement.getAttribute('data-url')">{{ qtn.payment_terms.payment_terms_id|default:'Net 45 Days' }}</td>
+                                    <td class="text-center" onclick="window.location.href=this.parentElement.getAttribute('data-url')">{{ qtn.line_count }}</td>
+                                    <td class="text-end fw-bold" onclick="window.location.href=this.parentElement.getAttribute('data-url')">{% if qtn.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ qtn.grand_total|floatformat:2 }}</td>
+                                    <td class="text-center" onclick="window.location.href=this.parentElement.getAttribute('data-url')">
+                                        <span class="badge bg-soft-{{ qtn.status_badge }} text-{{ qtn.status_badge }} rounded-pill px-3 py-1 text-uppercase">● {{ qtn.status }}</span>
+                                    </td>
+                                    {% if user_data.role|default_if_none:''|upper != 'VENDOR' %}
+                                    <td class="text-center">
+                                        {% if qtn.status|upper == 'SUBMITTED' %}
+                                        <button type="button" class="btn btn-sm btn-primary py-1 px-3 fs-12 btn-award" 
+                                                data-qtn-id="{{ qtn.quotation_id }}" 
+                                                data-qtn-num="{{ qtn.display_number }}"
+                                                data-vendor="{{ qtn.vendor_name }}"
+                                                data-amount="{% if qtn.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ qtn.grand_total|floatformat:2 }}">
+                                            Award
+                                        </button>
+                                        {% elif qtn.status|upper == 'AWARDED' %}
+                                        <span class="text-success fw-bold fs-12"><i class="ri-checkbox-circle-line me-1"></i>Awarded</span>
+                                        {% elif qtn.status|upper == 'REJECTED' %}
+                                        <span class="text-muted fs-12">Rejected</span>
+                                        {% else %}
+                                        <span class="text-muted fs-12">—</span>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                    <td class="text-end" onclick="window.location.href=this.parentElement.getAttribute('data-url')"><i class="ri-arrow-right-s-line text-muted"></i></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if user_data.role|default_if_none:''|upper != 'VENDOR' %}12{% else %}10{% endif %}" class="text-center py-5 text-muted">
+                                        <i class="ri-file-list-3-line fs-24 mb-2 d-block"></i>
+                                        <p class="mb-0">No quotations found.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1) !important; }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1) !important; }
+    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1) !important; }
+    
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fw-bold { font-weight: 700 !important; }
+    
+    .table-nowrap td, .table-nowrap th {
+        white-space: nowrap;
+    }
+
+    .btn-white { background-color: #fff; }
+
+    .qtn-item {
+        transition: all 0.2s;
+    }
+    .qtn-item:hover {
+        background-color: rgba(114, 124, 245, 0.05) !important;
+        border-left: 4px solid #727cf5 !important;
+        transform: translateX(5px);
+    }
+    .cursor-pointer { cursor: pointer; }
+</style>
+
+{% if user_data.role|default_if_none:''|upper == 'VENDOR' %}
+<!-- Select PR Modal -->
+<div class="modal fade" id="selectPRModal" tabindex="-1" aria-labelledby="selectPRModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom p-3">
+                <div>
+                    <h5 class="modal-title fw-bold" id="selectPRModalLabel">Select Purchase Requisition</h5>
+                    <p class="text-muted fs-11 mb-0">Choose a released PR to quote against</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="list-group list-group-flush gap-2">
+                    {% for pr in released_prs %}
+                    <a href="{% url 'pages:new_quotation' %}?pr_id={{ pr.pr_number }}" class="list-group-item list-group-item-action border rounded p-3 d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="ri-file-list-3-line fs-24 text-warning"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="fw-bold mb-1">{{ pr.pr_number }}</h6>
+                            <p class="text-muted fs-12 mb-0">{{ pr.description }}</p>
+                            <small class="text-muted">{{ pr.line_count }} line(s)</small>
+                        </div>
+                        <i class="ri-arrow-right-s-line text-muted"></i>
+                    </a>
+                    {% empty %}
+                    <div class="text-center p-4 text-muted">
+                        <i class="ri-file-list-3-line fs-24 mb-2 d-block"></i>
+                        <p class="mb-0">No released Purchase Requisitions available to quote against.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer bg-light bg-opacity-50 border-top p-3 d-flex justify-content-between">
+                <button type="button" class="btn btn-link text-muted fw-medium text-decoration-none" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'pages:new_quotation' %}" class="btn btn-outline-dark px-4">Create Without PR</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function filterQTNs(status, label) {
+        // Update button text
+        document.getElementById('statusFilter').innerHTML = '<i class="ri-filter-2-line me-1"></i> Status: ' + label;
+        
+        // Filter items
+        const items = document.querySelectorAll('.qtn-item');
+        items.forEach(item => {
+            if (status === 'all' || item.getAttribute('data-status') === status) {
+                item.style.display = 'table-row';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    let selectedQtnIdForAward = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const awardButtons = document.querySelectorAll('.btn-award');
+        const awardModalEl = document.getElementById('awardQuotationModal');
+        let awardModal = null;
+        if (awardModalEl) {
+            awardModal = new bootstrap.Modal(awardModalEl);
+        }
+
+        awardButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent row click navigation
+                selectedQtnIdForAward = btn.getAttribute('data-qtn-id');
+                
+                document.getElementById('awardQtnNo').innerText = btn.getAttribute('data-qtn-num');
+                document.getElementById('awardVendorName').innerText = btn.getAttribute('data-vendor');
+                document.getElementById('awardAmount').innerText = btn.getAttribute('data-amount');
+                document.getElementById('awardRemarks').value = ''; // Reset remarks
+
+                if (awardModal) awardModal.show();
+            });
+        });
+
+        const btnConfirmAward = document.getElementById('btnConfirmAward');
+        if (btnConfirmAward) {
+            btnConfirmAward.addEventListener('click', () => {
+                if (!selectedQtnIdForAward) return;
+
+                const remarks = document.getElementById('awardRemarks').value.trim();
+                const originalText = btnConfirmAward.innerHTML;
+                btnConfirmAward.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Awarding...';
+                btnConfirmAward.disabled = true;
+
+                fetch(`/procurement/quotations/award/${selectedQtnIdForAward}/`, {
+                    method: 'POST',
+                    body: JSON.stringify({ remarks: remarks }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    btnConfirmAward.innerHTML = originalText;
+                    btnConfirmAward.disabled = false;
+
+                    if (data.status === 'success') {
+                        if (awardModal) awardModal.hide();
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Quotation awarded successfully.',
+                                icon: 'success',
+                                confirmButtonColor: '#727cf5'
+                            }).then(() => window.location.reload());
+                        } else {
+                            alert('Quotation awarded successfully.');
+                            window.location.reload();
+                        }
+                    } else {
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Error',
+                                text: data.message || 'Failed to award quotation.',
+                                icon: 'error',
+                                confirmButtonColor: '#727cf5'
+                            });
+                        } else {
+                            alert(data.message || 'Failed to award quotation.');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error awarding quotation:', error);
+                    btnConfirmAward.innerHTML = originalText;
+                    btnConfirmAward.disabled = false;
+                    alert('An unexpected error occurred.');
+                });
+            });
+        }
+    });
+</script>
+
+{% if user_data.role|default_if_none:''|upper != 'VENDOR' %}
+<!-- Award Quotation Modal -->
+<div class="modal fade" id="awardQuotationModal" tabindex="-1" aria-labelledby="awardQuotationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-light border-0 py-3">
+                <h5 class="modal-title fw-bold text-uppercase fs-14" id="awardQuotationModalLabel">Award Quotation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <p class="text-muted fs-13 mb-3">Are you sure you want to award this quotation? This action will set the Purchase Requisition's status to Quotation Awarded and reject all competing quotations.</p>
+                    <div class="p-3 bg-light rounded border border-light">
+                        <div class="row g-2 fs-13">
+                            <div class="col-6">
+                                <span class="text-muted">Quotation No:</span><br>
+                                <span class="fw-bold text-dark" id="awardQtnNo"></span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted">Amount:</span><br>
+                                <span class="fw-bold text-primary" id="awardAmount"></span>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <span class="text-muted">Vendor:</span><br>
+                                <span class="fw-bold text-dark" id="awardVendorName"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label for="awardRemarks" class="form-label fw-semibold fs-12 text-uppercase text-muted">Remarks</label>
+                    <textarea class="form-control" id="awardRemarks" rows="3" placeholder="e.g. Lowest quotation selected / Best lead time"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light py-3">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmAward">
+                    <i class="ri-check-line me-1"></i> Confirm Award
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

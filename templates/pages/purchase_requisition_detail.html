@@ -1,0 +1,343 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Purchase Requisition Details - {{ pr_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header & Quick Actions -->
+    <div class="row mb-3 pb-3 border-bottom align-items-end">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{% url 'pages:purchase_requisitions' %}">Purchase Requisitions</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ pr_id }}</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-1">Purchase Requisition — {{ pr_id }}</h3>
+            <div class="d-flex align-items-center text-muted fs-13">
+                <span class="me-3">Standard Purchase Requisition</span>
+                <span class="badge bg-soft-{{ pr.status_badge }} text-{{ pr.status_badge }} me-3">● {{ pr.pr_status }}</span>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="d-flex gap-2 mb-1">
+                <button class="btn btn-success"><i class="ri-refresh-line me-1"></i> Convert — PO</button>
+                <button class="btn btn-outline-secondary">Create RFQ</button>
+                <button class="btn btn-outline-secondary">Print</button>
+                <button class="btn btn-outline-secondary">Export PDF</button>
+                <button class="btn btn-outline-info" data-bs-toggle="collapse" data-bs-target="#apiExplorer"><i class="ri-code-s-slash-line me-1"></i> API</button>
+            </div>
+            <div class="text-end text-muted fs-12 mt-1">
+                Last sync: 07 May 2026 · 09:32 IST
+            </div>
+        </div>
+    </div>
+
+    <!-- API Explorer (Collapsible) -->
+    <div class="collapse mb-4" id="apiExplorer">
+        <div class="card bg-dark text-white shadow-none border-0 rounded-3">
+            <div class="card-header border-bottom border-secondary py-2 d-flex justify-content-between align-items-center">
+                <span class="badge bg-success text-white">GET</span>
+                <code class="text-info">/api/v1/purchase-requisitions/{{ pr_id }}</code>
+                <span class="fs-12 text-muted">200 OK · 42ms</span>
+            </div>
+            <div class="card-body p-0">
+                <pre class="m-0 p-3" style="max-height: 250px; overflow-y: auto;"><code class="language-json">{{ api_json }}</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Information Section -->
+    {% if not request.session.vendor_permissions or request.session.vendor_permissions.PR_HEADER.view %}
+    <div class="card border-0 shadow-sm mb-4" id="block-header-information">
+        <div class="card-header bg-light bg-opacity-50 border-bottom d-flex justify-content-between align-items-center py-2">
+            <h6 class="card-title mb-0 fw-bold"><i class="ri-file-info-line me-2"></i>Header Information</h6>
+            <span class="fs-11 text-muted text-uppercase">SAP Table: EBAN (header fields)</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">PR Number [EBAN.BANFN]</label>
+                    <div class="fw-bold fs-15">{{ pr.pr_number }}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">PR Status [EBAN.STATU]</label>
+                    <span class="badge bg-soft-{{ pr.status_badge }} text-{{ pr.status_badge }}">● {{ pr.pr_status }}</span>
+                </div>
+                <div class="col-md-4">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">Release Indicator [EBAN.FRGKZ]</label>
+                    {% if pr.status_slug == 'released' %}
+                    <div class="text-success fw-medium"><i class="ri-check-line"></i> X — Released</div>
+                    {% elif pr.status_slug == 'in-process' %}
+                    <div class="text-warning fw-medium"><i class="ri-loader-2-line"></i> 1 — In Process</div>
+                    {% else %}
+                    <div class="text-info fw-medium"><i class="ri-time-line"></i> 0 — Open / Blocked</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">Release Group [T16FG.FRGGR]</label>
+                    <div class="fw-medium">B1 — Finance Approval Group</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">SAP Status Code [EBAN.STATU]</label>
+                    <div class="fw-bold">{% if pr.status_slug == 'released' %}S{% else %}N{% endif %}</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">Last Changed [EBAN.AEDAT]</label>
+                    <div class="fw-medium">{{ pr.last_changed }}</div>
+                </div>
+
+                <div class="col-12">
+                    <label class="fs-11 text-muted text-uppercase mb-1 d-block">Header Notes / Justification [STXH (BANF)]</label>
+                    <div class="bg-light p-2 rounded border-start border-4 border-info fs-13 italic">
+                        "{{ pr.header_notes }}"
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Line Items Section -->
+    {% if not request.session.vendor_permissions or request.session.vendor_permissions.PR_LINE_ITEM.view %}
+    <div class="card border-0 shadow-sm mb-4" id="block-line-item-details">
+        <div class="card-header bg-light bg-opacity-50 border-bottom d-flex justify-content-between align-items-center py-2">
+            <h6 class="card-title mb-0 fw-bold"><i class="ri-list-check-2 me-2"></i>Line Items <span class="badge bg-secondary ms-1">{{ lines_count }} items</span></h6>
+            <span class="fs-11 text-muted text-uppercase">SAP Table: EBAN (item fields)</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-nowrap align-middle mb-0 fs-13">
+                    <thead class="bg-light text-muted text-uppercase fs-11">
+                        <tr>
+                            <th>Item</th>
+                            <th>Material / Description</th>
+                            <th>HSN/SAC</th>
+                            <th class="text-end">Qty / UOM</th>
+                            <th>Plant / Del. Date</th>
+                            <th>Fixed Vendor</th>
+                            <th>Acct Assignment</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in line_items %}
+                        <tr>
+                            <td class="fw-bold text-success">{{ item.item_number }}</td>
+                            <td>
+                                <div class="fw-bold">{{ item.material_description }}</div>
+                                <div class="fs-11 text-muted">{{ item.material_number }}</div>
+                            </td>
+                            <td><span class="badge bg-light text-dark">{{ item.hsn_sac_code }}</span></td>
+                            <td class="text-end fw-medium">{{ item.quantity }} <span class="text-muted fs-11">{{ item.uom }}</span></td>
+                            <td>
+                                <div>{{ item.plant }}</div>
+                                <div class="fs-11 text-muted">{{ item.delivery_date_formatted }}</div>
+                            </td>
+                            <td>
+                                {% if item.fixed_vendor == 'Open' %}
+                                <span class="text-muted">Open</span>
+                                {% else %}
+                                <span class="text-primary">{{ item.fixed_vendor }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>{{ item.account_assignment }}</div>
+                                <div class="fs-11 text-muted">{{ item.gl_account }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-soft-info text-info fs-10 text-uppercase">
+                                    <i class="ri-arrow-right-line"></i> {{ item.item_status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-light bg-opacity-50">
+                        <tr>
+                            <td colspan="4" class="text-end text-muted fs-11 text-uppercase">Lines</td>
+                            <td class="text-end fw-bold fs-14 text-success">{{ lines_count }}</td>
+                            <td colspan="2" class="text-end text-muted fs-11 text-uppercase">Total Items</td>
+                            <td colspan="2" class="text-end fw-bold fs-15 text-success">{{ lines_count }} Items</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if user_data.role|upper == 'VENDOR' or request.session.user_data.role|upper == 'VENDOR' %}
+    {% csrf_token %}
+    <div class="d-flex justify-content-end gap-2 mb-4">
+        {% if pr.status_slug != 'approved' and pr.status_slug != 'rejected' and pr.status_slug != 'released' %}
+        <button class="btn btn-primary btn-lg acknowledge-btn" onclick="acknowledgePR('{{ pr_id }}');">
+            <i class="ri-checkbox-circle-line me-1"></i> Acknowledge Requisition
+        </button>
+        {% else %}
+        <button class="btn btn-outline-success btn-lg" disabled>
+            <i class="ri-checkbox-circle-fill me-1"></i> Acknowledged ({{ pr.pr_status }})
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1) !important; }
+    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1) !important; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .fs-15 { font-size: 15px; }
+    .fs-10 { font-size: 10px; }
+    .fw-bold { font-weight: 700 !important; }
+    .italic { font-style: italic; }
+</style>
+
+<script>
+    let currentPrId = null;
+
+    function acknowledgePR(prId) {
+        currentPrId = prId;
+        // Reset comment
+        const commentEl = document.getElementById('actionComment');
+        if (commentEl) commentEl.value = '';
+        
+        // Show modal
+        const modalEl = document.getElementById('takeActionModal');
+        if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+    }
+
+    function processResponse(prId, action, comment) {
+        let loadingSwal = null;
+        if (typeof Swal !== 'undefined') {
+            loadingSwal = Swal.fire({
+                title: 'Processing...',
+                text: 'Sending your response to the backend.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+        const url = `/api/vendor/purchase-requisitions/${prId}/${action}`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ comment: comment })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Purchase Requisition ' + prId + ' has been ' + (action === 'accept' ? 'accepted' : 'rejected') + ' successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#727cf5'
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                alert('Requisition status updated successfully.');
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            if (loadingSwal) {
+                loadingSwal.close();
+            }
+            console.error('Error:', error);
+            const errMsg = error.error || error.message || 'An unexpected error occurred.';
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: errMsg,
+                    icon: 'error',
+                    confirmButtonColor: '#727cf5'
+                });
+            } else {
+                alert('Error updating requisition: ' + errMsg);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const approveBtn = document.getElementById('btnApproveAction');
+        const rejectBtn = document.getElementById('btnRejectAction');
+        
+        if (approveBtn) {
+            approveBtn.addEventListener('click', function() {
+                if (currentPrId) {
+                    const comment = document.getElementById('actionComment').value;
+                    const modalEl = document.getElementById('takeActionModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                    processResponse(currentPrId, 'accept', comment);
+                }
+            });
+        }
+        
+        if (rejectBtn) {
+            rejectBtn.addEventListener('click', function() {
+                if (currentPrId) {
+                    const comment = document.getElementById('actionComment').value;
+                    const modalEl = document.getElementById('takeActionModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                    processResponse(currentPrId, 'reject', comment);
+                }
+            });
+        }
+    });
+</script>
+
+<!-- Take Action Modal -->
+<div class="modal fade" id="takeActionModal" tabindex="-1" aria-labelledby="takeActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; border: 1px solid #e1e7ec !important;">
+            <div class="modal-header border-bottom-0 pb-1 pt-3 px-3">
+                <h6 class="modal-title fw-bold text-dark d-flex align-items-center fs-15" id="takeActionModalLabel">
+                    <i class="ri-shield-check-line text-success me-2 fs-18"></i> Take Action
+                </h6>
+                <button type="button" class="btn-close fs-12" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-2 px-3">
+                <div class="mb-2">
+                    <label for="actionComment" class="form-label fw-bold text-secondary fs-13 mb-1">Decision Comment</label>
+                    <textarea class="form-control border-light-subtle bg-light bg-opacity-25 fs-13" id="actionComment" rows="3" placeholder="Add a note for your decision..." style="resize: none; border-radius: 6px;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-0 pb-3 px-3 d-flex gap-2 justify-content-between">
+                <button type="button" class="btn btn-success flex-grow-1 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1 fs-13" id="btnApproveAction" style="border-radius: 6px; background-color: #198754; border-color: #198754;">
+                    <i class="ri-check-line"></i> Approve
+                </button>
+                <button type="button" class="btn btn-danger flex-grow-1 py-2 fw-semibold d-flex align-items-center justify-content-center gap-1 fs-13" id="btnRejectAction" style="border-radius: 6px; background-color: #dc3545; border-color: #dc3545;">
+                    <i class="ri-close-circle-line"></i> Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

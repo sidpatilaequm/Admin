@@ -1,0 +1,753 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Locations - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header {
+        background-color: #198754 !important;
+        padding: 1rem;
+    }
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+    .table th {
+        color: #6c757d;
+    }
+    .action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    /* Make modal body scrollable for long forms */
+    .modal-body {
+        max-height: 75vh;
+        overflow-y: auto;
+    }
+    .toast.bg-success { background-color: #198754 !important; }
+    .toast.bg-warning { background-color: #ffc107 !important; }
+    .table th:nth-child(3),
+    .table td:nth-child(3) {
+        min-width: 250px;
+        max-width: 400px;
+        white-space: normal;
+        word-break: break-word;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Locations</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Locations</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="card-title mb-0 text-white">Location Management</h5>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-light btn-sm" id="addLocationBtn">
+                                <i class="las la-plus"></i> Add Location
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Search and Filter -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="search-box">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search locations...">
+                                <i class="las la-search search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="refreshBtn">
+                                <i class="las la-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Locations Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-nowrap align-middle mb-0" id="locationsTable">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Location Name</th>
+                                    <th scope="col">Address</th>
+                                    <th scope="col">City</th>
+                                    <th scope="col">State</th>
+                                    <th scope="col">PIN Code</th>
+                                    <th scope="col">Country</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="locationsTableBody">
+                                <!-- Data will be loaded via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Loading indicator -->
+                    <div class="text-center py-4" id="loadingIndicator" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading locations...</p>
+                    </div>
+
+                    <!-- No data message -->
+                    <div class="text-center py-4" id="noDataMessage" style="display: none;">
+                        <i class="las la-map-marker-alt fs-48 text-muted"></i>
+                        <h5 class="mt-3">No locations found</h5>
+                        <p class="text-muted">Click "Add Location" to create your first location.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Location Modal -->
+<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="locationModalLabel">Add Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="locationForm">
+                    <input type="hidden" id="locationId" name="locationId">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="locationName" class="form-label">Location Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="locationName" name="locationName" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="pinCode" class="form-label">PIN Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="pinCode" name="pinCode" required maxlength="6" pattern="[0-9]{6}">
+                                <div class="invalid-feedback"></div>
+                                <small class="text-muted">Enter 6-digit PIN code to auto-fill location details</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" class="form-control" id="state" name="state">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="country" name="country">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
+                            <label class="form-check-label" for="isActive">
+                                Active Location
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-theme" id="saveLocationBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="saveSpinner"></span>
+                    <span id="saveBtnText">Save Location</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this location?</p>
+                <p class="text-muted"><strong>Note:</strong> This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="deleteSpinner"></span>
+                    <span id="deleteBtnText">Delete Location</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let currentLocationId = null;
+    let locationsData = [];
+
+    // Get auth token from Django session
+    function getAuthToken() {
+        // Try to get from localStorage first, then from Django session
+        let token = localStorage.getItem('auth_token');
+        if (!token) {
+            // Try to get from Django session via AJAX
+            $.ajax({
+                url: '{% url "pages:get_auth_token" %}',
+                type: 'GET',
+                async: false,
+                success: function(response) {
+                    if (response.token) {
+                        token = response.token;
+                        localStorage.setItem('auth_token', token);
+                    }
+                }
+            });
+        }
+        
+        // If still no token, redirect to login
+        if (!token) {
+            showToast('Error', 'Session expired. Please login again.', 'danger');
+            setTimeout(() => {
+                window.location.href = '{% url "pages:login" %}';
+            }, 2000);
+            return null;
+        }
+        
+        return token;
+    }
+    
+    // Refresh token from Django session
+    function refreshAuthToken() {
+        $.ajax({
+            url: '{% url "pages:get_auth_token" %}',
+            type: 'GET',
+            success: function(response) {
+                if (response.token) {
+                    localStorage.setItem('auth_token', response.token);
+                    console.log('Token refreshed successfully');
+                } else {
+                    // No token in session, redirect to login
+                    showToast('Error', 'Session expired. Please login again.', 'danger');
+                    setTimeout(() => {
+                        window.location.href = '{% url "pages:login" %}';
+                    }, 2000);
+                }
+            },
+            error: function() {
+                showToast('Error', 'Session expired. Please login again.', 'danger');
+                setTimeout(() => {
+                    window.location.href = '{% url "pages:login" %}';
+                }, 2000);
+            }
+        });
+    }
+
+    // Initialize page
+    // Clear any expired token from localStorage and get fresh token
+    localStorage.removeItem('auth_token');
+    loadLocations();
+
+    // Add Location Button Click
+    $('#addLocationBtn').click(function() {
+        openLocationModal();
+    });
+
+    // Save Location Button Click
+    $('#saveLocationBtn').click(function() {
+        saveLocation();
+    });
+
+    // Confirm Delete Button Click
+    $('#confirmDeleteBtn').click(function() {
+        deleteLocation();
+    });
+
+    // Search Input
+    $('#searchInput').on('input', function() {
+        const searchTerm = $(this).val().toLowerCase();
+        filterLocations(searchTerm);
+    });
+
+    // Refresh Button
+    $('#refreshBtn').click(function() {
+        loadLocations();
+    });
+
+    // Auto-lookup on PIN code change (when 6 digits entered)
+    $('#pinCode').on('input', function() {
+        const pinCode = $(this).val();
+        if (pinCode.length === 6 && /^[0-9]{6}$/.test(pinCode)) {
+            lookupPinCode();
+        }
+    });
+
+    // Location Modal Events
+    $('#locationModal').on('hidden.bs.modal', function() {
+        resetLocationForm();
+    });
+
+    function loadLocations() {
+        showLoading(true);
+        
+        $.ajax({
+            url: JAVA_API_URL + '/api/locations',
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + getAuthToken(),
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                // Handle both array response and object with data property
+                let locations = [];
+                if (Array.isArray(response)) {
+                    // Direct array response from Java API
+                    locations = response;
+                } else if (response.status === 'SUCCESS' && response.data) {
+                    // Object with data property
+                    locations = response.data;
+                } else if (response.data && Array.isArray(response.data)) {
+                    // Object with data array
+                    locations = response.data;
+                }
+                
+                if (locations.length > 0) {
+                    locationsData = locations;
+                    displayLocations(locationsData);
+                } else {
+                    showNoData();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading locations:', error);
+                
+                // Handle authentication errors
+                if (xhr.status === 401 || xhr.status === 403) {
+                    // Try to refresh token first
+                    refreshAuthToken();
+                    showToast('Error', 'Session expired. Please login again.', 'danger');
+                    setTimeout(() => {
+                        window.location.href = '{% url "pages:login" %}';
+                    }, 2000);
+                    return;
+                }
+                
+                showToast('Error', 'Error loading locations: ' + error, 'danger');
+                showNoData();
+            },
+            complete: function() {
+                showLoading(false);
+            }
+        });
+    }
+
+    function displayLocations(locations) {
+        const tbody = $('#locationsTableBody');
+        tbody.empty();
+
+        if (locations.length === 0) {
+            showNoData();
+            return;
+        }
+
+        locations.forEach(function(location, index) {
+            const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">${location.locationName || 'N/A'}</h6>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 200px;" title="${location.address || 'N/A'}">
+                            ${location.address || 'N/A'}
+                        </div>
+                    </td>
+                    <td>${location.city || 'N/A'}</td>
+                    <td>${location.state || 'N/A'}</td>
+                    <td>${location.pinCode || 'N/A'}</td>
+                    <td>${location.country || 'N/A'}</td>
+                    <td>
+                        <span class="badge ${location.isActive ? 'bg-success' : 'bg-secondary'}">
+                            ${location.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-1">
+                            <button type="button" class="btn btn-info btn-sm action-btn edit-btn me-1" title="Edit" onclick="editLocation(${location.locationId})">
+                                <i class="mdi mdi-pencil"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm action-btn delete-btn" title="Delete" onclick="confirmDeleteLocation(${location.locationId})">
+                                <i class="mdi mdi-delete"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.append(row);
+        });
+
+        $('#noDataMessage').hide();
+    }
+
+    function filterLocations(searchTerm) {
+        const filtered = locationsData.filter(location => 
+            location.locationName.toLowerCase().includes(searchTerm) ||
+            location.address.toLowerCase().includes(searchTerm) ||
+            (location.city && location.city.toLowerCase().includes(searchTerm)) ||
+            (location.state && location.state.toLowerCase().includes(searchTerm)) ||
+            (location.pinCode && location.pinCode.toLowerCase().includes(searchTerm))
+        );
+        displayLocations(filtered);
+    }
+
+    function openLocationModal(locationId = null) {
+        currentLocationId = locationId;
+        
+        if (locationId) {
+            $('#locationModalLabel').text('Edit Location');
+            $('#saveBtnText').text('Update Location');
+            loadLocationDetails(locationId);
+        } else {
+            $('#locationModalLabel').text('Add Location');
+            $('#saveBtnText').text('Save Location');
+            resetLocationForm();
+        }
+        
+        $('#locationModal').modal('show');
+    }
+
+    function loadLocationDetails(locationId) {
+        $.ajax({
+            url: JAVA_API_URL + `/api/locations/${locationId}`,
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + getAuthToken(),
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                // Handle both direct object response and object with data property
+                let location = null;
+                if (response.locationId) {
+                    // Direct object response from Java API
+                    location = response;
+                } else if (response.status === 'SUCCESS' && response.data) {
+                    // Object with data property
+                    location = response.data;
+                } else if (response.data) {
+                    // Object with data property
+                    location = response.data;
+                }
+                
+                if (location) {
+                    $('#locationName').val(location.locationName);
+                    $('#pinCode').val(location.pinCode);
+                    $('#address').val(location.address);
+                    $('#city').val(location.city);
+                    $('#state').val(location.state);
+                    $('#country').val(location.country);
+                    $('#isActive').prop('checked', location.isActive);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading location details:', error);
+                showToast('Error loading location details', 'error');
+            }
+        });
+    }
+
+    function saveLocation() {
+        if (!validateLocationForm()) {
+            return;
+        }
+
+        const formData = {
+            locationName: $('#locationName').val(),
+            pinCode: $('#pinCode').val(),
+            address: $('#address').val(),
+            city: $('#city').val(),
+            state: $('#state').val(),
+            country: $('#country').val(),
+            isActive: $('#isActive').is(':checked')
+        };
+
+        if (currentLocationId) {
+            formData.locationId = currentLocationId;
+        }
+
+        showSaveLoading(true);
+
+        // Determine if this is an update or create
+        const url = currentLocationId ? 
+            JAVA_API_URL + `/api/locations/${currentLocationId}` : 
+            JAVA_API_URL + '/api/locations';
+        const method = currentLocationId ? 'PUT' : 'POST';
+
+        $.ajax({
+            url: url,
+            type: method,
+            headers: {
+                'Authorization': 'Bearer ' + getAuthToken(),
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify(formData),
+            success: function(response) {
+                // Handle both direct response and object with status
+                if (response.status === 'SUCCESS' || response.locationId || response.id) {
+                    showToast('Location saved successfully', 'success');
+                    $('#locationModal').modal('hide');
+                    loadLocations();
+                } else {
+                    showToast(response.statusMsg || response.message || 'Error saving location', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error saving location:', error);
+                showToast('Error saving location', 'error');
+            },
+            complete: function() {
+                showSaveLoading(false);
+            }
+        });
+    }
+
+    function validateLocationForm() {
+        let isValid = true;
+        
+        // Clear previous validation
+        $('.form-control').removeClass('is-invalid');
+        $('.invalid-feedback').text('');
+
+        // Validate required fields
+        const requiredFields = ['locationName', 'pinCode', 'address'];
+        requiredFields.forEach(function(fieldName) {
+            const field = $(`#${fieldName}`);
+            if (!field.val().trim()) {
+                field.addClass('is-invalid');
+                field.siblings('.invalid-feedback').text('This field is required');
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
+    function confirmDeleteLocation(locationId) {
+        currentLocationId = locationId;
+        $('#deleteModal').modal('show');
+    }
+
+    function deleteLocation() {
+        if (!currentLocationId) return;
+
+        showDeleteLoading(true);
+
+        $.ajax({
+            url: JAVA_API_URL + `/api/locations/${currentLocationId}`,
+            type: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + getAuthToken(),
+                'Content-Type': 'application/json'
+            },
+            success: function(response) {
+                // Handle both direct response and object with status
+                if (response.status === 'SUCCESS' || response === '' || response === null) {
+                    showToast('Location deleted successfully', 'success');
+                    $('#deleteModal').modal('hide');
+                    loadLocations();
+                } else {
+                    showToast(response.statusMsg || response.message || 'Error deleting location', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error deleting location:', error);
+                showToast('Error deleting location', 'error');
+            },
+            complete: function() {
+                showDeleteLoading(false);
+            }
+        });
+    }
+
+    function resetLocationForm() {
+        $('#locationForm')[0].reset();
+        $('#locationId').val('');
+        $('.form-control').removeClass('is-invalid');
+        $('.invalid-feedback').text('');
+    }
+
+    function showLoading(show) {
+        if (show) {
+            $('#loadingIndicator').show();
+            $('#locationsTable').hide();
+            $('#noDataMessage').hide();
+        } else {
+            $('#loadingIndicator').hide();
+            $('#locationsTable').show();
+        }
+    }
+
+    function showNoData() {
+        $('#noDataMessage').show();
+        $('#locationsTable').hide();
+    }
+
+    function showSaveLoading(show) {
+        if (show) {
+            $('#saveSpinner').removeClass('d-none');
+            $('#saveBtnText').text('Saving...');
+            $('#saveLocationBtn').prop('disabled', true);
+        } else {
+            $('#saveSpinner').addClass('d-none');
+            $('#saveBtnText').text(currentLocationId ? 'Update Location' : 'Save Location');
+            $('#saveLocationBtn').prop('disabled', false);
+        }
+    }
+
+    function showDeleteLoading(show) {
+        if (show) {
+            $('#deleteSpinner').removeClass('d-none');
+            $('#deleteBtnText').text('Deleting...');
+            $('#confirmDeleteBtn').prop('disabled', true);
+        } else {
+            $('#deleteSpinner').addClass('d-none');
+            $('#deleteBtnText').text('Delete Location');
+            $('#confirmDeleteBtn').prop('disabled', false);
+        }
+    }
+
+    function lookupPinCode() {
+        const pinCode = $('#pinCode').val().trim();
+        
+        if (!pinCode || pinCode.length !== 6 || !/^[0-9]{6}$/.test(pinCode)) {
+            showToast('Please enter a valid 6-digit PIN code', 'error');
+            return;
+        }
+
+        // Show loading state on PIN code field
+        const pinCodeField = $('#pinCode');
+        pinCodeField.prop('disabled', true);
+        pinCodeField.after('<div class="spinner-border spinner-border-sm text-primary position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%);"><span class="visually-hidden">Loading...</span></div>');
+
+        // Use a free Indian PIN code API
+        $.ajax({
+            url: `https://api.postalpincode.in/pincode/${pinCode}`,
+            type: 'GET',
+            timeout: 10000,
+            success: function(response) {
+                if (response && response.length > 0 && response[0].Status === 'Success') {
+                    const data = response[0].PostOffice[0];
+                    
+                    // Populate the text inputs
+                    $('#city').val(data.District || data.Name);
+                    $('#state').val(data.State);
+                    $('#country').val('India');
+                    
+                    showToast('Location details loaded successfully', 'success');
+                } else {
+                    showToast('PIN code not found. Please enter a valid Indian PIN code.', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error looking up PIN code:', error);
+                showToast('Error looking up PIN code. Please try again.', 'error');
+            },
+            complete: function() {
+                // Reset field state
+                pinCodeField.prop('disabled', false);
+                pinCodeField.siblings('.spinner-border').remove();
+            }
+        });
+    }
+
+
+    function showToast(message, type) {
+        const toastClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        const toast = `
+            <div class="toast align-items-center text-white ${toastClass} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        $('.toast-container').append(toast);
+        $('.toast').last().toast('show');
+    }
+
+    // Global functions for inline onclick handlers
+    window.editLocation = function(locationId) {
+        openLocationModal(locationId);
+    };
+
+    window.confirmDeleteLocation = function(locationId) {
+        confirmDeleteLocation(locationId);
+    };
+});
+</script>
+{% endblock %}

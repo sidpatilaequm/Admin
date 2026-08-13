@@ -1,0 +1,1081 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}Product Variants{% endblock %}
+
+{% block extra_css %}
+<style>
+    .variant-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .variant-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .variant-header {
+        background: rgba(25, 135, 84, 0.1);
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .variant-code {
+        font-weight: 600;
+        color: #495057;
+        font-size: 1.1rem;
+    }
+    
+    .variant-status {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .variant-body {
+        padding: 15px;
+        background: white;
+    }
+    
+    .attribute-badge {
+        display: inline-block;
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin: 2px;
+        font-size: 0.85rem;
+    }
+    
+    .price-info {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    
+    .price-label {
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.9rem;
+    }
+    
+    .price-value {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .stock-info {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 6px;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    
+    .bulk-actions {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .edit-inline {
+        display: none;
+    }
+    
+    .edit-mode .edit-inline {
+        display: inline-block;
+    }
+    
+    .edit-mode .view-mode {
+        display: none;
+    }
+    
+    .filters-section {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .btn.btn-primary {
+        color: #fff !important;
+    }
+
+    .toast-custom {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        min-width: 320px;
+        max-width: 400px;
+        background: #e6f9ed;
+        color: #198754;
+        border: 1px solid #b6e2c6;
+        font-size: 1rem;
+        position: relative;
+    }
+    .toast-custom .toast-icon {
+        background: #198754;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 12px;
+    }
+    .toast-custom .toast-close {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 1.2rem;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+    }
+    .toast-custom .toast-progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 4px;
+        background: #198754;
+        width: 100%;
+        border-radius: 0 0 10px 10px;
+        transition: width 2s linear;
+    }
+
+    .bg-success {
+        --in-bg-opacity: 1;
+        background-color: #198754 !important;
+        color: #fff !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">
+                    {% if material %}
+                        Variants for {{ material.material_name }}
+                    {% else %}
+                        ALL PRODUCT VARIANTS
+                    {% endif %}
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <a href="{% url 'pages:variant_matrix' %}" class="btn btn-primary">
+                        <i class="mdi mdi-plus"></i> <span style="color:#fff;">Create New Variants</span>
+                    </a>
+                    {% if material %}
+                    <a href="{% url 'pages:variant_list' %}" class="btn btn-outline-secondary">
+                        <i class="mdi mdi-view-list"></i> View All Variants
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="filters-section">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="searchFilter" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="searchFilter" placeholder="Search variants...">
+                    </div>
+                    
+                    <!-- <div class="col-md-3">
+                        <label for="attributeFilter" class="form-label">Attribute Filter</label>
+                        <select class="form-select" id="attributeFilter">
+                            <option value="">All Attributes</option>
+                            Will be populated dynamically
+                        </select>
+                    </div> -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary" id="clearFilters">
+                            <i class="mdi mdi-filter-remove"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Variants List -->
+    <div class="row" id="variantsContainer"></div>
+</div>
+
+<!-- Variant Detail Modal -->
+<div class="modal fade" id="variantDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                <h5 class="modal-title">Variant Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-4 pb-5" id="variantDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal for Active Status -->
+<div class="modal fade" id="activeStatusModal" tabindex="-1">
+    <div class="modal-dialog ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="activeStatusModalTitle">Change Active Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="activeStatusModalBody">
+                <!-- Content will be set by JS -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmActiveStatusBtn" disabled>Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Variant Modal -->
+<div class="modal fade" id="editVariantModal" tabindex="-1">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1); border-bottom: 1px solid #e9ecef; border-radius: 8px 8px 0 0;">
+                <div>
+                    <div class="variant-code" id="editVariantModalCode" style="font-weight: 600; color: #495057; font-size: 1.1rem;"></div>
+                    <small class="text-muted" id="editVariantModalMaterial"></small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4" style="max-height: 60vh; overflow-y: auto;">
+                <form id="editVariantForm"> 
+                    <input type="hidden" id="editVariantCode">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editMrp" class="form-label">MRP</label>
+                            <input type="number" class="form-control" id="editMrp" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editSellingPrice" class="form-label">Selling Price</label>
+                            <input type="number" class="form-control" id="editSellingPrice" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editCost" class="form-label">Cost</label>
+                            <input type="number" class="form-control" id="editCost" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editStock" class="form-label">Stock</label>
+                            <input type="number" class="form-control" id="editStock" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-3" id="editAttributesContainer">
+                        <!-- Attribute fields will be injected here -->
+                    </div>
+                    <!-- Editable Barcode Field -->
+                    <div class="row g-3 mt-2 align-items-center">
+                        <div class="col-md-6">
+                            <label class="form-label">Barcode Image</label>
+                            <div class="d-flex align-items-center">
+                                <img id="editBarcodeImagePreview" src="/static/images/default.png" alt="Barcode Image" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #eee; border-radius: 6px; background: #fff; margin-right: 10px;">
+                                <input type="file" id="editBarcodeImageInput" accept="image/*" style="display:none;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="editBarcodeImageBtn">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Editable Variant Image Field -->
+                    <div class="row g-3 mt-2 align-items-center">
+                        <div class="col-md-6">
+                            <label class="form-label">Variant Image</label>
+                            <div class="d-flex align-items-center">
+                                <img id="editVariantImagePreview" src="/static/images/default.png" alt="Variant Image" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid #eee; border-radius: 6px; background: #fff; margin-right: 10px;">
+                                <input type="file" id="editVariantImageInput" accept="image/*" style="display:none;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="editVariantImageBtn">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer pb-4">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveEditVariantBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barcode Image Modal -->
+<div class="modal fade" id="barcodeImageModal" tabindex="-1" aria-labelledby="barcodeImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="barcodeImageModalLabel">Barcode Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="barcodeImageModalImg" src="" alt="Barcode" class="img-fluid" style="width: 150px; height: 150px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; background: #fff;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variant Image Modal -->
+<div class="modal fade" id="variantImageModal" tabindex="-1" aria-labelledby="variantImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="variantImageModalLabel">Variant Image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="variantImageModalImg" src="" alt="Variant Image" class="img-fluid" style="width: 180px; height: 180px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; background: #fff;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Barcode Modal -->
+<div class="modal fade" id="addBarcodeModal" tabindex="-1" aria-labelledby="addBarcodeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="addBarcodeForm" enctype="multipart/form-data">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addBarcodeModalLabel">Add Barcode Image</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="file" id="barcodeFileInput" accept="image/*" required>
+          <input type="hidden" id="barcodeVariantCode" name="variant_code">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Upload Variant Image Modal -->
+<div class="modal fade" id="uploadVariantImageModal" tabindex="-1" aria-labelledby="uploadVariantImageModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="uploadVariantImageForm" enctype="multipart/form-data">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadVariantImageModalLabel">Upload Variant Image</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="variant_image_file" id="variantImageFileInput" accept="image/*" required>
+          <input type="hidden" id="variantImageVariantCode" name="variant_code">
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Variant Confirmation Modal -->
+<div class="modal fade" id="deleteVariantModal" tabindex="-1" aria-labelledby="deleteVariantModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteVariantModalLabel">Delete Variant</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete variant <span id="deleteVariantCodeText" class="fw-bold"></span>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteVariantBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // View variant details
+    $(document).on('click', '.view-variant', function() {
+        const variantCode = $(this).data('variant-code');
+        $.ajax({
+            url: `/api/materials/variants/${variantCode}`,
+            type: 'GET',
+            success: function(response) {
+                if (response.data && response.data.variant) {
+                    displayVariantDetails(response.data.variant);
+                } else {
+                    showToast('Error', 'Failed to load variant details', 'danger');
+                }
+            },
+            error: function() {
+                showToast('Error', 'Failed to load variant details', 'danger');
+            }
+        });
+    });
+    
+    // Delete variant
+    var deleteVariantCode = null;
+    $(document).on('click', '.delete-variant', function() {
+        deleteVariantCode = $(this).data('variant-code');
+        $('#deleteVariantCodeText').text(deleteVariantCode);
+        $('#deleteVariantModal').modal('show');
+    });
+    
+    // Filters
+    $('#statusFilter, #searchFilter, #attributeFilter').on('change keyup', function() {
+        filterVariants();
+    });
+    
+    $('#clearFilters').on('click', function() {
+        $('#statusFilter, #searchFilter, #attributeFilter').val('');
+        filterVariants();
+    });
+    
+    function filterVariants() {
+        const status = $('#statusFilter').val();
+        const search = $('#searchFilter').val().toLowerCase();
+        const attribute = $('#attributeFilter').val();
+        let anyVisible = false;
+        // Always restore all variant items before filtering
+        $('.variant-item').show();
+        $('.variant-item').each(function() {
+            const card = $(this);
+            const variantCode = card.find('.variant-code').text().toLowerCase();
+            const materialName = card.find('.variant-header small').text().toLowerCase();
+            const attributes = card.find('.attribute-badge').text().toLowerCase();
+            const isActive = card.find('.variant-status').hasClass('status-active');
+            let show = true;
+            if (status && ((status === 'active' && !isActive) || (status === 'inactive' && isActive))) {
+                show = false;
+            }
+            if (search && !variantCode.includes(search) && !materialName.includes(search) && !attributes.includes(search)) {
+                show = false;
+            }
+            if (attribute && !attributes.includes(attribute.toLowerCase())) {
+                show = false;
+            }
+            card.toggle(show);
+            if (show) anyVisible = true;
+        });
+        // Remove any previous 'no results' message
+        $('#variantsContainer .no-results-message').remove();
+        if (!anyVisible) {
+            $('#variantsContainer').append('<div class="col-12 text-center text-muted py-5 no-results-message">No search results found.</div>');
+        }
+    }
+    
+    function displayVariantDetails(data) {
+        let attrHtml = '';
+        if (data.attributes && data.attributes.length) {
+            attrHtml = data.attributes.map(attr =>
+                `<span class="attribute-badge">${attr.attributeName}: ${attr.attributeValue}</span>`
+            ).join(' ');
+        }
+        // Handle barcode display
+        let barcodeHtml = '';
+        if (data.barcodeImage) {
+            barcodeHtml = `<a href="#" class="barcode-thumbnail" data-barcode-img="data:image/jpeg;base64,${data.barcodeImage}">
+                <img src="data:image/jpeg;base64,${data.barcodeImage}" alt="Barcode" class="img-fluid" 
+                     style="width: 100px; height: 100px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; background: #fff;">
+            </a>`;
+        } else {
+            barcodeHtml = `<span class="text-muted">No Data</span>`;
+        }
+        // Handle variant image display
+        let variantImageHtml = '';
+        if (data.variantImage && data.variantImage !== 'null' && data.variantImage !== '') {
+            variantImageHtml = `<div class='text-center mb-3'><img src='data:image/jpeg;base64,${data.variantImage}' alt='Variant Image' class='img-fluid' style='max-width: 140px; max-height: 140px; object-fit: contain; border-radius: 8px; border: 1px solid #eee;'/></div>`;
+        } else {
+            variantImageHtml = `<div class='text-center mb-3'><img src='/static/images/default.png' alt='No Image' class='img-fluid' style='max-width: 140px; max-height: 140px; object-fit: contain; border-radius: 8px; border: 1px solid #eee;'/></div>`;
+        }
+        const content = `
+            ${variantImageHtml}
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Basic Information</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Variant Code:</strong></td><td>${data.variantCode}</td></tr>
+                        <tr><td><strong>Parent Product:</strong></td><td>${data.materialName}</td></tr>
+                        <tr><td><strong>Barcode:</strong></td><td>${barcodeHtml}</td></tr>
+                        <tr><td><strong>Status:</strong></td><td><span class="badge ${data.active ? 'bg-success' : 'bg-danger'}">${data.active ? 'Active' : 'Inactive'}</span></td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>Pricing & Stock</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>MRP:</strong></td><td>&#8377;${data.mrp}</td></tr>
+                        <tr><td><strong>Selling Price:</strong></td><td>&#8377;${data.sellingPrice}</td></tr>
+                        <tr><td><strong>Cost Price:</strong></td><td>&#8377;${data.cost}</td></tr>
+                        <tr><td><strong>Current Stock:</strong></td><td>${data.stock}</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h6>Attributes</h6>
+                    <div>${attrHtml}</div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12">
+                    <h6>Description</h6>
+                    <div>${data.materialDescription || ''}</div>
+                </div>
+            </div>
+        `;
+        $('#variantDetailContent').html(content);
+        $('#variantDetailModal').modal('show');
+    }
+    
+    function showToast(title, message, type) {
+        // Only green for now (success/info)
+        var iconHtml = '<span class="toast-icon"><i class="mdi mdi-check-circle-outline"></i></span>';
+        var toast = `
+            <div class="toast-custom d-flex align-items-center position-relative p-3 mb-2">
+                ${iconHtml}
+                <div class="flex-grow-1">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                <div class="toast-progress"></div>
+            </div>
+        `;
+        $('.toast-container').empty();
+        $('.toast-container').append(toast);
+        var $toast = $('.toast-custom').last();
+        setTimeout(function() {
+            $toast.find('.toast-progress').css('width', '0%');
+        }, 50);
+        setTimeout(function() {
+            $toast.fadeOut(300, function() { $(this).remove(); });
+        }, 2000);
+    }
+
+    function loadVariants() {
+        $.ajax({
+            url: '/api/materials/variants',
+            type: 'GET',
+            success: function(response) {
+                if (response.data && response.data.variants) {
+                    renderVariantCards(response.data.variants);
+                } else {
+                    $('#variantsContainer').html('<div class="col-12 text-center text-muted py-5">No variants found.</div>');
+                }
+            },
+            error: function() {
+                $('#variantsContainer').html('<div class="col-12 text-center text-danger py-5">Failed to load variants.</div>');
+            }
+        });
+    }
+
+    function renderVariantCards(variants) {
+        const $container = $('#variantsContainer');
+        $container.empty();
+        if (!variants.length) {
+            $container.html('<div class="col-12 text-center text-muted py-5">No variants found.</div>');
+            return;
+        }
+        variants.forEach(variant => {
+            let attrHtml = '';
+            if (variant.attributes && variant.attributes.length) {
+                attrHtml = variant.attributes.map(attr =>
+                    `<span class="attribute-badge">${attr.attributeName}: ${attr.attributeValue}</span>`
+                ).join(' ');
+            }
+            $container.append(`
+                <div class="col-md-6 col-lg-4 variant-item" data-variant-id="${variant.variantId || ''}">
+                    <div class="variant-card">
+                        <div class="variant-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="variant-code">${variant.variantCode}</span>
+                                <span class="variant-status ${variant.active ? 'status-active' : 'status-inactive'}">
+                                    ${variant.active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <small class="text-muted">${variant.materialName || ''}</small>
+                        </div>
+                        <div class="variant-body">
+                            <div class="row align-items-center mb-3">
+                                <!-- Variant Image Display -->
+                                <div class="col-5 text-center"> 
+                                    <div>
+                                        ${variant.variantImage && variant.variantImage !== 'null' && variant.variantImage !== '' ?
+                                            `<a href="#" class="variant-image-thumbnail" data-variant-img="data:image/jpeg;base64,${variant.variantImage}">
+                                                <img src="data:image/jpeg;base64,${variant.variantImage}" alt="Variant Image" class="img-fluid" style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 8px; border: 1px solid #eee;" />
+                                            </a>`
+                                            : `<a href="#" class="variant-image-thumbnail" data-variant-img="/static/images/default.png">
+                                                <img src="/static/images/default.png" alt="No Image" class="img-fluid" style="max-width: 120px; max-height: 120px; object-fit: contain; border-radius: 8px; border: 1px solid #eee;" />
+                                            </a>`
+                                        }
+                                    </div>
+                                </div>
+                                <!-- Price/Stock Table -->
+                                <div class="col-7">
+                                     <div class="price-info">
+                                <table class="table table-sm mb-0">
+                                    <tr>
+                                        <td class="price-label">MRP:</td>
+                                        <td class="price-value view-mode">&#8377;${variant.mrp}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="price-label">Selling Price:</td>
+                                        <td class="price-value view-mode">&#8377;${variant.sellingPrice}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="price-label">Cost:</td>
+                                        <td class="price-value view-mode">&#8377;${variant.cost}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="price-label">Stock:</td>
+                                        <td class="price-value view-mode">${variant.stock}</td>
+                                    </tr>
+                                </table>
+                            </div>  
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <strong>Attributes:</strong>
+                                <div class="mt-2">${attrHtml}</div>
+                            </div>
+                           
+                            <div class="mb-3">
+                                <strong>Barcode:</strong>
+                                <div class="view-mode">
+                                    ${variant.barcodeImage && variant.barcodeImage !== 'null' && variant.barcodeImage !== '' ? 
+                                        `<a href="#" class="barcode-thumbnail" data-barcode-img="data:image/jpeg;base64,${variant.barcodeImage}">
+                                            <img src="data:image/jpeg;base64,${variant.barcodeImage}" alt="Barcode" class="img-fluid" 
+                                                 style="width: 100px; height: 100px; object-fit: contain; border-radius: 8px; border: 1px solid #eee; background: #fff;">
+                                        </a>` : 
+                                        `<div class="d-flex align-items-center">
+                                            <span class="text-muted me-2">No Data</span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary add-barcode-btn" data-variant-code="${variant.variantCode}">
+                                                <i class="mdi mdi-plus"></i> Add Barcode
+                                            </button>
+                                        </div>`
+                                    }
+                                </div>
+                                <!-- Upload Image Button -->
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary upload-variant-image-btn" data-variant-code="${variant.variantCode}">
+                                        <i class="mdi mdi-upload"></i> Upload Image
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-info view-variant" data-variant-code="${variant.variantCode}">
+                                        <i class="mdi mdi-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary edit-variant" data-variant-code="${variant.variantCode}">
+                                        <i class="mdi mdi-pencil"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger delete-variant" data-variant-code="${variant.variantCode}">
+                                        <i class="mdi mdi-delete"></i>
+                                    </button>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" ${variant.active ? 'checked' : ''} data-field="is_active" data-variant-code="${variant.variantCode}">
+                                    <label class="form-check-label">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    // Active checkbox click handler
+    $(document).on('change', 'input[data-field="is_active"]', function(e) {
+        e.preventDefault();
+        const $checkbox = $(this);
+        const variantCard = $checkbox.closest('.variant-item');
+        const variantCode = variantCard.find('.variant-code').text().trim();
+        const variantName = variantCard.find('.text-muted').text().trim();
+        const isChecked = $checkbox.is(':checked');
+        // Set modal content
+        $('#activeStatusModalTitle').text(isChecked ? 'Activate Variant' : 'Deactivate Variant');
+        $('#activeStatusModalBody').html(
+            `Do you want to ${isChecked ? 'activate' : 'deactivate'} the variant <strong>${variantName} -- ${variantCode}</strong>?`
+        );
+        // Store the code and checked state on the modal for later
+        $('#activeStatusModal').data('variant-code', variantCode);
+        $('#activeStatusModal').data('is-checked', isChecked);
+        // Show modal
+        $('#activeStatusModal').modal('show');
+    });
+
+    // Confirm Active Status Change
+    $('#confirmActiveStatusBtn').prop('disabled', false).off('click').on('click', function() {
+        // Get the code and checked state from the modal
+        const variantCode = $('#activeStatusModal').data('variant-code');
+        const isChecked = $('#activeStatusModal').data('is-checked');
+        if (!variantCode) {
+            showToast('Error', 'No variant code found.', 'danger');
+            return;
+        }
+        $.ajax({
+            url: `/api/materials/variants/${variantCode}/active-status`,
+            type: 'PUT',
+            contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + (getCookie ? getCookie('auth_token') : '')
+            },
+            data: JSON.stringify({ isActive: isChecked }),
+            success: function(response) {
+                showToast('Success', response.statusMsg || 'Variant status updated successfully.', 'success');
+                loadVariants(); // Reload the list to show updated status
+            },
+            error: function(xhr) {
+                let msg = 'Failed to update variant status.';
+                if (xhr.responseJSON && xhr.responseJSON.statusMsg) {
+                    msg = xhr.responseJSON.statusMsg;
+                }
+                showToast('Error', msg, 'danger');
+            },
+            complete: function() {
+                $('#activeStatusModal').modal('hide');
+            }
+        });
+    });
+
+    // Helper to get cookie value
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Edit Variant Button Click
+    $(document).on('click', '.edit-variant', function() {
+        const variantCode = $(this).data('variant-code');
+        // Fetch variant details
+        $.ajax({
+            url: `/api/materials/variants/${variantCode}`,
+            type: 'GET',
+            success: function(response) {
+                if (response.data && response.data.variant) {
+                    const v = response.data.variant;
+                    $('#editVariantCode').val(v.variantCode);
+                    $('#editMrp').val(v.mrp);
+                    $('#editSellingPrice').val(v.sellingPrice);
+                    $('#editCost').val(v.cost);
+                    $('#editStock').val(v.stock);
+                    // Set modal header info
+                    $('#editVariantModalCode').text(v.variantCode);
+                    $('#editVariantModalMaterial').text(v.materialName || '');
+                    // Set barcode and images
+                    $('#editBarcode').val(v.barcode || '');
+                    if (v.barcodeImage && v.barcodeImage !== 'null' && v.barcodeImage !== '') {
+                        $('#editBarcodeImagePreview').attr('src', 'data:image/jpeg;base64,' + v.barcodeImage);
+                    } else {
+                        $('#editBarcodeImagePreview').attr('src', '/static/images/default.png');
+                    }
+                    if (v.variantImage && v.variantImage !== 'null' && v.variantImage !== '') {
+                        $('#editVariantImagePreview').attr('src', 'data:image/jpeg;base64,' + v.variantImage);
+                    } else {
+                        $('#editVariantImagePreview').attr('src', '/static/images/default.png');
+                    }
+                    // Load attributes for dropdowns
+                    $.ajax({
+                        url: '/api/attributes/by-type/VARIANT',
+                        type: 'GET',
+                        success: function(attrResp) {
+                            const attrList = (attrResp.data && attrResp.data.attributes) ? attrResp.data.attributes : [];
+                            // Build attribute fields
+                            const attrHtml = attrList.map(attr => {
+                                // Find value for this attribute in variant
+                                let val = '';
+                                if (v.attributes && v.attributes.length) {
+                                    const found = v.attributes.find(a => a.attributeName === attr.attributeName);
+                                    if (found) val = found.attributeValue;
+                                }
+                                return `<div class="col-md-6 mb-2">
+                                    <label class="form-label">${attr.attributeName}</label>
+                                    <input type="text" class="form-control edit-attr-value" data-attr-id="${attr.attributeId}" value="${val}">
+                                </div>`;
+                            }).join('');
+                            $('#editAttributesContainer').html(attrHtml);
+                            $('#editVariantModal').modal('show');
+                        },
+                        error: function() {
+                            $('#editAttributesContainer').html('<div class="col-12 text-danger">Failed to load attributes</div>');
+                            $('#editVariantModal').modal('show');
+                        }
+                    });
+                } else {
+                    showToast('Error', 'Failed to load variant details', 'danger');
+                }
+            },
+            error: function() {
+                showToast('Error', 'Failed to load variant details', 'danger');
+            }
+        });
+    });
+
+    // Save Edit Variant
+    $('#saveEditVariantBtn').off('click').on('click', function() {
+        const variantCode = $('#editVariantCode').val();
+        const mrp = $('#editMrp').val();
+        const sellingPrice = $('#editSellingPrice').val();
+        const cost = $('#editCost').val();
+        const stock = $('#editStock').val();
+        const isActive = undefined; // Not present in modal, can be added if needed
+        const barcode = $('#editBarcode').val();
+        // Collect attributes
+        const attributes = [];
+        $('#editAttributesContainer .edit-attr-value').each(function() {
+            const attrId = $(this).data('attr-id');
+            const attrValue = $(this).val();
+            if (attrId && attrValue) {
+                attributes.push({ attributeId: parseInt(attrId), attributeValue: attrValue });
+            }
+        });
+        // Prepare FormData
+        const formData = new FormData();
+        if (mrp) formData.append('mrp', mrp);
+        if (sellingPrice) formData.append('sellingPrice', sellingPrice);
+        if (cost) formData.append('cost', cost);
+        if (stock) formData.append('stock', stock);
+        if (typeof isActive !== 'undefined') formData.append('isActive', isActive);
+        if (attributes.length) formData.append('attributes', JSON.stringify(attributes));
+        if (barcode) formData.append('barcode', barcode);
+        // Barcode image file
+        const barcodeImageFile = $('#editBarcodeImageInput')[0].files[0];
+        if (barcodeImageFile) {
+            formData.append('barcodeImage', barcodeImageFile);
+        }
+        // Variant image file
+        const variantImageFile = $('#editVariantImageInput')[0].files[0];
+        if (variantImageFile) {
+            formData.append('variantImage', variantImageFile);
+        }
+        // Use POST if uploading files, PUT otherwise
+        let ajaxType = (barcodeImageFile || variantImageFile) ? 'POST' : 'PUT';
+        $.ajax({
+            url: `/api/materials/variants/${variantCode}`,
+            type: ajaxType,
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.status === '200' || response.status === 200) {
+                    showToast('Success', response.statusMsg || 'Variant updated successfully', 'success');
+                    $('#editVariantModal').modal('hide');
+                    loadVariants();
+                } else {
+                    showToast('Error', response.statusMsg || 'Failed to update variant', 'danger');
+                }
+            },
+            error: function(xhr) {
+                let msg = 'Failed to update variant';
+                if (xhr.responseJSON && xhr.responseJSON.statusMsg) {
+                    msg = xhr.responseJSON.statusMsg;
+                }
+                showToast('Error', msg, 'danger');
+            }
+        });
+    });
+
+    // Barcode Image Click Handler
+    $(document).on('click', '.barcode-thumbnail', function(e) {
+        e.preventDefault();
+        var imgSrc = $(this).data('barcode-img');
+        $('#barcodeImageModalImg').attr('src', imgSrc);
+        $('#barcodeImageModal').modal('show');
+    });
+
+    // Add Barcode Button Click Handler
+    $(document).on('click', '.add-barcode-btn', function() {
+        const variantCode = $(this).data('variant-code');
+        $('#barcodeVariantCode').val(variantCode);
+        $('#barcodeFileInput').val('');
+        $('#addBarcodeModal').modal('show');
+    });
+
+    // Handle Add Barcode Form Submit
+    $('#addBarcodeForm').on('submit', function(e) {
+        e.preventDefault();
+        const variantCode = $('#barcodeVariantCode').val();
+        const fileInput = $('#barcodeFileInput')[0];
+        if (!fileInput.files.length) {
+            showToast('Error', 'Please select a file.', 'danger');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        $.ajax({
+            url: `/api/materials/variants/${variantCode}/barcode-image`, // Proxy endpoint
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                showToast('Success', 'Barcode image uploaded successfully!', 'success');
+                $('#addBarcodeModal').modal('hide');
+                loadVariants(); // Refresh list
+            },
+            error: function(xhr) {
+                showToast('Error', 'Failed to upload barcode image.', 'danger');
+            }
+        });
+    });
+
+    // Upload Variant Image Button Click Handler
+    $(document).on('click', '.upload-variant-image-btn', function() {
+        const variantCode = $(this).data('variant-code');
+        $('#variantImageVariantCode').val(variantCode);
+        $('#variantImageFileInput').val('');
+        $('#uploadVariantImageModal').modal('show');
+    });
+
+    // Handle Upload Variant Image Form Submit
+    $('#uploadVariantImageForm').on('submit', function(e) {
+        e.preventDefault();
+        const variantCode = $('#variantImageVariantCode').val();
+        const fileInput = $('#variantImageFileInput')[0];
+        if (!fileInput.files.length) {
+            showToast('Error', 'Please select a file.', 'danger');
+            return;
+        }
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        $.ajax({
+            url: `/api/materials/variants/${variantCode}/variant-image`,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                showToast('Success', 'Variant image uploaded successfully!', 'success');
+                $('#uploadVariantImageModal').modal('hide');
+                loadVariants(); // Refresh list
+            },
+            error: function(xhr) {
+                showToast('Error', 'Failed to upload variant image.', 'danger');
+            }
+        });
+    });
+
+    // Variant Image Click Handler
+    $(document).on('click', '.variant-image-thumbnail', function(e) {
+        e.preventDefault();
+        var imgSrc = $(this).data('variant-img');
+        $('#variantImageModalImg').attr('src', imgSrc);
+        $('#variantImageModal').modal('show');
+    });
+
+    // Barcode image change button
+    $('#editBarcodeImageBtn').on('click', function() {
+        $('#editBarcodeImageInput').click();
+    });
+    $('#editBarcodeImageInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                $('#editBarcodeImagePreview').attr('src', ev.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    // Variant image change button
+    $('#editVariantImageBtn').on('click', function() {
+        $('#editVariantImageInput').click();
+    });
+    $('#editVariantImageInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                $('#editVariantImagePreview').attr('src', ev.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Confirm Delete Variant
+    $('#confirmDeleteVariantBtn').off('click').on('click', function() {
+        if (!deleteVariantCode) return;
+        $.ajax({
+            url: `/api/materials/variants/${deleteVariantCode}/delete`,
+            type: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                $('#deleteVariantModal').modal('hide');
+                showToast('Success', 'Variant deleted successfully!', 'success');
+                loadVariants();
+            },
+            error: function(xhr) {
+                $('#deleteVariantModal').modal('hide');
+                showToast('Error', 'Failed to delete variant.', 'danger');
+            }
+        });
+    });
+
+    // Initial load
+    loadVariants();
+});
+</script>
+{% endblock %} 

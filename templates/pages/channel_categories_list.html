@@ -1,0 +1,355 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}{{ channel.channel_name }} - Categories{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">{{ channel.channel_name }} - Categories</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'pages:channels_list' %}">Channels</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'pages:channel_detail' channel.id %}">{{ channel.channel_name }}</a></li>
+                        <li class="breadcrumb-item active">Categories</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="card-title">Channel Categories</h4>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                            <i class="fas fa-plus"></i> Add Category
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Category Code</th>
+                                    <th>Category Name</th>
+                                    <th>Parent Category</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Created At</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category in categories %}
+                                <tr>
+                                    <td>{{ category.category_code }}</td>
+                                    <td>{{ category.category_name }}</td>
+                                    <td>{{ category.parent_category.category_name|default:"-" }}</td>
+                                    <td>{{ category.description|default:"-" }}</td>
+                                    <td>
+                                        {% if category.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ category.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-primary edit-category" 
+                                                    data-category-id="{{ category.id }}"
+                                                    data-category-code="{{ category.category_code }}"
+                                                    data-category-name="{{ category.category_name }}"
+                                                    data-description="{{ category.description|default:'' }}"
+                                                    data-parent-category-id="{{ category.parent_category.id|default:'' }}"
+                                                    data-is-active="{{ category.is_active|yesno:'true,false' }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger delete-category" 
+                                                    data-category-id="{{ category.id }}"
+                                                    data-category-name="{{ category.category_name }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No categories found for this channel.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addCategoryForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="categoryCode" class="form-label">Category Code *</label>
+                        <input type="text" class="form-control" id="categoryCode" name="category_code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Category Name *</label>
+                        <input type="text" class="form-control" id="categoryName" name="category_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="parentCategory" class="form-label">Parent Category</label>
+                        <select class="form-select" id="parentCategory" name="parent_category_id">
+                            <option value="">No Parent Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.category_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="categoryDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="categoryDescription" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="categoryIsActive" name="is_active" checked>
+                            <label class="form-check-label" for="categoryIsActive">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCategoryModalLabel">Edit Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCategoryForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editCategoryId" name="category_id">
+                    <div class="mb-3">
+                        <label for="editCategoryCode" class="form-label">Category Code *</label>
+                        <input type="text" class="form-control" id="editCategoryCode" name="category_code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategoryName" class="form-label">Category Name *</label>
+                        <input type="text" class="form-control" id="editCategoryName" name="category_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editParentCategory" class="form-label">Parent Category</label>
+                        <select class="form-select" id="editParentCategory" name="parent_category_id">
+                            <option value="">No Parent Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.category_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editCategoryDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editCategoryDescription" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editCategoryIsActive" name="is_active">
+                            <label class="form-check-label" for="editCategoryIsActive">
+                                Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Category Modal -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the category "<span id="deleteCategoryName"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteCategory">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add Category Form
+    $('#addCategoryForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            category_code: $('#categoryCode').val(),
+            category_name: $('#categoryName').val(),
+            parent_category_id: $('#parentCategory').val() || null,
+            description: $('#categoryDescription').val(),
+            is_active: $('#categoryIsActive').is(':checked')
+        };
+
+        $.ajax({
+            url: '{% url "pages:channel_category_create" channel.id %}',
+            type: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    toastr.success(response.message);
+                    $('#addCategoryModal').modal('hide');
+                    location.reload();
+                } else {
+                    toastr.error(response.message || 'Error creating category');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                toastr.error(response?.message || 'Error creating category');
+            }
+        });
+    });
+
+    // Edit Category
+    $('.edit-category').on('click', function() {
+        const categoryId = $(this).data('category-id');
+        const categoryCode = $(this).data('category-code');
+        const categoryName = $(this).data('category-name');
+        const description = $(this).data('description');
+        const parentCategoryId = $(this).data('parent-category-id');
+        const isActive = $(this).data('is-active');
+
+        $('#editCategoryId').val(categoryId);
+        $('#editCategoryCode').val(categoryCode);
+        $('#editCategoryName').val(categoryName);
+        $('#editCategoryDescription').val(description);
+        $('#editParentCategory').val(parentCategoryId);
+        $('#editCategoryIsActive').prop('checked', isActive === 'true');
+
+        $('#editCategoryModal').modal('show');
+    });
+
+    // Edit Category Form
+    $('#editCategoryForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const categoryId = $('#editCategoryId').val();
+        const formData = {
+            category_code: $('#editCategoryCode').val(),
+            category_name: $('#editCategoryName').val(),
+            parent_category_id: $('#editParentCategory').val() || null,
+            description: $('#editCategoryDescription').val(),
+            is_active: $('#editCategoryIsActive').is(':checked')
+        };
+
+        $.ajax({
+            url: `/channels/categories/${categoryId}/update/`,
+            type: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    toastr.success(response.message);
+                    $('#editCategoryModal').modal('hide');
+                    location.reload();
+                } else {
+                    toastr.error(response.message || 'Error updating category');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                toastr.error(response?.message || 'Error updating category');
+            }
+        });
+    });
+
+    // Delete Category
+    $('.delete-category').on('click', function() {
+        const categoryId = $(this).data('category-id');
+        const categoryName = $(this).data('category-name');
+
+        $('#deleteCategoryName').text(categoryName);
+        $('#confirmDeleteCategory').data('category-id', categoryId);
+        $('#deleteCategoryModal').modal('show');
+    });
+
+    // Confirm Delete Category
+    $('#confirmDeleteCategory').on('click', function() {
+        const categoryId = $(this).data('category-id');
+
+        $.ajax({
+            url: `/channels/categories/${categoryId}/delete/`,
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    toastr.success(response.message);
+                    $('#deleteCategoryModal').modal('hide');
+                    location.reload();
+                } else {
+                    toastr.error(response.message || 'Error deleting category');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                toastr.error(response?.message || 'Error deleting category');
+            }
+        });
+    });
+
+    // Reset form when modal is closed
+    $('#addCategoryModal').on('hidden.bs.modal', function() {
+        $('#addCategoryForm')[0].reset();
+    });
+});
+</script>
+{% endblock %}

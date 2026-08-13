@@ -1,0 +1,481 @@
+{% extends "pages/base.html" %}
+
+{% block title %}Settings - WorkflowOS{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        border: none;
+        margin-bottom: 24px;
+    }
+
+    .card-header {
+        background-color: #198754 !important;
+        padding: 1rem;
+    }
+
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+
+    .text-dim {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>Settings
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="#">WorkflowOS</a></li>
+                        <li class="breadcrumb-item active">Settings</li>
+                    </ol>
+                </div>
+            </div>
+            <p class="text-muted mt-2">Manage your availability, delegation, and standalone messages.</p>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <!-- Out of Office Settings -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title text-white mb-0"><i class="fas fa-calendar-times me-2"></i>Out of Office</h5>
+                </div>
+                <div class="card-body bg-light">
+                    <p class="text-secondary small mb-3">
+                        While you're out, stage notifications addressed to you will be sent
+                        to your delegate instead, and they may act on your behalf. Their
+                        decision is still recorded against your approver slot, so voting
+                        math stays correct.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Out of office until</label>
+                        <input type="datetime-local" class="form-control border-success" id="ooo-until">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-user-check me-1"></i> Delegate
+                        </label>
+                        <select class="form-select border-success" id="delegate-id">
+                            <option value="">Select a delegate...</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-success px-4" id="btn-save-ooo" onclick="saveOOO()">
+                            <i class="fas fa-save me-1"></i> Save
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="clearOOO()">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standalone Broadcast Message -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title text-white mb-0"><i class="fas fa-bullhorn me-2"></i>Standalone Broadcast
+                        Message</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Fire a one-off (or recurring) notification to any email addresses,
+                        independent of any workflow request. Supports {{key}} placeholders
+                        resolved against the context fields you provide below.
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label">Recipients (comma-separated emails)</label>
+                        <input type="text" class="form-control" id="sa-to-emails" placeholder="a@co.com, b@co.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="sa-subject" placeholder="Message">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" id="sa-message"
+                            placeholder="Supports {{key}} placeholders from context JSON below..." rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Context (optional JSON)</label>
+                        <textarea class="form-control font-monospace text-sm" id="sa-context"
+                            placeholder='e.g., {"name": "Jane", "amount": 5000}' rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Repeat every (hours, optional)</label>
+                            <input type="number" class="form-control" id="sa-interval" min="1" placeholder="e.g., 24"
+                                onchange="toggleMaxReminders()">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Max reminders</label>
+                            <input type="number" class="form-control" id="sa-max-reminders" min="1"
+                                placeholder="blank = unlimited" disabled>
+                        </div>
+                    </div>
+                    <button class="btn btn-theme mt-2" id="btn-send-sa" onclick="sendStandaloneMessage()">
+                        <i class="fas fa-paper-plane me-1"></i> Send Message
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6">
+            <!-- Active Standalone Messages -->
+            <div class="card" id="active-sa-card" style="display: none;">
+                <div class="card-header bg-info">
+                    <h5 class="card-title text-white mb-0"><i class="fas fa-history me-2"></i>Active Recurring Messages
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2" id="active-sa-list">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin OOO Panel -->
+            <div class="card" id="admin-ooo-panel" style="display: none;">
+                <div class="card-header bg-dark">
+                    <h5 class="card-title text-white mb-0"><i class="fas fa-shield-alt me-2"></i>Admin — User Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Overview of which approvers are currently marked out of office and who is delegating on their
+                        behalf.
+                    </p>
+
+                    <div id="admin-ooo-active-list"></div>
+
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-2" id="admin-all-count">All Approvers (0)</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Delegate</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-all-approvers-list">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const API_BASE = '/api';
+    const USER_ID = "{{ request.user.id|default:'1' }}";
+
+    function getCurrentUser() {
+        return {
+            id: USER_ID,
+            name: "{{ user_data.firstName|default:'Admin' }}",
+            email: "{{ user_data.email|default:'admin@example.com' }}",
+            role: "admin"
+        };
+    }
+
+    const api = {
+        getUsers: async () => {
+            const resp = await fetch(`${API_BASE}/stages/users?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch users');
+            return resp.json();
+        },
+        me: async () => {
+            const resp = await fetch(`${API_BASE}/auth/me?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch user data');
+            return resp.json();
+        },
+        updateOOO: async (oooData) => {
+            const resp = await fetch(`${API_BASE}/auth/me/out-of-office?user_id=${USER_ID}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(oooData)
+            });
+            if (!resp.ok) throw new Error('Failed to update OOO');
+            return resp.json();
+        },
+        sendStandaloneMessage: async (msgData) => {
+            const resp = await fetch(`${API_BASE}/messages/?user_id=${USER_ID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(msgData)
+            });
+            if (!resp.ok) throw new Error('Failed to send message');
+            return resp.json();
+        },
+        getStandaloneMessages: async (recurring_only) => {
+            const params = recurring_only ? '&active_only=true' : '';
+            const resp = await fetch(`${API_BASE}/messages/?user_id=${USER_ID}${params}`);
+            if (!resp.ok) throw new Error('Failed to fetch messages');
+            return resp.json();
+        },
+        deactivateMessage: async (msgId) => {
+            const resp = await fetch(`${API_BASE}/messages/${msgId}/deactivate?user_id=${USER_ID}`, {
+                method: 'PATCH'
+            });
+            if (!resp.ok) throw new Error('Failed to deactivate message');
+            return resp.json();
+        }
+    };
+
+    let allUsers = [];
+
+    async function loadData() {
+        try {
+            allUsers = await api.getUsers();
+            populateDelegateDropdown(allUsers);
+            renderAdminOOO(allUsers);
+
+            const me = await api.me();
+            if (me.ooo_until) {
+                // Ensure correct format for datetime-local (YYYY-MM-DDThh:mm)
+                const d = new Date(me.ooo_until);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                document.getElementById('ooo-until').value = d.toISOString().slice(0, 16);
+            }
+            if (me.delegate_id) {
+                document.getElementById('delegate-id').value = me.delegate_id;
+            }
+
+            if (getCurrentUser().role === 'admin' || getCurrentUser().role === 'SUPER_ADMIN') {
+                document.getElementById('admin-ooo-panel').style.display = 'block';
+            }
+
+            loadActiveMessages();
+        } catch (e) {
+            console.error(e);
+            alert("Failed to load settings data: " + e.message);
+        }
+    }
+
+    function populateDelegateDropdown(users) {
+        const select = document.getElementById('delegate-id');
+        users.forEach(u => {
+            if (u.id.toString() !== USER_ID) {
+                const opt = document.createElement('option');
+                opt.value = u.id;
+                opt.textContent = `${u.firstName || ''} ${u.lastName || ''} (${u.email})`;
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    function renderAdminOOO(users) {
+        const activeList = document.getElementById('admin-ooo-active-list');
+        const allList = document.getElementById('admin-all-approvers-list');
+
+        let oooHtml = '';
+        let allHtml = '';
+
+        users.forEach(u => {
+            const name = `${u.firstName || ''} ${u.lastName || ''}`;
+            const delegateName = u.delegate_id ? (users.find(x => x.id === u.delegate_id)?.firstName || `User ${u.delegate_id}`) : 'None';
+            const isOOO = u.ooo_until && new Date(u.ooo_until) > new Date();
+
+            allHtml += `
+                <tr>
+                    <td>${name}</td>
+                    <td>${u.role}</td>
+                    <td>${isOOO ? '<span class="badge bg-warning">OOO</span>' : '<span class="badge bg-success">Active</span>'}</td>
+                    <td>${delegateName}</td>
+                </tr>
+            `;
+
+            if (isOOO) {
+                oooHtml += `
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin-bottom: 8px; border-radius: 4px; font-size: 13px;">
+                        <strong>${name}</strong> is out until ${new Date(u.ooo_until).toLocaleString()}<br>
+                        <span style="color: #666;">Delegating to: <strong>${delegateName}</strong></span>
+                    </div>
+                `;
+            }
+        });
+
+        document.getElementById('admin-all-count').textContent = `All Users (${users.length})`;
+        allList.innerHTML = allHtml;
+        activeList.innerHTML = oooHtml || '<p class="text-muted small">No users are currently marked as out of office.</p>';
+    }
+
+    async function loadActiveMessages() {
+        try {
+            const msgs = await api.getStandaloneMessages(true);
+            const card = document.getElementById('active-sa-card');
+            const list = document.getElementById('active-sa-list');
+
+            if (msgs && msgs.length > 0) {
+                card.style.display = 'block';
+                list.innerHTML = msgs.map(m => `
+                    <div style="border: 1px solid #dee2e6; padding: 12px; border-radius: 6px; background: #fff;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="font-size: 13px;">
+                                <strong>${m.subject || '(No Subject)'}</strong><br>
+                                <span style="color: #6c757d;">To: ${m.to_emails.join(', ')}</span><br>
+                                <span style="color: #6c757d;">Every ${m.reminder_interval_hours}h (Sent ${m.reminders_sent}${m.max_reminders ? '/' + m.max_reminders : ''})</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deactivateMessage(${m.id})">Stop</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                card.style.display = 'none';
+            }
+        } catch (e) {
+            console.error("Failed to load messages", e);
+        }
+    }
+
+    async function saveOOO() {
+        const until = document.getElementById('ooo-until').value;
+        const delegateId = document.getElementById('delegate-id').value;
+        const btn = document.getElementById('btn-save-ooo');
+
+        if (until && !delegateId) {
+            alert("Please select a delegate if you are setting an OOO date.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        try {
+            const d = until ? new Date(until) : null;
+            await api.updateOOO({
+                ooo_until: d ? d.toISOString() : null,
+                delegate_id: delegateId ? parseInt(delegateId) : null
+            });
+            alert("OOO settings saved!");
+            loadData();
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save me-1"></i> Save';
+        }
+    }
+
+    async function clearOOO() {
+        document.getElementById('ooo-until').value = '';
+        document.getElementById('delegate-id').value = '';
+        await saveOOO();
+    }
+
+    function toggleMaxReminders() {
+        const interval = document.getElementById('sa-interval').value;
+        const maxInput = document.getElementById('sa-max-reminders');
+        if (interval) {
+            maxInput.disabled = false;
+        } else {
+            maxInput.disabled = true;
+            maxInput.value = '';
+        }
+    }
+
+    async function sendStandaloneMessage() {
+        const toEmailsStr = document.getElementById('sa-to-emails').value;
+        if (!toEmailsStr) {
+            alert("Please provide at least one recipient email.");
+            return;
+        }
+
+        const to_emails = toEmailsStr.split(',').map(e => e.trim()).filter(e => e);
+        const subject = document.getElementById('sa-subject').value;
+        const message = document.getElementById('sa-message').value;
+
+        let context = null;
+        const contextStr = document.getElementById('sa-context').value;
+        if (contextStr) {
+            try {
+                context = JSON.parse(contextStr);
+            } catch (e) {
+                alert("Invalid JSON in context field.");
+                return;
+            }
+        }
+
+        const intervalStr = document.getElementById('sa-interval').value;
+        const maxStr = document.getElementById('sa-max-reminders').value;
+
+        const payload = {
+            to_emails,
+            subject,
+            message,
+            context,
+            reminder_interval_hours: intervalStr ? parseInt(intervalStr) : null,
+            max_reminders: maxStr ? parseInt(maxStr) : null
+        };
+
+        const btn = document.getElementById('btn-send-sa');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            await api.sendStandaloneMessage(payload);
+            alert("Message triggered successfully!");
+            document.getElementById('sa-to-emails').value = '';
+            document.getElementById('sa-subject').value = '';
+            document.getElementById('sa-message').value = '';
+            document.getElementById('sa-context').value = '';
+            document.getElementById('sa-interval').value = '';
+            document.getElementById('sa-max-reminders').value = '';
+            toggleMaxReminders();
+            loadActiveMessages();
+        } catch (e) {
+            alert("Error sending message: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Message';
+        }
+    }
+
+    async function deactivateMessage(id) {
+        if (!confirm("Stop this recurring message?")) return;
+        try {
+            await api.deactivateMessage(id);
+            loadActiveMessages();
+        } catch (e) {
+            alert("Failed to stop message: " + e.message);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadData);
+</script>
+{% endblock %}

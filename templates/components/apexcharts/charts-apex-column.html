@@ -1,0 +1,188 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}Apex Column Charts {% endblock title %} 
+
+
+{% block content %}
+
+    {% block pagetitle %}
+        {% include "partials/page-title.html" with pagetitle="Apexcharts" title="Column Charts" %}
+    {% endblock pagetitle %}
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Basic Column Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_chart" data-colors='["--in-danger", "--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Column with Data Labels</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_chart_datalabel" data-colors='["--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Stacked Column Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_stacked" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-danger"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Stacked Column 100</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_stacked_chart" data-colors='["--in-primary", "--in-success", "--in-warning"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Column with Markers</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_markers" data-colors='["--in-success", "--in-primary"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Column with Rotated Labels</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_rotated_labels" data-colors='["--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Column with Nagetive Values</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_nagetive_values" data-colors='["--in-success", "--in-danger", "--in-warning"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Range Column Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_range" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Dynamic Loaded Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="dynamicloadedchart-wrap" dir="ltr">
+                                        <div id="chart-year" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-danger", "--in-dark", "--in-info"]' class="apex-charts"></div>
+                                        <div id="chart-quarter" class="apex-charts"></div>
+                                    </div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Distributed Columns Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_distributed" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-danger", "--in-dark", "--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Column with Group Label</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="column_group_labels" data-colors='["--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+{% endblock content %}
+
+{% block extra_js %}          
+
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/apexcharts.min.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.0/dayjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.0/plugin/quarterOfYear.min.js"></script>
+
+    <!-- apexcharts init -->
+    <script src="{% static 'js/pages/apexcharts-column.init.js' %}"></script>
+
+{% endblock extra_js %}
+

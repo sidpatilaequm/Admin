@@ -1,0 +1,171 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Create Supplier Invitation | aequm{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h3 class="mb-1 text-success fw-bold"><i class="fas fa-envelope-open-text me-2"></i>Create Supplier Invitation</h3>
+            <p class="text-muted mb-0">Generate a secure onboarding link and invite a supplier to register on the aequm portal.</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'pages:admin_list_invitations' %}" class="btn btn-outline-success">
+                <i class="fas fa-list me-1"></i> View Invitations
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold text-success mb-4"><i class="fas fa-paper-plane me-1"></i>New Invitation Request</h5>
+                    
+                    <div id="alert-container"></div>
+                    
+                    <form id="inviteForm" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="supplier_email" class="form-label fw-semibold">Supplier Email Address <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control border-success-subtle p-3" id="supplier_email" name="supplier_email" required placeholder="e.g. supplier@company.com">
+                            <div class="form-text">A unique, single-use invitation token will be generated and linked to this email.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="supplier_name" class="form-label fw-semibold">Supplier Name (Optional)</label>
+                            <input type="text" class="form-control border-success-subtle p-3" id="supplier_name" name="supplier_name" placeholder="e.g. Acme Rockets Corp">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="expiry_days" class="form-label fw-semibold">Expiry Duration</label>
+                            <select class="form-select border-success-subtle p-3" id="expiry_days" name="expiry_days">
+                                <option value="1">24 Hours (1 Day)</option>
+                                <option value="3" selected>72 Hours (3 Days)</option>
+                                <option value="7">168 Hours (7 Days)</option>
+                                <option value="14">336 Hours (14 Days)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg p-3 fw-bold shadow-sm" id="submitBtn">
+                                <i class="fas fa-link me-1"></i> Generate Invitation Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Result Box -->
+            <div class="card border-0 shadow-sm mt-4 d-none" id="resultCard">
+                <div class="card-body p-4 border-start border-5 border-success">
+                    <h5 class="fw-bold text-success mb-3"><i class="fas fa-check-circle me-1"></i>Invitation Generated Successfully</h5>
+                    <p class="text-muted">You can copy the generated registration link below to send manually, or use the automated email invitation:</p>
+                    
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control border-success-subtle p-3 bg-light" id="inviteUrl" readonly>
+                        <button class="btn btn-success" type="button" id="copyBtn">
+                            <i class="far fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-success bg-success-subtle border-0 mb-0 py-2">
+                        <i class="fas fa-info-circle me-1"></i> An invitation email with this link has been prepared for dispatch to <strong id="sentEmail"></strong>.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inviteForm = document.getElementById('inviteForm');
+    const alertContainer = document.getElementById('alert-container');
+    const resultCard = document.getElementById('resultCard');
+    const inviteUrlInput = document.getElementById('inviteUrl');
+    const sentEmailSpan = document.getElementById('sentEmail');
+    const copyBtn = document.getElementById('copyBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    inviteForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Generating...';
+        
+        alertContainer.innerHTML = '';
+        resultCard.classList.add('d-none');
+
+        const formData = new FormData(inviteForm);
+        const data = {
+            supplier_email: formData.get('supplier_email'),
+            supplier_name: formData.get('supplier_name'),
+            expiry_days: formData.get('expiry_days')
+        };
+
+        try {
+            const response = await fetch('{% url "pages:admin_create_invitation" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'success') {
+                inviteUrlInput.value = result.invite_url;
+                sentEmailSpan.textContent = result.email;
+                resultCard.classList.remove('d-none');
+                
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <strong>Success!</strong> Invitation link generated and stored in the database.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                inviteForm.reset();
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error!</strong> ${result.error || 'Failed to generate invitation link.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error generating invitation:', error);
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error!</strong> An unexpected error occurred while communicating with the server.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-link me-1"></i> Generate Invitation Link';
+        }
+    });
+
+    copyBtn.addEventListener('click', function() {
+        inviteUrlInput.select();
+        inviteUrlInput.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(inviteUrlInput.value);
+        
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.classList.replace('btn-success', 'btn-outline-success');
+        
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+            copyBtn.classList.replace('btn-outline-success', 'btn-success');
+        }, 2000);
+    });
+});
+</script>
+{% endblock %}

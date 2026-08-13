@@ -1,0 +1,30 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="uil-exclamation-triangle" style="font-size: 64px; color: #dc3545;"></i>
+                    </div>
+                    <h2 class="card-title text-danger">Oops! Something went wrong</h2>
+                    <p class="card-text text-muted">{{ error_message|default:"An unexpected error occurred." }}</p>
+                    <div class="mt-4">
+                        <a href="{% url 'pages:vendor_dashboard' %}" class="btn btn-primary me-2">
+                            <i class="uil-home"></i> Go to Dashboard
+                        </a>
+                        <button onclick="history.back()" class="btn btn-secondary">
+                            <i class="uil-arrow-left"></i> Go Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

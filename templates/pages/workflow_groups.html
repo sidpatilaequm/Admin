@@ -1,0 +1,638 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Approver Groups - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #198754;
+        --primary-hover: #157347;
+        --primary-soft: rgba(25, 135, 84, 0.1);
+        --border: #e9ecef;
+        --text-dim: #6c757d;
+        --surface: #ffffff;
+        --surface-elevated: #f8f9fa;
+        --purple: #727cf5;
+        --purple-dim: rgba(114, 124, 245, 0.1);
+        --accent-dim: rgba(25, 135, 84, 0.2);
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    .page-header-info h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #343a40;
+        margin: 0 0 4px 0;
+    }
+    .page-header-info p {
+        color: var(--text-dim);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Cards */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-primary {
+        background-color: var(--primary) !important;
+        color: #ffffff !important;
+        border: 1px solid var(--primary) !important;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+    }
+    .btn-secondary {
+        background-color: #ffffff !important;
+        color: #495057 !important;
+        border: 1px solid var(--border) !important;
+    }
+    .btn-secondary:hover {
+        background-color: var(--surface-elevated) !important;
+        border-color: #adb5bd !important;
+    }
+    .btn-ghost {
+        background-color: transparent !important;
+        color: var(--text-dim) !important;
+        border: 1px solid transparent !important;
+    }
+    .btn-ghost:hover {
+        background-color: var(--surface-elevated) !important;
+        color: #343a40 !important;
+    }
+    .btn-sm {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background-color: #ffffff;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-icon:hover {
+        background-color: var(--surface-elevated);
+        color: #343a40;
+    }
+    .btn-icon.text-danger:hover {
+        background-color: #fce8e6;
+        color: #d93025;
+        border-color: #fad2cf;
+    }
+
+    /* Grid & Layout helpers */
+    .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .flex-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .flex-1 {
+        flex: 1;
+    }
+    .gap-2 {
+        gap: 8px;
+    }
+    .gap-3 {
+        gap: 12px;
+    }
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+    }
+
+    /* Overlay / Modals */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .custom-modal {
+        background: var(--surface);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        padding: 24px;
+        animation: modalFadeIn 0.25s ease-out;
+        width: 500px;
+        max-width: 90%;
+    }
+    .modal-header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        color: #343a40;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        margin-top: 24px;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Form Fields */
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+    input, select, textarea {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        background-color: #ffffff;
+        color: #495057;
+        transition: all 0.2s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
+    }
+
+    /* Logo Box */
+    .nav-logo-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+    }
+    .text-dim {
+        color: var(--text-dim);
+    }
+
+    /* Skeletons */
+    .skeleton-page {
+        padding: 20px;
+    }
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeletonKeyframe 1.5s infinite;
+    }
+    .skeleton-header {
+        height: 48px;
+        width: 250px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+    }
+    @keyframes skeletonKeyframe {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Empty state */
+    .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-dim);
+    }
+    .empty-icon {
+        margin-bottom: 16px;
+        color: #adb5bd;
+    }
+    .empty h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    .empty p {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="groups-content" style="display: none;">
+    <div class="page-header">
+        <div class="page-header-info">
+            <h1>Approver Groups</h1>
+            <p>Manage groups of users who can approve requests at different stages.</p>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" onclick="openCreateGroupModal()">
+                <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i> Create Group
+            </button>
+        </div>
+    </div>
+
+    <!-- Groups Grid -->
+    <div class="grid-2" id="groups-grid">
+        <!-- Injected dynamically -->
+    </div>
+</div>
+
+<!-- Loading state -->
+<div class="skeleton-page" id="groups-loading">
+    <div class="skeleton skeleton-header"></div>
+    <div class="grid-2">
+        <div class="skeleton" style="height: 250px;"></div>
+        <div class="skeleton" style="height: 250px;"></div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="overlay" id="create-group-modal" style="display: none;">
+    <div class="custom-modal">
+        <div class="flex-between modal-header">
+            <h2>Create Approver Group</h2>
+            <button class="btn-icon" onclick="closeCreateGroupModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+        </div>
+        <div class="form-group">
+            <label>Group Name</label>
+            <input id="new-group-name" placeholder="e.g., Legal Department">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeCreateGroupModal()">Cancel</button>
+            <button class="btn btn-primary" id="btn-save-group" onclick="createGroup()">Create Group</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+
+
+    // Actual API client using FastAPI endpoints
+    const API_BASE = '/api';
+    const USER_ID = "{{ request.user.id|default:'1' }}";
+    const api = {
+        getGroups: async () => {
+            const resp = await fetch(`${API_BASE}/stages/approver-groups?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch groups');
+            return await resp.json();
+        },
+        getUsers: async () => {
+            const resp = await fetch(`${API_BASE}/stages/users?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch users');
+            return await resp.json();
+        },
+        createGroup: async (name, description, memberIds) => {
+            const resp = await fetch(`${API_BASE}/stages/approver-groups?user_id=${USER_ID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, description: description || '', member_ids: memberIds || [] })
+            });
+            if (!resp.ok) throw new Error('Failed to create group');
+            return await resp.json();
+        },
+        deleteGroup: async (id) => {
+            const resp = await fetch(`${API_BASE}/stages/approver-groups/${id}?user_id=${USER_ID}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error('Failed to delete group');
+            return true;
+        },
+        addGroupMember: async (groupId, userId, sequentialOrder = 0) => {
+            const resp = await fetch(`${API_BASE}/stages/approver-groups/${groupId}/members?user_id=${USER_ID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, sequential_order: sequentialOrder })
+            });
+            if (!resp.ok) throw new Error('Failed to add group member');
+            return await resp.json();
+        },
+        removeGroupMember: async (groupId, userId) => {
+            const resp = await fetch(`${API_BASE}/stages/approver-groups/${groupId}/members/${userId}?user_id=${USER_ID}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error('Failed to remove group member');
+            return true;
+        }
+    };
+
+    let allGroups = [];
+    let allUsers = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadGroupsPage();
+    });
+
+    async function loadGroupsPage() {
+        try {
+            const [groups, users] = await Promise.all([
+                api.getGroups(),
+                api.getUsers()
+            ]);
+            
+            allGroups = groups || [];
+            allUsers = users || [];
+
+            renderGroups();
+
+            document.getElementById('groups-loading').style.display = 'none';
+            document.getElementById('groups-content').style.display = 'block';
+
+        } catch (err) {
+            toast.error("Failed to load groups: " + err.message);
+        }
+    }
+
+    function renderGroups() {
+        const grid = document.getElementById('groups-grid');
+        grid.innerHTML = '';
+
+        if (allGroups.length === 0) {
+            grid.innerHTML = `
+                <div class="empty" style="grid-column: span 2;">
+                    <i data-lucide="users" class="empty-icon" style="width: 48px; height: 48px;"></i>
+                    <h3>No Approver Groups</h3>
+                    <p>Start by creating a group to assign to workflow stages.</p>
+                </div>
+            `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            return;
+        }
+
+        allGroups.forEach(group => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Header content
+            let headerHtml = `
+                <div class="flex-between" style="margin-bottom: 20px;">
+                    <div class="flex-center gap-3">
+                        <div class="nav-logo-box" style="width: 40px; height: 40px; background: var(--purple-dim); border: 1px solid var(--purple);">
+                            <i data-lucide="shield" style="color: var(--purple); width: 20px; height: 20px;"></i>
+                        </div>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 700; margin: 0;">${escapeHtml(group.name)}</h3>
+                            <div class="text-dim" style="font-size: 12px;">${group.members ? group.members.length : 0} Members</div>
+                        </div>
+                    </div>
+                    <button class="btn-icon text-danger" onclick="deleteGroup(${group.id})" style="border: none; background: none;">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+            `;
+
+            // Members list content
+            let membersHtml = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            if (group.members && group.members.length > 0) {
+                // Sort by sequential order
+                const sorted = [...group.members].sort((a, b) => (a.sequential_order || 0) - (b.sequential_order || 0));
+                
+                sorted.forEach(member => {
+                    membersHtml += `
+                        <div class="flex-between" style="padding: 8px 12px; background: var(--surface-elevated); border-radius: 8px;">
+                            <div class="flex-center gap-2">
+                                <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--border); font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                    ${escapeHtml(member.name.charAt(0))}
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                    <span style="font-size: 13px; font-weight: 500;">${escapeHtml(member.name)}</span>
+                                    <span style="font-size: 10px; opacity: 0.6;">Order: ${member.sequential_order || 0}</span>
+                                </div>
+                            </div>
+                            <div class="flex-center gap-2">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value="${member.sequential_order || 0}"
+                                    style="width: 45px; height: 24px; font-size: 11px; padding: 0 4px; text-align: center; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 4px; color: var(--text-dim);"
+                                    title="Sequential Order"
+                                    onchange="updateMemberOrder(${group.id}, ${member.id}, this.value)"
+                                >
+                                <button
+                                    class="btn-icon btn-sm"
+                                    style="border: none; background: none; width: 24px; height: 24px;"
+                                    onclick="removeMember(${group.id}, ${member.id})"
+                                >
+                                    <i data-lucide="x" style="width: 12px; height: 12px;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                membersHtml += '<p class="text-dim" style="font-size: 12px; padding: 10px 0;">No members in this group yet.</p>';
+            }
+
+            // Add member section
+            const remainingUsers = allUsers.filter(u => !group.members || !group.members.some(m => m.id === u.id));
+            
+            let addMemberHtml = '';
+            if (remainingUsers.length > 0) {
+                addMemberHtml = `
+                    <div id="add-member-box-${group.id}" style="display: none; margin-top: 12px; padding: 12px; background: var(--surface-elevated); border-radius: 8px; border: 1px solid var(--accent-dim);">
+                        <div class="flex-between" style="margin-bottom: 10px;">
+                            <span style="font-size: 12px; font-weight: 700;">Add Member</span>
+                            <button class="btn-icon btn-sm" onclick="toggleAddMember(${group.id}, false)" style="border: none; background: none; width: 18px; height: 18px;"><i data-lucide="x" style="width: 12px; height: 12px;"></i></button>
+                        </div>
+                        <input
+                            id="search-user-input-${group.id}"
+                            placeholder="Search users..."
+                            style="height: 32px; font-size: 12px; margin-bottom: 8px; background: var(--surface-elevated); border: 1px solid var(--border); border-radius: 4px; padding: 0 8px;"
+                            oninput="filterAddUsers(${group.id})"
+                        >
+                        <div style="max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;" id="user-results-list-${group.id}">
+                `;
+
+                remainingUsers.forEach(u => {
+                    addMemberHtml += `
+                        <button
+                            class="btn btn-ghost btn-sm user-add-row"
+                            data-search="${escapeHtml(u.name.toLowerCase())} ${escapeHtml(u.email.toLowerCase())}"
+                            style="justify-content: flex-start; text-align: left; padding: 6px 8px; width: 100%; border-radius: 4px;"
+                            onclick="addMember(${group.id}, ${u.id})"
+                        >
+                            <div style="font-size: 12px; font-weight: 500;">${escapeHtml(u.name)}</div>
+                            <div style="font-size: 10px; opacity: 0.6;">${escapeHtml(u.email)}</div>
+                        </button>
+                    `;
+                });
+
+                addMemberHtml += `
+                        </div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" id="btn-show-add-${group.id}" style="width: 100%; margin-top: 8px; border: 1px dashed var(--border);" onclick="toggleAddMember(${group.id}, true)">
+                        <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Member
+                    </button>
+                `;
+            }
+
+            membersHtml += addMemberHtml + '</div>';
+            card.innerHTML = headerHtml + membersHtml;
+            grid.appendChild(card);
+        });
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function toggleAddMember(groupId, show) {
+        document.getElementById(`add-member-box-${groupId}`).style.display = show ? 'block' : 'none';
+        document.getElementById(`btn-show-add-${groupId}`).style.display = show ? 'none' : 'block';
+        if (show) {
+            document.getElementById(`search-user-input-${groupId}`).focus();
+        }
+    }
+
+    function filterAddUsers(groupId) {
+        const query = document.getElementById(`search-user-input-${groupId}`).value.toLowerCase();
+        const rows = document.getElementById(`user-results-list-${groupId}`).querySelectorAll('.user-add-row');
+        rows.forEach(r => {
+            const txt = r.getAttribute('data-search');
+            if (txt.includes(query)) {
+                r.style.display = 'flex';
+            } else {
+                r.style.display = 'none';
+            }
+        });
+    }
+
+    async function addMember(groupId, userId) {
+        try {
+            await api.addGroupMember(groupId, userId);
+            toast.success("Member added to group");
+            loadGroupsPage();
+        } catch (err) {
+            toast.error("Failed to add member: " + err.message);
+        }
+    }
+
+    async function removeMember(groupId, userId) {
+        if (!confirm("Are you sure you want to remove this member?")) return;
+        try {
+            await api.removeGroupMember(groupId, userId);
+            toast.success("Member removed from group");
+            loadGroupsPage();
+        } catch (err) {
+            toast.error("Failed to remove member: " + err.message);
+        }
+    }
+
+    async function updateMemberOrder(groupId, userId, order) {
+        const sequentialOrder = parseInt(order) || 0;
+        try {
+            await api.addGroupMember(groupId, userId, sequentialOrder);
+            toast.success("Order updated");
+            loadGroupsPage();
+        } catch (err) {
+            toast.error("Failed to update order: " + err.message);
+        }
+    }
+
+    function openCreateGroupModal() {
+        document.getElementById('new-group-name').value = '';
+        document.getElementById('create-group-modal').style.display = 'flex';
+    }
+
+    function closeCreateGroupModal() {
+        document.getElementById('create-group-modal').style.display = 'none';
+    }
+
+    async function createGroup() {
+        const name = document.getElementById('new-group-name').value.trim();
+        if (!name) {
+            toast.error("Group name is required.");
+            return;
+        }
+
+        const btnSave = document.getElementById('btn-save-group');
+        btnSave.disabled = true;
+        btnSave.innerText = "Creating...";
+
+        try {
+            await api.createGroup(name);
+            toast.success("Group created successfully!");
+            closeCreateGroupModal();
+            loadGroupsPage();
+        } catch (err) {
+            toast.error("Failed to create group: " + err.message);
+        } finally {
+            btnSave.disabled = false;
+            btnSave.innerText = "Create Group";
+        }
+    }
+
+    async function deleteGroup(id) {
+        if (!confirm("Are you sure you want to delete this approver group?")) return;
+        try {
+            await api.deleteGroup(id);
+            toast.success("Group deleted successfully!");
+            loadGroupsPage();
+        } catch (err) {
+            toast.error("Failed to delete group: " + err.message);
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+</script>
+{% endblock %}

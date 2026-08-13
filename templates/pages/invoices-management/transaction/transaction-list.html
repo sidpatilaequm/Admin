@@ -1,0 +1,184 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %} Transaction List {% endblock title %} 
+
+{% block extra_css %}
+
+    <!-- Sweet Alert css-->
+    <link href="{% static 'libs/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+   
+{% endblock extra_css %}
+
+
+{% block content %}
+
+    {% block pagetitle %}
+        {% include "partials/page-title.html" with pagetitle="User" title="Transaction List" %}
+    {% endblock pagetitle %}
+
+                    <div class="row pb-4 gy-3">
+                        <div class="col-sm-4">
+                            <a href="{% url 'pages:invoices_management.transaction.new' %}" class="btn btn-primary"><i class="las la-plus me-1"></i>Add Transaction</a>
+                        </div>
+
+                        <div class="col-sm-auto ms-auto">
+                           <div class="d-flex gap-3">
+                            <div class="search-box">
+                                <input type="text" class="form-control" id="searchMemberList" placeholder="Search for result">
+                                <i class="las la-search search-icon"></i>
+                            </div>
+                            <div class="">
+                                <button type="button" id="dropdownMenuLink1" data-bs-toggle="dropdown" aria-expanded="false" class="btn btn-soft-info btn-icon fs-14"><i class="las la-ellipsis-v fs-18"></i></button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink1">
+                                    <li><a class="dropdown-item" href="#">All</a></li>
+                                    <li><a class="dropdown-item" href="#">Last Week</a></li>
+                                    <li><a class="dropdown-item" href="#">Last Month</a></li>
+                                    <li><a class="dropdown-item" href="#">Last Year</a></li>
+                                </ul>
+                            </div>
+                           </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="table-responsive table-card">
+                                        <table class="table table-hover table-nowrap align-middle mb-0">
+                                            <thead>
+                                                <tr class="text-muted text-uppercase">
+                                                    <th scope="col">Transaction Id</th>
+                                                    <th scope="col">Date</th>
+                                                    <th scope="col">Description</th>
+                                                    <th scope="col">Credit / Debit</th>
+                                                    <th scope="col">Amount</th>
+                                                    <th scope="col" style="width: 12%;">Attachment</th>
+                                                </tr>
+                                            </thead>
+        
+                                            <tbody>
+                                                <tr>
+                                                    <td>#BR2150</td>
+                                                    <td>20 Sep, 2022</td>
+                                                    <td>Maintenance</td>
+                                                    <td><span class="badge bg-success-subtle text-success  p-2">Credit</span></td>
+                                                    <td>$1200.00</td>
+                                                    <td>N/A</td>
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2151</td>
+                                                    <td>12 Arl, 2022</td>
+                                                    <td>Flight Booking</td>
+                                                    <td><span class="badge bg-success-subtle text-success  p-2">Credit</span></td>
+                                                    <td>$3600.00</td>
+                                                    <td>N/A</td>
+                                                    
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2152</td>
+                                                    <td>28 Mar, 2022</td>
+                                                    <td>Office Rent</td>
+                                                    <td><span class="badge bg-danger-subtle text-danger  p-2">Debit</span></td>
+                                                    <td>$800.00</td>
+                                                    <td>N/A</td>
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2153</td>
+                                                    <td>23 Aug, 2022</td>
+                                                    <td>Salary Payment</td>
+                                                    <td><span class="badge bg-success-subtle text-success  p-2">Credit</span></td>
+                                                    <td>$1600.00</td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-soft-success btn-sm btn-icon fs-14">
+                                                            <i class="las la-download fs-18"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2154</td>
+                                                    <td>18 Sep, 2022</td>
+                                                    <td>Salary Payment</td>
+                                                    <td><span class="badge bg-danger-subtle text-danger  p-2">Debit</span></td>
+                                                    <td>$3200.00</td>
+                                                    <td>N/A</td>
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2155</td>
+                                                    <td>12 Feb, 2022</td>
+                                                    <td>Maintenance</td>
+                                                    <td><span class="badge bg-success-subtle text-success  p-2">Credit</span></td>
+                                                    <td>$900.00</td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-soft-success btn-sm btn-icon fs-14">
+                                                            <i class="las la-download fs-18"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2156</td>
+                                                    <td>30 Nov, 2022</td>
+                                                    <td>Online Product</td>
+                                                    <td><span class="badge bg-success-subtle text-success  p-2">Credit</span></td>
+                                                    <td>$200.00</td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-soft-success btn-sm btn-icon fs-14">
+                                                            <i class="las la-download fs-18"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+        
+                                                <tr>
+                                                    <td>#BR2157</td>
+                                                    <td>23 Sep, 2022</td>
+                                                    <td>Office Rent</td>
+                                                    <td><span class="badge bg-danger-subtle text-danger  p-2">Debit</span></td>
+                                                    <td>$1200.00</td>
+                                                    <td>N/A</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>#BR2158</td>
+                                                    <td>16 Aug, 2022</td>
+                                                    <td>Online Product</td>
+                                                    <td><span class="badge bg-success-subtle text-success  p-2">Credit</span></td>
+                                                    <td>$1800.00</td>
+                                                    <td>N/A</td>
+                                                </tr>
+                                            </tbody><!-- end tbody -->
+                                        </table><!-- end table -->
+                                    </div><!-- end table responsive -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row align-items-center mb-4 gy-3">
+                        <div class="col-md-5">
+                            <p class="mb-0 text-muted">Showing <b>1</b> to <b>5</b> of <b>10</b> results</p>
+                        </div>
+                        <div class="col-sm-auto ms-auto">
+                            <nav aria-label="...">
+                                <ul class="pagination mb-0">
+                                  <li class="page-item disabled">
+                                    <span class="page-link">Previous</span>
+                                  </li>
+                                  <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                  <li class="page-item" aria-current="page">
+                                    <span class="page-link">2</span>
+                                  </li>
+                                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                  <li class="page-item">
+                                    <a class="page-link" href="#">Next</a>
+                                  </li>
+                                </ul>
+                              </nav>
+                        </div>
+                    </div>
+{% endblock content %}
+        

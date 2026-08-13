@@ -1,0 +1,344 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Currencies - Master Data{% endblock %}
+
+{% block extra_css %}
+<style>
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+
+    .table th {
+        color: #6c757d;
+        background-color: #f8f9fa;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+    }
+
+    #loading,
+    #no-data {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .master-data-pill {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        padding: 0.4rem 1.25rem;
+        border-radius: 30px;
+        font-weight: 500;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease-in-out;
+    }
+    .master-data-pill:hover {
+        background-color: #f8f9fa;
+        color: #212529;
+        border-color: #ced4da;
+    }
+    .master-data-pill.active {
+        background-color: #1f2937 !important;
+        color: #fff !important;
+        border-color: #1f2937 !important;
+    }
+    .master-data-pill.disabled-tab {
+        opacity: 0.7;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0 fw-bold" style="font-size: 1.6rem; color: #212529;">
+                    Master data
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item">Master Data</li>
+                        <li class="breadcrumb-item active">Currencies</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description Paragraph -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <p class="text-muted" style="font-size: 0.92rem; line-height: 1.6; max-width: 1000px; color: #595959 !important;">
+                Reference data behind the budget — the hierarchy dimensions (department, project, activity, sub-activity), the employee hierarchy that owns the budget, and lookups (cost type, status, version, fiscal period). Records can be added and edited; a record can't be deleted while it's used by a budget line.
+            </p>
+        </div>
+    </div>
+
+    <!-- Tab Pills Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'pages:companies_list' %}" class="master-data-pill {% if request.resolver_match.url_name == 'companies_list' %}active{% endif %}">
+                    Organisation
+                </a>
+                <a href="{% url 'pages:departments_list' %}" class="master-data-pill {% if request.resolver_match.url_name == 'departments_list' %}active{% endif %}">
+                    Departments
+                </a>
+                <a href="{% url 'pages:countries_list' %}" class="master-data-pill {% if request.resolver_match.url_name == 'countries_list' %}active{% endif %}">
+                    Countries
+                </a>
+                <a href="{% url 'pages:currencies_list' %}" class="master-data-pill {% if request.resolver_match.url_name == 'currencies_list' %}active{% endif %}">
+                    Currencies
+                </a>
+                <a href="{% url 'pages:channels_list_org' %}" class="master-data-pill {% if request.resolver_match.url_name == 'channels_list_org' %}active{% endif %}">
+                    Channels
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Projects
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Activities
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Sub-activities
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Cost types
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Statuses
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Employees
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Budget versions
+                </a>
+                <a href="#" class="master-data-pill disabled-tab">
+                    Fiscal periods
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Card -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 10px; background-color: #fff;">
+                <div class="card-body p-4">
+                    <!-- Title, Record Count and Add Button Row -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0 fw-bold" style="color: #212529; font-size: 1.2rem;">Currencies</h4>
+                        <div class="d-flex align-items-center">
+                            <span class="text-muted me-3" id="record-count-badge" style="font-size: 0.9rem;">0 records</span>
+                            <button type="button" class="btn btn-success d-flex align-items-center" id="addCurrencyBtn" style="background-color: #0b7a4b; border-color: #0b7a4b; padding: 0.4rem 1.2rem; border-radius: 6px; font-weight: 500;">
+                                <i class="las la-plus me-1" style="font-size: 1.1rem;"></i> Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loader -->
+                    <div id="loading">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading currencies...</p>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="no-data" style="display:none;">
+                        <i class="las la-info-circle text-muted" style="font-size: 2.5rem;"></i>
+                        <p class="mt-2 text-muted">No currencies found.</p>
+                    </div>
+
+                    <!-- Table -->
+                    <div id="organization-table-container" style="display:none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" style="border-color: #f1f5f9;">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Symbol</th>
+                                        <th>Status</th>
+                                        <th style="width: 150px; text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="currenciesTableBody">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Currency Modal -->
+<div class="modal fade" id="currencyModal" tabindex="-1" aria-labelledby="currencyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="modal-header py-3 px-4" style="background: rgba(11, 122, 75, 0.08);">
+                <h5 class="modal-title fw-bold" id="currencyModalLabel" style="color: #0b7a4b;">Add Currency</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <form id="currencyForm">
+                    <input type="hidden" id="currencyId" name="currencyId">
+                    <div class="mb-3">
+                        <label for="currencyCode" class="form-label fw-semibold">Currency Code *</label>
+                        <select class="form-select" id="currencyCode" name="currencyCode" required style="border-radius: 6px;">
+                            <option value="">-- Select Code --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="currencyName" class="form-label fw-semibold">Currency Name *</label>
+                        <input type="text" class="form-control" id="currencyName" name="currencyName" required
+                            placeholder="Enter Currency Name" style="border-radius: 6px;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="currencySymbol" class="form-label fw-semibold">Symbol *</label>
+                        <input type="text" class="form-control" id="currencySymbol" name="symbol" required
+                            placeholder="e.g. ₹" style="border-radius: 6px;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="currencyStatus" class="form-label fw-semibold">Status *</label>
+                        <select class="form-select" id="currencyStatus" name="status" required style="border-radius: 6px;">
+                            <option value="ACTIVE">Active</option>
+                            <option value="INACTIVE">Inactive</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 6px; padding: 0.4rem 1.2rem;">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveCurrencyBtn" style="background-color: #0b7a4b; border-color: #0b7a4b; border-radius: 6px; padding: 0.4rem 1.2rem;">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/organization.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Highlight sidebar nav item for Master Data
+        const sidebarLink = document.querySelector('.organization-nav-item > a');
+        if (sidebarLink) {
+            sidebarLink.classList.add('active');
+            const parentLi = sidebarLink.closest('li');
+            if (parentLi) {
+                parentLi.classList.add('active');
+            }
+        }
+
+        const module = 'currencies';
+        const tableBody = document.getElementById('currenciesTableBody');
+        const modal = new bootstrap.Modal(document.getElementById('currencyModal'));
+        const form = document.getElementById('currencyForm');
+
+        function renderTable() {
+            OrganizationManager.fetchData(module).then(data => {
+                tableBody.innerHTML = '';
+                OrganizationManager.data[module] = data;
+
+                const countBadge = document.getElementById('record-count-badge');
+                if (countBadge) {
+                    countBadge.textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
+                }
+
+                data.forEach(item => {
+                    const row = `
+                        <tr>
+                            <td><strong style="color: #212529; font-weight: 600;">${item.currencyCode || item.code || '-'}</strong></td>
+                            <td style="color: #495057;">${item.currencyName || item.name || '-'}</td>
+                            <td style="color: #212529; font-weight: 500;">${item.symbol || '-'}</td>
+                            <td><span class="badge" style="background-color: ${item.status === 'ACTIVE' ? '#198754' : '#dc3545'}; font-size: 0.75rem; padding: 0.35em 0.65em;">${item.status}</span></td>
+                            <td style="text-align: right;">
+                                <button class="btn btn-sm btn-outline-secondary edit-btn me-1" data-id="${item.currencyId || item.id}" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" data-id="${item.currencyId || item.id}" style="font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 4px;">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            });
+        }
+
+        renderTable();
+
+        // Coming Soon Toast handler for disabled tabs
+        document.querySelectorAll('.disabled-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (window.OrganizationManager) {
+                    OrganizationManager.showToast('This Master Data dimension is coming soon!', 'info');
+                }
+            });
+        });
+
+        const currencySelect = document.getElementById('currencyCode');
+        OrganizationManager.fetchCurrencyData().then(currencies => {
+            currencies.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.code;
+                option.textContent = c.code;
+                currencySelect.appendChild(option);
+            });
+        });
+
+        currencySelect.addEventListener('change', (e) => {
+            OrganizationManager.autoPopulateCurrencyDetails(e.target.value);
+        });
+
+        document.getElementById('addCurrencyBtn').addEventListener('click', () => {
+            form.reset();
+            document.getElementById('currencyId').value = '';
+            document.getElementById('currencyModalLabel').innerText = 'Add Currency';
+            modal.show();
+        });
+
+        document.getElementById('saveCurrencyBtn').addEventListener('click', () => {
+            const formData = new FormData(form);
+            const record = Object.fromEntries(formData.entries());
+
+            OrganizationManager.saveRecord(module, record).then(() => {
+                modal.hide();
+                renderTable();
+            }).catch(() => { });
+        });
+
+        tableBody.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (e.target.classList.contains('edit-btn')) {
+                const record = OrganizationManager.data[module].find(r => (r.currencyId || r.id) == id);
+                OrganizationManager.prefillModal('currencyModal', record);
+                document.getElementById('currencyModalLabel').innerText = 'Edit Currency';
+                modal.show();
+            } else if (e.target.classList.contains('delete-btn')) {
+                OrganizationManager.deleteRecord(module, id).then(res => {
+                    if (res.success) renderTable();
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

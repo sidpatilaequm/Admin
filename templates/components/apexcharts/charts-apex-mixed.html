@@ -1,0 +1,78 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}Apex Mixed Charts {% endblock title %} 
+
+
+{% block content %}
+
+    {% block pagetitle %}
+        {% include "partials/page-title.html" with pagetitle="Apexcharts" title="Mixed Charts" %}
+    {% endblock pagetitle %}
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Line & Column Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="line_column_chart" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Multiple Y-Axis Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="multi_chart" data-colors='["--in-primary", "--in-info", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Line & Area Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="line_area_chart" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Line, Column & Area Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="line_area_charts" data-colors='["--in-primary", "--in-success", "--in-danger"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+{% endblock content %}
+
+{% block extra_js %}          
+
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/apexcharts.min.js' %}"></script>
+
+    <!-- mixed charts init -->
+    <script src="{% static 'js/pages/apexcharts-mixed.init.js' %}"></script>
+
+{% endblock extra_js %}
+

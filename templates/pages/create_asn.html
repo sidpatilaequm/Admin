@@ -1,0 +1,666 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Create ASN — PO-2026-04512{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header with Actions -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <h3 class="fw-bold mb-1">Create New ASN</h3>
+            <p class="text-muted fs-13 mb-0">Despatching against Purchase Order: <span class="fw-bold text-primary">PO-2026-04512</span></p>
+        </div>
+        <div class="col-sm-auto mt-3 mt-sm-0">
+            <div class="d-flex align-items-center gap-2">
+                <a href="{% url 'pages:asn' %}" class="btn btn-link text-muted text-decoration-none fs-12 fw-bold me-2">← Back</a>
+                <button class="btn btn-outline-secondary btn-sm fw-bold px-3 border-light-subtle shadow-sm" style="background-color: #f8fafc;">
+                    <i class="ri-save-line me-1"></i> Save Draft
+                </button>
+                <button class="btn btn-success btn-sm fw-bold px-4 shadow-sm" style="background-color: #065f46; border-color: #065f46;">
+                    Submit ASN →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5-Step Stepper -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body py-4">
+            <div class="d-flex justify-content-between stepper-container overflow-auto px-4">
+                <div class="step-item active">
+                    <div class="step-icon">1</div>
+                    <div class="step-text text-nowrap">PO & Header</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-icon">2</div>
+                    <div class="step-text text-nowrap">Transport Details</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-icon">3</div>
+                    <div class="step-text text-nowrap">Line Items & Batches</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-icon">4</div>
+                    <div class="step-text text-nowrap">Documents</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-icon">5</div>
+                    <div class="step-text text-nowrap">Review & Submit</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="asnForm">
+        <!-- Step 1: PO & Header -->
+        <div id="step1">
+            <!-- Purchase Order Reference -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-link me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Purchase Order Reference</h6>
+                    <span class="ms-auto badge bg-white text-muted border fs-9 px-2">PRIMARY PO</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PO Number *</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 fw-bold py-2" value="PO-2026-04512" readonly>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PO Description</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 py-2" value="OPC 53 Grade Cement + Packing Bags — Q1 FY26" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Supplier GSTIN (Despatch) *</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 py-2" value="27AAACA7890B1ZP" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Buyer GSTIN (Deliver To) *</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 py-2" value="29AAPCA3382B1ZM" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Deliver to Plant</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 py-2" value="1100 — Bangalore Plant" readonly>
+                        </div>
+                    </div>
+                    <div class="alert alert-info border-0 shadow-none mt-4 mb-0 d-flex align-items-center" style="background-color: #f0fdf4; border-radius: 8px;">
+                        <i class="ri-information-line fs-18 text-success me-2"></i>
+                        <span class="fs-11 fw-bold" style="color: #166534;">Linked PO: PO-2026-04512 — 2 open lines · Total PO value ₹20,635,000 · OPC 53 Cement: 5,000 MT open · Packing Bags: 10,000 EA open</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ASN Header -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-file-text-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">ASN Header</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4 text-start">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">ASN Number</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 fw-bold py-2" value="ASN-2026-34210" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Your Despatch Note No. (optional)</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="Your internal delivery note reference">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Despatch Date *</label>
+                            <input type="date" class="form-control border fs-12 py-2" value="2026-05-12">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Expected Delivery Date *</label>
+                            <input type="date" class="form-control border fs-12 py-2" value="2026-05-16">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Is Partial Shipment?</label>
+                            <select class="form-select border fs-12 py-2">
+                                <option>No — Full shipment</option>
+                                <option>Yes — Partial shipment</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Despatch From / Deliver To -->
+            <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-map-pin-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Despatch From / Deliver To</h6>
+                    <button type="button" class="ms-auto btn btn-link text-muted text-decoration-none fs-10 p-0 fw-bold text-uppercase">Address Details</button>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4 text-start">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Despatch From Address *</label>
+                            <textarea class="form-control border fs-12 py-2" rows="2">Ambuja Cements, Survey No 47, Surat-Magdalla Road, Surat, Gujarat 395007</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Deliver To Address *</label>
+                            <textarea class="form-control border fs-12 py-2" rows="2">Plot 47, Peenya Industrial Area, Bangalore 560058</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Despatch State Code</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 py-2" value="27 — Gujarat" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Delivery State Code</label>
+                            <input type="text" class="form-control bg-light border-0 fs-12 py-2" value="29 — Karnataka" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 fw-bold">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm px-4 fw-bold" onclick="nextStep(2)">Next: Transport →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Transport Details (Placeholder for layout) -->
+        <div id="step2" style="display: none;">
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-truck-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Transport & Carrier Details</h6>
+                </div>
+                <div class="card-body p-4 text-start">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Mode of Transport *</label>
+                            <select class="form-select border fs-12 py-2">
+                                <option>🚚 Road</option>
+                                <option>✈️ Air</option>
+                                <option>🚢 Sea</option>
+                                <option>🚆 Rail</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Carrier / Transporter Name *</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="e.g. Mahindra Logistics, Blue Dart">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Vehicle / Container Number *</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="e.g. KA-19-AB-1234">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Vehicle Type</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="e.g. 20ft container, 9-tonne truck">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">LR / Consignment Note No. *</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="e.g. LR/MHL/2026/11245">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Seal Number</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="Container/truck seal no.">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Driver Name</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="Driver name">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Driver Phone</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="+91 XXXXX XXXXX">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Tracking URL (optional)</label>
+                            <input type="text" class="form-control border fs-12 py-2" placeholder="https://courier.com/track/...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-archive-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Package Summary</h6>
+                </div>
+                <div class="card-body p-4 text-start">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Total Packages *</label>
+                            <input type="number" class="form-control border fs-12 py-2" value="50">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Package Type *</label>
+                            <select class="form-select border fs-12 py-2">
+                                <option>Pallet</option>
+                                <option>Carton</option>
+                                <option>Bags</option>
+                                <option>Drum</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Gross Weight *</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control border fs-12 py-2" value="0.000">
+                                <span class="input-group-text border-start-0 bg-light fs-11">KG</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Net Weight</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control border fs-12 py-2" value="0.000">
+                                <span class="input-group-text border-start-0 bg-light fs-11">KG</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 p-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none fs-12 fw-bold" onclick="nextStep(1)">← Back</button>
+                    <button type="button" class="btn btn-success btn-sm px-4 fw-bold" onclick="nextStep(3)">Next: Line Items →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Line Items & Batches -->
+        <div id="step3" style="display: none;">
+            <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-list-check me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Line Items — Despatching Against PO</h6>
+                    <button type="button" class="ms-auto btn btn-link text-muted text-decoration-none fs-10 p-0 fw-bold text-uppercase me-3" onclick="nextStep(2)">← Back</button>
+                    <button type="button" class="btn btn-success btn-sm px-3 fw-bold fs-10" onclick="nextStep(4)">Next: Documents →</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="p-3" style="background-color: #f0fdf4;">
+                        <div class="d-flex align-items-center">
+                            <i class="ri-information-line fs-16 text-success me-2"></i>
+                            <span class="fs-11 fw-bold text-success">Rule: Despatched quantity cannot exceed the PO open quantity. For batch-managed items, enter batch number, manufacture date, and expiry date below each line.</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 fs-11 text-start">
+                            <thead class="text-muted text-uppercase fs-10 fw-bold" style="background-color: #f9fafb; border-bottom: 1px solid #f1f5f9;">
+                                <tr>
+                                    <th class="ps-4 py-3">PO Line</th>
+                                    <th>Material / Description</th>
+                                    <th>HSN/SAC</th>
+                                    <th>PO Open Qty</th>
+                                    <th style="width: 120px;">Despatching Qty *</th>
+                                    <th>UOM</th>
+                                    <th>Packages</th>
+                                    <th>Gross Wt</th>
+                                    <th>Delivery SLoc</th>
+                                    <th>Certificate No.</th>
+                                    <th>Country</th>
+                                    <th class="pe-4">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="12" class="text-center py-5 text-muted fw-medium fs-12">
+                                        No lines — select a PO or add manually
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-top-0 p-4">
+                    <div class="row text-end">
+                        <div class="col-md-3 offset-md-3">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-0">Lines</label>
+                            <h4 class="fw-bold mb-0">0</h4>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-0">Total Despatched</label>
+                            <h4 class="fw-bold mb-0">0.000</h4>
+                        </div>
+                        <div class="col-md-3 pe-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-0">Total Gross Weight</label>
+                            <h4 class="fw-bold mb-0">0 KG</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Documents & Attachments -->
+        <div id="step4" style="display: none;">
+            <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-attachment-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Documents & Attachments</h6>
+                    <button type="button" class="ms-auto btn btn-link text-muted text-decoration-none fs-10 p-0 fw-bold text-uppercase me-3" onclick="nextStep(3)">← Back</button>
+                    <button type="button" class="btn btn-success btn-sm px-4 fw-bold fs-10" onclick="nextStep(5)">Next: Review →</button>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-text-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">Tax Invoice <span class="badge bg-danger-subtle text-danger ms-1 fs-9">Mandatory</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Required — please upload</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-text-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">E-Way Bill <span class="badge bg-danger-subtle text-danger ms-1 fs-9">Mandatory</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Required — please upload</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-text-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">LR / Consignment Note <span class="badge bg-danger-subtle text-danger ms-1 fs-9">Mandatory</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Required — please upload</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Optional Docs -->
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm opacity-75">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">Packing List <span class="badge bg-light text-muted ms-1 fs-9 border">Optional</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Not yet uploaded</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm opacity-75">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">Quality / Test Certificate <span class="badge bg-light text-muted ms-1 fs-9 border">Optional</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Not yet uploaded</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-sub                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm opacity-75">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">Certificate of Analysis (COA) <span class="badge bg-light text-muted ms-1 fs-9 border">Optional</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Not yet uploaded</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm opacity-75">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-file-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">Delivery Challan <span class="badge bg-light text-muted ms-1 fs-9 border">Optional</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Not yet uploaded</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm opacity-75">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-alert-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">MSDS (Safety Data Sheet) <span class="badge bg-light text-muted ms-1 fs-9 border">Optional</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Not yet uploaded</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 border rounded-3 d-flex align-items-center transition-all hover-shadow-sm opacity-75">
+                                <div class="bg-light rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="ri-camera-line text-muted fs-18"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-1 fs-12">Goods Photo (Pre-Despatch) <span class="badge bg-light text-muted ms-1 fs-9 border">Optional</span></h6>
+                                    <p class="text-muted fs-11 mb-0">Not yet uploaded</p>
+                                </div>
+                                <button type="button" class="btn btn-light btn-sm ms-auto fw-bold px-3 border border-light-subtle fs-11">Upload</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Review & Submit -->
+        <div id="step5" style="display: none;">
+            <div class="d-flex align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Review all details before submitting</h5>
+                <button type="button" class="ms-auto btn btn-link text-muted text-decoration-none fs-12 fw-bold" onclick="nextStep(4)">← Back</button>
+            </div>
+
+            <!-- Header Summary -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-survey-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Header Summary</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4 text-start">
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">ASN No.</label>
+                            <span class="fw-bold fs-12 text-success">ASN-2026-60524</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">PO Reference</label>
+                            <span class="fw-bold fs-12">PO-2026-04512</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">Despatch Date</label>
+                            <span class="fw-bold fs-12">12 May 2026</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">Carrier</label>
+                            <span class="fw-bold fs-12">—</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">Vehicle</label>
+                            <span class="fw-bold fs-12">—</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">LR Number</label>
+                            <span class="fw-bold fs-12">—</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">E-Way Bill</label>
+                            <span class="fw-bold fs-12">—</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">EWB Valid Until</label>
+                            <span class="fw-bold fs-12">15 May 2026</span>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-1 d-block">Invoice</label>
+                            <span class="fw-bold fs-12">— · ₹0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lines Summary -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-list-unordered me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">0 Lines</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 fs-11 text-start">
+                        <thead class="text-muted text-uppercase fs-10 fw-bold" style="background-color: #f9fafb; border-bottom: 1px solid #f1f5f9;">
+                            <tr>
+                                <th class="ps-4 py-3">Line</th>
+                                <th>Description</th>
+                                <th>HSN</th>
+                                <th>PO Qty</th>
+                                <th>Despatching</th>
+                                <th>UOM</th>
+                                <th class="pe-4">Batches</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">No line items added</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white border-top-0 p-4">
+                    <div class="d-flex justify-content-end align-items-center gap-5">
+                        <div class="text-center">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-0">Documents Uploaded</label>
+                            <h5 class="fw-bold mb-0">0 / 9</h5>
+                        </div>
+                        <div class="text-center">
+                            <label class="text-muted fs-10 fw-bold text-uppercase mb-0">Mandatory Docs</label>
+                            <h5 class="fw-bold mb-0 text-danger">0/3 <i class="ri-close-line"></i></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-success border-0 shadow-none mb-5 d-flex align-items-center" style="background-color: #f0fdf4; border-radius: 8px;">
+                <i class="ri-checkbox-circle-line fs-18 text-success me-2"></i>
+                <span class="fs-12 fw-bold text-success">✓ By submitting, you confirm this ASN accurately represents the goods despatched. The buyer will receive a notification immediately.</span>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .fs-9 { font-size: 9px; }
+    .fs-10 { font-size: 10px; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .fs-18 { font-size: 18px; }
+    .fw-bold { font-weight: 700 !important; }
+
+    /* Stepper Styling */
+    .stepper-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 140px;
+        text-align: center;
+        position: relative;
+    }
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+        margin-bottom: 8px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    .step-text {
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .step-item.active .step-icon {
+        background: #065f46;
+        border-color: #065f46;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(6, 95, 70, 0.2);
+    }
+    .step-item.active .step-text {
+        color: #065f46;
+    }
+    .step-item.completed .step-icon {
+        background: #f0fdf4;
+        border-color: #16a34a;
+        color: #16a34a;
+    }
+    .step-item.completed .step-icon::before {
+        content: '\eb7a';
+        font-family: 'remixicon';
+        font-size: 14px;
+    }
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e2e8f0;
+        margin-top: -24px;
+        min-width: 40px;
+    }
+    .step-line.active {
+        background: #16a34a;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #16a34a;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    }
+</style>
+
+<script>
+    function nextStep(step) {
+        // Hide all steps
+        for(let i=1; i<=5; i++) {
+            const stepDiv = document.getElementById('step' + i);
+            if(stepDiv) stepDiv.style.display = 'none';
+        }
+        
+        // Show target step
+        document.getElementById('step' + step).style.display = 'block';
+        
+        // Update stepper UI
+        const stepItems = document.querySelectorAll('.step-item');
+        stepItems.forEach((item, index) => {
+            const stepNum = index + 1;
+            if (stepNum < step) {
+                item.classList.add('completed');
+                item.classList.remove('active');
+            } else if (stepNum === step) {
+                item.classList.remove('completed');
+                item.classList.add('active');
+            } else {
+                item.classList.remove('completed', 'active');
+            }
+        });
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+</script>
+{% endblock %}

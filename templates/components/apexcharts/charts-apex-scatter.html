@@ -1,0 +1,69 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}Apex Scatter Charts {% endblock title %} 
+
+
+{% block content %}
+
+    {% block pagetitle %}
+        {% include "partials/page-title.html" with pagetitle="Apexcharts" title="Scatter Charts" %}
+    {% endblock pagetitle %}
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Basic Scatter Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="basic_scatter" data-colors='["--in-primary", "--in-success", "--in-warning"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Scatter - Datetime Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="datetime_scatter" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-warning", "--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Scatter Images Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="images_scatter" data-colors='["--in-primary", "--in-danger"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+{% endblock content %}
+
+{% block extra_js %}          
+
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/apexcharts.min.js' %}"></script>
+
+    <!-- scatter charts init -->
+    <script src="{% static 'js/pages/apexcharts-scatter.init.js' %}"></script>
+   
+    
+{% endblock extra_js %}
+ 
+  

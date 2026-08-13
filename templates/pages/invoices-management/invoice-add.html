@@ -1,0 +1,229 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Add Invoice - Invoika{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>Create New Invoice
+                </h4>
+
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:invoice' %}">Invoices</a></li>
+                        <li class="breadcrumb-item active">Create</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" id="invoiceForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Customer Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        <input type="text" class="form-control" name="customer_name" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Invoice Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                        <input type="date" class="form-control" name="invoice_date" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Items</label>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="itemsTable">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Item</th>
+                                                    <th>Quantity</th>
+                                                    <th>Price</th>
+                                                    <th>Total</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <input type="text" class="form-control" name="items[]" placeholder="Enter item name">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" class="form-control quantity" name="quantities[]" min="1" value="1" onchange="calculateTotal(this)">
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">$</span>
+                                                            <input type="number" class="form-control price" name="prices[]" min="0" step="0.01" onchange="calculateTotal(this)">
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">$</span>
+                                                            <input type="number" class="form-control total" readonly>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="5">
+                                                        <button type="button" class="btn btn-info btn-sm" id="addItem">
+                                                            <i class="fas fa-plus me-1"></i> Add Item
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">$</span>
+                                                            <input type="number" class="form-control" id="subtotal" readonly>
+                                                        </div>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3" class="text-end"><strong>Tax (10%):</strong></td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">$</span>
+                                                            <input type="number" class="form-control" id="tax" readonly>
+                                                        </div>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                                    <td>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">$</span>
+                                                            <input type="number" class="form-control" id="grandTotal" readonly>
+                                                        </div>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="text-end">
+                                    <button type="button" class="btn btn-secondary me-2" onclick="window.location.href='{% url 'pages:invoice' %}'">
+                                        <i class="fas fa-times me-1"></i> Cancel
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Save Invoice
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function calculateTotal(input) {
+        const row = input.closest('tr');
+        const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+        const price = parseFloat(row.querySelector('.price').value) || 0;
+        const total = quantity * price;
+        row.querySelector('.total').value = total.toFixed(2);
+        updateTotals();
+    }
+
+    function updateTotals() {
+        let subtotal = 0;
+        document.querySelectorAll('.total').forEach(input => {
+            subtotal += parseFloat(input.value) || 0;
+        });
+        
+        const tax = subtotal * 0.1;
+        const grandTotal = subtotal + tax;
+        
+        document.getElementById('subtotal').value = subtotal.toFixed(2);
+        document.getElementById('tax').value = tax.toFixed(2);
+        document.getElementById('grandTotal').value = grandTotal.toFixed(2);
+    }
+
+    function removeItem(button) {
+        button.closest('tr').remove();
+        updateTotals();
+    }
+
+    document.getElementById('addItem').addEventListener('click', function() {
+        const tbody = document.querySelector('#itemsTable tbody');
+        const newRow = tbody.insertRow();
+        newRow.innerHTML = `
+            <td>
+                <input type="text" class="form-control" name="items[]" placeholder="Enter item name">
+            </td>
+            <td>
+                <input type="number" class="form-control quantity" name="quantities[]" min="1" value="1" onchange="calculateTotal(this)">
+            </td>
+            <td>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control price" name="prices[]" min="0" step="0.01" onchange="calculateTotal(this)">
+                </div>
+            </td>
+            <td>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" class="form-control total" readonly>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+    });
+
+    // Initialize the first row's total
+    calculateTotal(document.querySelector('.quantity'));
+</script>
+{% endblock %}
+                    
+         
+
+   
+

@@ -1,0 +1,228 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Prospects | aequm{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h3 class="mb-1 text-success fw-bold"><i class="fas fa-user-clock me-2"></i>Vendor Prospect</h3>
+            <p class="text-muted mb-0">Manage and approve initial onboarding requests submitted by potential suppliers.</p>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th scope="col">Legal Entity Name</th>
+                            <th scope="col">Contact Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone Number</th>
+                            <th scope="col">Designation</th>
+                            <th scope="col">Created Date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-center" style="width: 150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="onboardingRequestsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
+                                Loading onboarding requests...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div class="toast-container"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadPendingOnboardingRequests();
+
+    function loadPendingOnboardingRequests() {
+        const tbody = document.getElementById('onboardingRequestsTableBody');
+        const alertContainer = document.getElementById('alert-container');
+        
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <div class="spinner-border text-success mb-3" role="status"></div>
+                    <div>Loading onboarding requests...</div>
+                </td>
+            </tr>
+        `;
+
+        fetch('/api/vendor-onboarding/requests')
+            .then(res => res.json())
+            .then(response => {
+                console.log('Onboarding Requests Response:', response);
+                const requests = response.data?.requests || [];
+                
+                if (requests.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 text-success-light opacity-50"></i>
+                                <h5 class="fw-semibold mb-1">No pending prospects found</h5>
+                                <p class="mb-0">All onboarding requests have been processed.</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                let rowsHtml = '';
+                requests.forEach(item => {
+                    const dateStr = item.createdDate ? new Date(item.createdDate).toLocaleString() : '-';
+                    let statusBadge = '';
+                    let actionBtn = '';
+
+                    if (item.onboardingStatus === 'PENDING_LINK') {
+                        statusBadge = `<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-1 rounded-pill fw-semibold">Pending Link</span>`;
+                        actionBtn = `<button class="btn btn-sm btn-success generate-onboarding-link-btn" data-user-id="${item.userId}">
+                                        <i class="fas fa-link me-1"></i>Create Link
+                                     </button>`;
+                    } else if (item.onboardingStatus === 'LINK_GENERATED' || item.onboardingToken) {
+                        statusBadge = `<span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">Link Generated</span>`;
+                        const fullLink = window.location.origin + '/vendor/onboarding/?token=' + (item.onboardingToken || '');
+                        actionBtn = `<button class="btn btn-sm btn-outline-success copy-link-btn" data-link="${fullLink}">
+                                        <i class="far fa-copy me-1"></i>Copy Link
+                                     </button>`;
+                    } else {
+                        statusBadge = `<span class="badge bg-secondary-subtle text-secondary border border-secondary px-3 py-1 rounded-pill fw-semibold">${item.onboardingStatus || 'Unknown'}</span>`;
+                        actionBtn = `<span class="text-muted">-</span>`;
+                    }
+
+                    rowsHtml += `
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-success-subtle rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-building text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold">${item.vendorLegalEntityName || '-'}</h6>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="fw-semibold">${item.vendorContactName || '-'}</span></td>
+                            <td>${item.vendorEmail || '-'}</td>
+                            <td>${item.vendorPhoneNumber || '-'}</td>
+                            <td>${item.vendorDesignation || '-'}</td>
+                            <td><span class="text-muted">${dateStr}</span></td>
+                            <td>${statusBadge}</td>
+                            <td class="text-center">${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+
+                tbody.innerHTML = rowsHtml;
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3 opacity-50"></i>
+                            <h5 class="fw-semibold">Connection Error</h5>
+                            <p class="mb-0">Failed to load onboarding requests from server.</p>
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+
+    // Generate link token handler
+    document.addEventListener('click', function(e) {
+        const targetBtn = e.target.closest('.generate-onboarding-link-btn');
+        if (targetBtn) {
+            const userId = targetBtn.getAttribute('data-user-id');
+            const originalHtml = targetBtn.innerHTML;
+            
+            targetBtn.disabled = true;
+            targetBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Generating...';
+
+            fetch(`/api/vendor-onboarding/generate-link/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(response => {
+                if (response.status === '200') {
+                    showToast('Success', 'Onboarding link generated successfully', 'success');
+                    loadPendingOnboardingRequests();
+                } else {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = originalHtml;
+                    showToast('Error', response.statusMsg || 'Failed to generate link', 'danger');
+                }
+            })
+            .catch(err => {
+                targetBtn.disabled = false;
+                targetBtn.innerHTML = originalHtml;
+                showToast('Error', 'Server error generating link', 'danger');
+            });
+        }
+    });
+
+    // Copy link helper
+    document.addEventListener('click', function(e) {
+        const copyBtn = e.target.closest('.copy-link-btn');
+        if (copyBtn) {
+            const linkText = copyBtn.getAttribute('data-link');
+            
+            navigator.clipboard.writeText(linkText).then(() => {
+                const originalHtml = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                copyBtn.className = 'btn btn-sm btn-success';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHtml;
+                    copyBtn.className = 'btn btn-sm btn-outline-success';
+                }, 2000);
+            }).catch(err => {
+                console.error(err);
+                showToast('Error', 'Failed to copy link to clipboard', 'danger');
+            });
+        }
+    });
+
+    function showToast(title, message, type) {
+        const toastHtml = `
+            <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>${title}:</strong> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>`;
+        const toastContainer = document.querySelector('.toast-container');
+        if (toastContainer) {
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,636 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Purchase Requisitions - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header {
+        background-color: #198754 !important;
+        padding: 1rem;
+    }
+
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+
+    .table th {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="las la-shopping-basket me-2"></i>Purchase Requisitions
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Purchase Requisitions</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-white mb-0">Purchase Requisitions</h4>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light" id="bulkUploadPRBtn">
+                                <i class="mdi mdi-upload me-1"></i> Bulk Upload
+                            </button>
+                            <a href="{% url 'pages:pr_create' %}" class="btn btn-light" id="createPRBtn">
+                                <i class="mdi mdi-plus me-1"></i> Create PR
+                            </a>
+                            <!-- Send Notification Button -->
+                            <button type="button" class="btn btn-theme" id="sendNotificationBtn">
+                                <i class="mdi mdi-bell-outline me-1"></i> Send Notification
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Filters Section -->
+                    <div class="row mb-3 g-3">
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                            <label for="locationFilter" class="form-label">Filter by Location</label>
+                            <select class="form-control" id="locationFilter">
+                                <option value="">Select Location...</option>
+                                <option value="JP Nagar">JP Nagar</option>
+                            </select>
+                        </div>
+                        <div class="col-xl-4 col-lg-4 col-md-6 col-sm-12">
+                            <label for="searchPRInput" class="form-label">Search PR</label>
+                            <div class="search-box">
+                                <input type="text" class="form-control" id="searchPRInput"
+                                    placeholder="Search PR Number...">
+                                <i class="las la-search search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                            <label for="statusFilter" class="form-label">Status</label>
+                            <select class="form-control" id="statusFilter">
+                                <option value="">All Statuses</option>
+                                <option value="DRAFT">Draft</option>
+                                <option value="SUBMITTED">Submitted</option>
+                                <!-- <option value="APPROVED">Approved</option> -->
+                            </select>
+                        </div>
+                        <div class="col-xl-2 col-lg-12 col-md-6 col-sm-12 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-secondary w-100" id="refreshBtn">
+                                <i class="las la-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PR Table -->
+                    <div class="table-responsive">
+                        <table class="table align-middle table-nowrap mb-0" id="prTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">PR Number</th>
+                                    <th scope="col">Material SKU</th>
+                                    <th scope="col">Quantity</th>
+                                    <th scope="col">UOM</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Sent Date</th>
+                                    <th scope="col">Required Date</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Example Row -->
+                                <tr>
+                                    <td><a href="#" class="fw-medium">PR-2026-001</a></td>
+                                    <td>JP Nagar</td>
+                                    <td>3 Items</td>
+                                    <td>₹25,000</td>
+                                    <td><span class="badge bg-primary">Submitted</span></td>
+                                    <td>05-Mar-2026</td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-soft-info"><i
+                                                    class="las la-eye fs-16"></i></button>
+                                            <button class="btn btn-sm btn-soft-secondary"><i
+                                                    class="las la-pen fs-16"></i></button>
+                                            <button class="btn btn-sm btn-soft-success"><i
+                                                    class="las la-arrow-up fs-16"></i></button>
+                                            <button class="btn btn-sm btn-soft-danger"><i
+                                                    class="las la-trash fs-16"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View PR Modal -->
+    <div class="modal fade" id="viewPRModal" tabindex="-1" aria-labelledby="viewPRModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header py-3 px-4" style="background: rgba(13, 110, 253, 0.1);">
+                    <h5 class="modal-title" id="viewPRModalLabel">View Purchase Requisition <span id="viewPrNumberBadge"
+                            class="badge bg-secondary ms-2"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4 pb-5">
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block">Location</small>
+                            <strong id="viewPrLocation">--</strong>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block">Required Date</small>
+                            <strong id="viewPrRequiredDate">--</strong>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block">Requested By</small>
+                            <strong id="viewPrRequestedBy">--</strong>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted d-block">Remarks</small>
+                            <span id="viewPrRemarks" style="white-space: pre-wrap;">--</span>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3">Material Items</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle table-nowrap" id="viewPrItemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item Code</th>
+                                    <th>Quantity</th>
+                                    <th>UOM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Items injected here -->
+                            </tbody>
+                            <tfoot>
+                                <!-- Removed Grand Total since prices are hidden -->
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete PR Modal -->
+    <div class="modal fade" id="deletePRModal" tabindex="-1" aria-labelledby="deletePRModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header py-3 px-4" style="background: rgba(220, 53, 69, 0.1);">
+                    <h5 class="modal-title text-danger" id="deletePRModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4 pb-5">
+                    Are you sure you want to delete this Purchase Requisition?
+                    <br><small class="text-muted">This action only applies to Draft PRs.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeletePRBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Send Notification Modal -->
+    <div class="modal fade" id="sendNotificationModal" tabindex="-1" aria-labelledby="sendNotificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header py-3 px-4" style="background: rgba(13, 110, 253, 0.1);">
+                    <h5 class="modal-title" id="sendNotificationModalLabel">Send Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4 pb-5">
+                    <div class="mb-3">
+                        <label for="notificationEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="notificationEmail" placeholder="recipient@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="notificationPrSelect" class="form-label">PR Number</label>
+                        <select class="form-select" id="notificationPrSelect">
+                            <option value="">Select PR...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-theme" id="sendNotificationConfirmBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function(){
+            // Existing init code already present; add new handlers
+            $('#sendNotificationBtn').on('click', function(){
+                var modal = new bootstrap.Modal(document.getElementById('sendNotificationModal'));
+                modal.show();
+                loadPrNumbers();
+            });
+            function loadPrNumbers(){
+                $.ajax({
+                    url: '/api/notifications/pr-numbers',
+                    method: 'GET',
+                    success: function(resp){
+                        var select = $('#notificationPrSelect');
+                        select.empty();
+                        select.append('<option value="">Select PR...</option>');
+                        resp.forEach(function(pr){
+                            select.append(`<option value="${pr}">${pr}</option>`);
+                        });
+                    },
+                    error: function(){
+                        showToast('Error','Failed to load PR numbers','danger');
+                    }
+                });
+            }
+            $('#sendNotificationConfirmBtn').on('click', function(){
+                var email = $('#notificationEmail').val().trim();
+                var prNumber = $('#notificationPrSelect').val();
+                if(!email || !prNumber){
+                    showToast('Error','Please provide both email and PR number','danger');
+                    return;
+                }
+                $.ajax({
+                    url: '/api/notifications/send-notification',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({email: email, pr_number: prNumber}),
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '')
+                    },
+                    success: function(){
+                        showToast('Success','Notification sent','success');
+                        var modal = bootstrap.Modal.getInstance(document.getElementById('sendNotificationModal'));
+                        modal.hide();
+                    },
+                    error: function(xhr){
+                        var msg = xhr.responseJSON?.detail || 'Failed to send notification';
+                        showToast('Error', msg, 'danger');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Submit PR Modal -->
+    <div class="modal fade" id="submitPRModal" tabindex="-1" aria-labelledby="submitPRModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                    <h5 class="modal-title" id="submitPRModalLabel">Confirm Submit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-4 pb-5">
+                    <p class="mb-0">Are you sure you want to Submit this PR for approval?</p>
+                    <small class="text-danger">You will not be able to edit it afterwards.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-theme" id="confirmSubmitPRBtn">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        // Toast notification function
+        function showToast(title, message, type = 'success') {
+            var isSuccess = type === 'success' || type === 'info';
+            var iconHtml = isSuccess
+                ? '<span class="toast-icon"><i class="mdi mdi-check-circle-outline"></i></span>'
+                : '<span class="toast-icon"><i class="mdi mdi-alert-circle-outline"></i></span>';
+            var toastClass = isSuccess ? '' : 'toast-warning';
+            if (type === 'error' || type === 'danger') toastClass = 'toast-danger bg-danger text-white';
+            else if (type === 'warning') toastClass = 'toast-warning bg-warning text-dark';
+            else if (type === 'info') toastClass = 'toast-info bg-info text-white';
+            else toastClass = 'toast-success bg-success text-white';
+
+            var toast = `
+            <div class="toast-custom d-flex align-items-center position-relative p-3 mb-2 ${toastClass} rounded shadow-sm" style="min-width: 300px;">
+                ${iconHtml}
+                <div class="flex-grow-1 ms-2">
+                    <strong>${title}</strong><br>
+                    <span>${message}</span>
+                </div>
+                <button class="toast-close btn-close ms-2" ${!isSuccess ? 'style="filter: invert(1)"' : ''} onclick="this.parentElement.remove()"></button>
+            </div>
+        `;
+            $('.toast-container').empty();
+            $('.toast-container').append(toast);
+
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                $('.toast-container .toast-custom').fadeOut(400, function () { $(this).remove(); });
+            }, 4000);
+        }
+
+        $(document).ready(function () {
+            // Initialize
+            loadLocations();
+            loadPurchaseRequisitions();
+
+            // Event Listeners
+            $('#refreshBtn').on('click', function () {
+                loadPurchaseRequisitions();
+            });
+
+            $('#locationFilter, #statusFilter').on('change', function () {
+                loadPurchaseRequisitions();
+            });
+
+            // Debounce search input
+            let searchTimeout;
+            $('#searchPRInput').on('input', function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function () {
+                    loadPurchaseRequisitions();
+                }, 500);
+            });
+
+            // ==========================================
+            // Data Fetching Functions
+            // ==========================================
+
+            function loadLocations() {
+                $.ajax({
+                    url: '{% url "pages:locations_list_proxy" %}',
+                    method: 'GET',
+                    success: function (response) {
+                        if (response) {
+                            const locationSelect = $('#locationFilter');
+                            locationSelect.empty();
+                            locationSelect.append('<option value="">All Locations</option>');
+
+                            // Handle the array structure which might be returned directly or wrapped
+                            const locationsList = response.data?.content || response.data || response || [];
+                            if (Array.isArray(locationsList)) {
+                                locationsList.forEach(loc => {
+                                    const name = loc.name || loc.locationName;
+                                    const locId = loc.locationId || loc.id;
+                                    if (name && locId) {
+                                        locationSelect.append(`<option value="${locId}">${name}</option>`);
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error loading locations:', error);
+                    }
+                });
+            }
+
+            function loadPurchaseRequisitions() {
+                // Build query params
+                const params = {};
+                const locationId = $('#locationFilter').val();
+                const status = $('#statusFilter').val();
+                const search = $('#searchPRInput').val();
+
+                if (locationId) params.locationId = locationId;
+                if (status) params.status = status;
+                if (search) params.search = search;
+
+                // Show loading state
+                const tbody = $('#prTable tbody');
+                tbody.html('<tr><td colspan="8" class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>');
+
+                $.ajax({
+                    url: '{% url "pages:vendor_purchase_requisitions_proxy" %}',
+                    method: 'GET',
+                    data: params,
+                    success: function (response) {
+                        tbody.empty();
+
+                        // Depending on how your Java backend wraps pagination
+                        const prList = response.content || response.data?.content || response.data || response || [];
+
+                        if (Array.isArray(prList) && prList.length > 0) {
+                            prList.forEach(item => {
+                                const sentDateStr = item.sentDate ? new Date(item.sentDate).toLocaleDateString() : 'N/A';
+                                const requiredDateStr = item.requiredDate ? new Date(item.requiredDate).toLocaleDateString() : 'N/A';
+
+                                // Badge color mapping
+                                let badgeClass = 'bg-secondary';
+                                if (item.assignmentStatus === 'RELEASED') badgeClass = 'bg-success';
+                                else if (item.assignmentStatus === 'SUBMITTED') badgeClass = 'bg-primary';
+
+                                const row = `
+                                <tr>
+                                    <td><span class="fw-medium text-success">${item.prNumber || 'N/A'}</span></td>
+                                    <td>${item.materialSku || 'Unknown'}</td>
+                                    <td>${item.quantity || 0}</td>
+                                    <td>${item.uom || 'N/A'}</td>
+                                    <td><span class="badge ${badgeClass}">${item.assignmentStatus || 'PENDING'}</span></td>
+                                    <td>${sentDateStr}</td>
+                                    <td>${requiredDateStr}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-soft-info view-pr-btn" data-id="${item.prNumber}">
+                                            <i class="las la-eye fs-16"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                                tbody.append(row);
+                            });
+
+                            // Bind action buttons inside table
+                            bindTableActions();
+
+                        } else {
+                            tbody.html('<tr><td colspan="8" class="text-center text-muted py-4">No purchase requisitions found matching your criteria.</td></tr>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error loading PRs:', error);
+                        tbody.html(`<tr><td colspan="8" class="text-center text-danger py-4">Failed to load Purchase Requisitions. Please try again. (${error})</td></tr>`);
+                    }
+                });
+            }
+
+            let prToProcess = null;
+
+            function bindTableActions() {
+                // View PR Action
+                $('.view-pr-btn').on('click', function (e) {
+                    e.preventDefault();
+                    const prId = $(this).data('id');
+
+                    // Show a loading state inside the modal if needed, or open then load
+                    const tbody = $('#viewPrItemsTable tbody');
+                    tbody.html('<tr><td colspan="3" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading details...</td></tr>');
+
+                    // Reset fields
+                    $('#viewPrNumberBadge').text('');
+                    $('#viewPrLocation').text('--');
+                    $('#viewPrRequiredDate').text('--');
+                    $('#viewPrRequestedBy').text('--');
+                    $('#viewPrRemarks').text('--');
+                    $('#viewPrGrandTotal').text('₹0.00');
+
+                    const modal = new bootstrap.Modal(document.getElementById('viewPRModal'));
+                    modal.show();
+
+                    // Fetch details
+                    $.ajax({
+                        url: `{% url 'pages:vendor_purchase_requisition_detail_proxy' %}?prNumber=${prId}`,
+                        method: 'GET',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '')
+                        },
+                        success: function (response) {
+                            const pr = response.data || response;
+
+                            $('#viewPrNumberBadge').text(pr.prNumber || 'Draft');
+                            $('#viewPrNumberBadge').removeClass().addClass('badge ms-2');
+                            if (pr.status === 'SUBMITTED') $('#viewPrNumberBadge').addClass('bg-primary');
+                            else if (pr.status === 'APPROVED') $('#viewPrNumberBadge').addClass('bg-success');
+                            else if (pr.status === 'REJECTED') $('#viewPrNumberBadge').addClass('bg-danger');
+                            else $('#viewPrNumberBadge').addClass('bg-warning text-dark'); // DRAFT
+
+                            $('#viewPrLocation').text(pr.locationName || pr.locationId || 'N/A');
+                            $('#viewPrRequiredDate').text(pr.requiredDate ? new Date(pr.requiredDate).toLocaleDateString() : 'N/A');
+                            $('#viewPrRequestedBy').text(pr.requestedByName || pr.requestedBy || 'N/A');
+                            $('#viewPrRemarks').text(pr.remarks || 'None');
+
+                            // Removed Grand Total update
+
+                            tbody.empty();
+                            const items = pr.items || [];
+                            if (items.length > 0) {
+                                items.forEach(item => {
+                                    const qty = parseFloat(item.quantity || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                                    tbody.append(`
+                                    <tr>
+                                        <td><strong>${item.sku || item.materialName || 'Unknown'}</strong></td>
+                                        <td>${qty}</td>
+                                        <td>${item.uom || 'N/A'}</td>
+                                    </tr>
+                                `);
+                                });
+                            } else {
+                                tbody.html('<tr><td colspan="3" class="text-center text-muted">No items found.</td></tr>');
+                            }
+                        },
+                        error: function (xhr) {
+                            tbody.html('<tr><td colspan="3" class="text-center text-danger">Error loading details.</td></tr>');
+                            showToast('Error', 'Failed to fetch PR details.', 'danger');
+                        }
+                    });
+                });
+
+                // Trigger Delete Modal
+                $('.delete-pr-btn').on('click', function (e) {
+                    e.preventDefault();
+                    prToProcess = $(this).data('id');
+                    const modal = new bootstrap.Modal(document.getElementById('deletePRModal'));
+                    modal.show();
+                });
+
+                // Trigger Submit Modal
+                $('.submit-pr-btn').on('click', function (e) {
+                    e.preventDefault();
+                    prToProcess = $(this).data('id');
+                    const modal = new bootstrap.Modal(document.getElementById('submitPRModal'));
+                    modal.show();
+                });
+            }
+
+            // Confirm Delete Action
+            $('#confirmDeletePRBtn').on('click', function () {
+                if (prToProcess) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deletePRModal'));
+                    modal.hide();
+                    deletePR(prToProcess);
+                    prToProcess = null;
+                }
+            });
+
+            // Confirm Submit Action
+            $('#confirmSubmitPRBtn').on('click', function () {
+                if (prToProcess) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('submitPRModal'));
+                    modal.hide();
+                    updatePRStatus(prToProcess, 'SUBMITTED');
+                    prToProcess = null;
+                }
+            });
+
+            window.deletePR = function (prId) {
+                $.ajax({
+                    url: `/api/purchase-requisitions/${prId}/`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '')
+                    },
+                    success: function () {
+                        showToast('Success', 'Purchase Requisition deleted completely.', 'success');
+                        loadPurchaseRequisitions();
+                    },
+                    error: function (xhr) {
+                        showToast('Error', 'Failed to delete PR: ' + (xhr.responseJSON?.message || 'Server error'), 'danger');
+                    }
+                });
+            };
+
+            window.updatePRStatus = function (prId, status) {
+                $.ajax({
+                    url: `/api/purchase-requisitions/${prId}/status/`,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '')
+                    },
+                    contentType: 'application/json',
+                    data: JSON.stringify({ status: status }),
+                    success: function () {
+                        showToast('Success', `Purchase Requisition status successfully updated to ${status}.`, 'success');
+                        loadPurchaseRequisitions();
+                    },
+                    error: function (xhr) {
+                        showToast('Error', 'Failed to update status: ' + (xhr.responseJSON?.message || 'Server error'), 'danger');
+                    }
+                });
+            };
+        });
+    </script>
+    {% endblock %}

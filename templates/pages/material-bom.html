@@ -1,0 +1,1105 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Material BOM - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header-theme {
+        background-color: #198754 !important;
+        color: white !important;
+    }
+
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+
+    .section-title {
+        border-bottom: 2px solid #198754;
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .parameter-card {
+        background: #fdfdfd;
+        border: 1px dashed #ced4da;
+        border-radius: 6px;
+        padding: 15px;
+    }
+
+    /* Result Modal & Report Styles from Materials Page */
+    #bomEditModal .modal-header {
+        border-bottom: 1px solid #f1f5f9 !important;
+        background: #fff !important;
+    }
+
+    .bom-report-card {
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+        border: 1px solid #e2e8f0 !important;
+        background: #fff !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    .table-minimal {
+        width: 100% !important;
+        margin-bottom: 0 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+
+    .table-minimal thead th {
+        background-color: #f8fafc !important;
+        color: #1e293b !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.025em !important;
+        padding: 14px 16px !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        border-top: none !important;
+        border-right: 1px solid #e2e8f0 !important;
+    }
+
+    .table-minimal tbody td {
+        padding: 12px 16px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        border-right: 1px solid #e2e8f0 !important;
+        color: #334155 !important;
+        font-size: 0.85rem !important;
+    }
+
+    .table-minimal .bg-warning-minimal {
+        background-color: #fffbeb !important;
+        color: #92400e !important;
+        font-weight: 600 !important;
+    }
+
+    #bomEditModal .btn {
+        border-radius: 6px !important;
+        padding: 8px 16px !important;
+        font-weight: 500 !important;
+    }
+
+    /* Loading States */
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        border-radius: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="container-fluid">
+
+        <!-- Page Title -->
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+                <h3 class="fw-bold">Material BOM Generation</h3>
+                <p class="text-muted">Process aerospace CAD drawings into structured Bill of Materials with multi-layer
+                    logic.</p>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card shadow-lg border-0 mb-5">
+                    <div class="card-header card-header-theme py-3">
+                        <h5 class="card-title mb-0 text-white text-center"><i class="mdi mdi-creation fs-4 me-2"></i>
+                            Configure & Process CAD Drawing</h5>
+                    </div>
+                    <div class="card-body p-4 position-relative">
+                        <div id="configLoadingOverlay" class="loading-overlay">
+                            <div class="text-center">
+                                <div class="spinner-border text-success" role="status"
+                                    style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h5 class="mt-3 text-success fw-bold" id="loadingText">Analyzing Drawing...</h5>
+                            </div>
+                        </div>
+
+                        <!-- 1. BOM Structure -->
+                        <div class="mb-4">
+                            <h6 class="section-title text-center">1. BOM Architecture <span class="text-danger">*</span>
+                            </h6>
+                            <div class="d-flex justify-content-center gap-4">
+                                <div class="form-check card-radio p-0" style="width: 200px;">
+                                    <input class="form-check-input" type="radio" name="bomStructure" id="structSingle"
+                                        value="Single-level" checked>
+                                    <label class="form-check-label p-3 text-center border rounded-3" for="structSingle">
+                                        <span class="fs-15 mb-1 d-block fw-bold">Aerospace Single</span>
+                                        <span class="text-muted d-block small">Standard Fasteners</span>
+                                    </label>
+                                </div>
+                                <div class="form-check card-radio p-0" style="width: 200px;">
+                                    <input class="form-check-input" type="radio" name="bomStructure" id="structMulti"
+                                        value="Multi-level">
+                                    <label class="form-check-label p-3 text-center border rounded-3" for="structMulti">
+                                        <span class="fs-15 mb-1 d-block fw-bold">Assembly Multi</span>
+                                        <span class="text-muted d-block small">Hierarchical Parts</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Processing Parameters -->
+                        <div id="singleLevelParams">
+                            <div class="mb-4">
+                                <h6 class="section-title text-center">2. Manufacturing Specification</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Component Class</label>
+                                        <select class="form-select" id="bomPartType">
+                                            <option value="Nut">Nut</option>
+                                            <option value="Bolt">Bolt</option>
+                                            <option value="Screw">Screw</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Method</label>
+                                        <select class="form-select" id="bomMfgMethod">
+                                            <option value="Machining">Machining</option>
+                                            <option value="Forging">Forging</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Calculation Mode</label>
+                                        <select class="form-select" id="bomInputModeSelect">
+                                            <option value="Auto" selected>Intelligent Auto</option>
+                                            <option value="Scrap">Manual Scrap %</option>
+                                            <option value="Stock">Stock Override</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="parameter-card mt-3">
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Form/Shape</label>
+                                            <select class="form-select form-select-sm" id="bomStockShape">
+                                                <option value="HEX">Hexagonal</option>
+                                                <option value="ROUND">Round Bar</option>
+                                                <option value="SQUARE">Square</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Machining (in)</label>
+                                            <input type="number" step="0.001" class="form-control form-control-sm"
+                                                id="bomMachiningAllowance" value="0.020">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Face (in)</label>
+                                            <input type="number" step="0.001" class="form-control form-control-sm"
+                                                id="bomFaceAllowance" value="0.015">
+                                        </div>
+
+                                        <div class="col-md-12 mt-2" id="scrapInputContainer" style="display: none;">
+                                            <label class="form-label small text-success fw-bold">Scrap Allowance
+                                                (%)</label>
+                                            <input type="number" step="1" class="form-control border-success"
+                                                id="bomScrapPercentage" value="20">
+                                        </div>
+
+                                        <div class="col-md-12 mt-2" id="stockInputContainer" style="display: none;">
+                                            <label class="form-label small text-primary fw-bold">Specific Stock
+                                                Dimension (inch)</label>
+                                            <input type="number" step="0.001" class="form-control border-primary"
+                                                id="bomStockSize" placeholder="e.g. 0.500">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Upload & Master Files -->
+                        <div class="mb-4">
+                            <h6 class="section-title text-center">3. Input Sources</h6>
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Drawing Upload (PDF) <span
+                                        class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i
+                                            class="mdi mdi-file-pdf-outline text-danger"></i></span>
+                                    <input type="file" class="form-control border-dashed" id="bomCadFileInput"
+                                        accept="application/pdf, .dwg, .dxf">
+                                </div>
+                                <div class="form-text small mt-1"><i
+                                        class="mdi mdi-information-outline me-1"></i>Supports standard aerospace
+                                    technical drawings.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Master Reference Database <span
+                                        class="badge bg-soft-info text-info ms-1">Optional</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="mdi mdi-database-sync"></i></span>
+                                    <select class="form-select" id="masterBomFileSelect">
+                                        <option value="" selected>Loading list...</option>
+                                    </select>
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        id="refreshMasterFilesBtn"><i class="mdi mdi-refresh"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Verification Panel -->
+                        <div id="bomFgVerifySection" style="display: none;"
+                            class="alert alert-soft-warning border-warning p-3 mb-4 rounded-3 shadow-sm">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="mdi mdi-alert-decagram text-warning fs-3 me-2"></i>
+                                <span class="fw-bold text-dark">Part Verification Required</span>
+                            </div>
+                            <p class="small text-muted mb-3">Drawing extraction was successful, but the primary Part
+                                Number could not be identified. Please enter it manually to continue:</p>
+                            <div class="input-group shadow-sm">
+                                <input type="text" class="form-control" id="manualFgInput"
+                                    placeholder="Part No. (e.g. NAS1149)">
+                                <button class="btn btn-warning fw-bold px-4" type="button" id="bomConfirmFgBtn">VERIFY &
+                                    SYNC</button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="button" class="btn btn-success btn-lg py-3 fw-bold shadow-sm"
+                                id="generateBomBtn">
+                                <i class="mdi mdi-lightning-bolt-outline fs-4 me-2"></i>GENERATE BILL OF MATERIALS
+                            </button>
+                            <button type="button" class="btn btn-link text-muted btn-sm" id="resetFormBtn">Reset
+                                Configuration</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOM RESULT FULLSCREEN MODAL -->
+<div class="modal fade" id="bomEditModal" tabindex="-1" aria-labelledby="bomEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content border-0">
+            <div class="modal-header py-3 px-4 border-bottom bg-white">
+                <h5 class="modal-title fw-bold d-flex align-items-center" id="bomEditModalLabel">
+                    <i class="mdi mdi-file-tree text-success fs-3 me-2"></i> BOM Extraction Results
+                </h5>
+                <div class="d-flex align-items-center ms-auto">
+                    <div class="input-group input-group-sm me-3 border rounded" style="width: 220px;"
+                        id="modalScrapSection">
+                        <span class="input-group-text bg-light text-muted border-0">Scrap %</span>
+                        <input type="number" class="form-control text-center fw-bold border-0" id="modalScrapInput"
+                            step="0.1" value="20">
+                        <button class="btn btn-success border-0" type="button" id="updateScrapBtn">
+                            <i class="mdi mdi-refresh"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body bg-light-subtle p-4" style="overflow-y: auto;">
+                <div id="bomAccordionContainer" class="accordion mb-4">
+                    <!-- Dynamic Reports Replicated from Materials Page -->
+                </div>
+
+                <!-- Technical Containers for Logic -->
+                <div id="masterTablesContainer" class="d-none">
+                    <table id="bomEditTable">
+                        <tbody id="bomEditTableBody"></tbody>
+                    </table>
+                    <table id="bomExcelTable">
+                        <tbody id="excelBOMTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-white border-top py-3 justify-content-between">
+                <div class="text-muted small"><i class="mdi mdi-clock-outline me-1"></i>Generated at: <span
+                        id="genTimestamp"></span></div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success px-4 fw-bold" id="downloadBomExcelBtn">
+                        <i class="mdi mdi-file-excel-outline me-2"></i>DOWNLOAD EXCEL (XLSX)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- SheetJS for Excel export (using xlsx-js-style for advanced styling) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+
+<script>
+    const bomContext = {
+        bomStructure: 'Single-level',
+        inputMode: 'Auto',
+        currentFile: null,
+        fullBomReportData: null
+    };
+
+    $(document).ready(function () {
+        loadMasterBomFiles();
+
+        // Handle Radio Changes
+        $('input[name="bomStructure"]').on('change', function () {
+            bomContext.bomStructure = $(this).val();
+            if (bomContext.bomStructure === 'Multi-level') {
+                $('#singleLevelParams').slideUp();
+                $('#modalScrapSection').fadeOut();
+            } else {
+                $('#singleLevelParams').slideDown();
+                $('#modalScrapSection').fadeIn();
+            }
+        });
+
+        // Handle Mode Changes
+        $('#bomInputModeSelect').on('change', function () {
+            const mode = $(this).val();
+            bomContext.inputMode = mode;
+            $('#scrapInputContainer, #stockInputContainer').hide();
+            if (mode === 'Scrap') $('#scrapInputContainer').fadeIn();
+            else if (mode === 'Stock') $('#stockInputContainer').fadeIn();
+        });
+
+        $('#refreshMasterFilesBtn').on('click', loadMasterBomFiles);
+        $('#resetFormBtn').on('click', () => { if (confirm('Are you sure you want to clear all inputs?')) location.reload(); });
+        $('#generateBomBtn').on('click', handleGenerate);
+        $('#bomConfirmFgBtn').on('click', () => syncWithJavaDB($('#manualFgInput').val()));
+
+        // Modal Logic
+        $('#updateScrapBtn').on('click', () => handleRecalculate($('#modalScrapInput').val()));
+        $(document).on('click', '#downloadBomExcelBtn', handleExcelDownload);
+    });
+
+    function loadMasterBomFiles() {
+        const $select = $('#masterBomFileSelect');
+        $.ajax({
+            url: "{% url 'pages:master_bom_files_list_proxy' %}",
+            type: 'GET',
+            success: (data) => {
+                let files = data;
+                // Safeguard: handle stringified data
+                if (typeof data === 'string') {
+                    try { files = JSON.parse(data); } catch (e) { console.error("Parse error", e); }
+                }
+
+                if (Array.isArray(files) && files.length > 0) {
+                    let html = '<option value="" selected>No Database - Extraction Only</option>';
+                    files.sort((a, b) => (b.id || 0) - (a.id || 0));
+                    files.forEach(f => {
+                        const fileName = f.fileName || f.file_name || 'Unnamed BOM';
+                        const version = f.version || 1;
+                        const date = f.uploadedAt ? new Date(f.uploadedAt).toLocaleDateString() : 'TBD';
+                        html += `<option value="${f.id}">${fileName} | v${version} | ${date}</option>`;
+                    });
+                    $select.html(html);
+                } else if (files && files.status === 'success' && Array.isArray(files.data)) {
+                    // Fallback to wrapped format just in case
+                    let html = '<option value="" selected>No Database - Extraction Only</option>';
+                    files.data.forEach(f => html += `<option value="${f.id}">${f.fileName || f.file_name}</option>`);
+                    $select.html(html);
+                } else {
+                    $select.html('<option value="">No databases available</option>');
+                }
+            },
+            error: () => $select.html('<option value="">Error fetching files</option>')
+        });
+    }
+
+    function handleGenerate() {
+        const fileInput = document.getElementById('bomCadFileInput');
+        const file = fileInput.files[0];
+        if (!file) { showToast('Error', 'Technical drawing PDF is required.', 'danger'); return; }
+
+        bomContext.currentFile = file;
+        toggleLoading(true, "Extracting Geometric Data...");
+        $('#bomFgVerifySection').hide();
+
+        const formData = new FormData();
+        formData.append('file', file);
+        const masterId = $('#masterBomFileSelect').val();
+        if (masterId) formData.append('master_bom_id', masterId);
+
+        formData.append('bom_structure', bomContext.bomStructure);
+        if (bomContext.bomStructure === 'Single-level') {
+            formData.append('part_type', $('#bomPartType').val());
+            formData.append('mfg_method', $('#bomMfgMethod').val());
+            formData.append('stock_shape', $('#bomStockShape').val());
+            formData.append('machining_allowance', $('#bomMachiningAllowance').val());
+            formData.append('face_allowance', $('#bomFaceAllowance').val());
+            if (bomContext.inputMode === 'Scrap') formData.append('scrap_percentage', $('#bomScrapPercentage').val());
+            if (bomContext.inputMode === 'Stock') formData.append('stock_size', $('#bomStockSize').val());
+        }
+
+        $.ajax({
+            url: "{% url 'pages:bom_aerospace_json_proxy' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            success: function (resp) {
+                if (resp && resp.status === 'success' && resp.data) {
+                    // Cache the CAD data immediately for fallback use
+                    bomContext.fullBomReportData = resp.data;
+
+                    const fg = resp.data.fg_number || (resp.data.header_data && resp.data.header_data.part_number);
+                    if (bomContext.bomStructure === 'Multi-level') {
+                        const masterId = $('#masterBomFileSelect').val();
+                        if (!masterId) {
+                            // No Database selected - show CAD data immediately
+                            toggleLoading(false);
+                            bomContext.fullBomReportData = resp.data;
+                            renderAndShow(resp.data);
+                            showToast('Info', 'Database synchronization skipped (No Database selected). Showing CAD extraction.', 'info');
+                        } else if (!fg || fg.includes('UNKNOWN')) {
+                            const fallback = extractFgFromFilename(file.name);
+                            if (fallback && fallback.length > 2) syncWithJavaDB(fallback);
+                            else { toggleLoading(false); $('#bomFgVerifySection').fadeIn(); }
+                        } else syncWithJavaDB(fg);
+                    } else {
+                        toggleLoading(false);
+                        bomContext.fullBomReportData = resp.data;
+                        renderAndShow(resp.data);
+                    }
+                } else {
+                    toggleLoading(false);
+                    showToast('Extraction Error', 'Could not process PDF structure.', 'danger');
+                }
+            },
+            error: () => { toggleLoading(false); showToast('Timeout', 'Backend processing exceeded limit.', 'danger'); }
+        });
+    }
+
+    function syncWithJavaDB(fg) {
+        toggleLoading(true, `Synchronizing ${fg} with Master BOM...`);
+        const masterId = $('#masterBomFileSelect').val();
+        $.ajax({
+            url: "{% url 'pages:master_bom_fetch_proxy' %}",
+            type: 'GET',
+            data: { fg_number: fg, file_id: masterId },
+            success: function (resp) {
+                toggleLoading(false);
+                if (resp && resp.status === 'success' && resp.data) {
+                    console.log("Master BOM Fetch Success:", resp.data);
+                    bomContext.fullBomReportData = resp.data;
+                    renderAndShow(resp.data);
+                    $('#bomFgVerifySection').hide();
+                } else if (bomContext.fullBomReportData) {
+                    // Fallback to CAD data if already extracted
+                    console.log("Master BOM Fetch Failed. Falling back to CAD Data:", bomContext.fullBomReportData);
+                    showToast('Info', 'Using CAD-extracted data (No match in Master Database).', 'info');
+                    renderAndShow(bomContext.fullBomReportData);
+                    $('#bomFgVerifySection').hide();
+                } else {
+                    console.warn("Master BOM Fetch Failed and no fallback CAD data available.");
+                    showToast('Database Miss', 'Part metadata found in drawing but not in DB.', 'warning');
+                    $('#bomFgVerifySection').fadeIn();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Master BOM Fetch Error:", error);
+                toggleLoading(false);
+                if (bomContext.fullBomReportData) {
+                    showToast('Info', 'Database synchronization failed. Using CAD data.', 'info');
+                    renderAndShow(bomContext.fullBomReportData);
+                } else {
+                    showToast('Error', 'Failed to connect to database.', 'danger');
+                }
+            }
+        });
+    }
+
+    function handleRecalculate(scrap) {
+        toggleLoading(true, `Recalculating Aerospace Specs (${scrap}% scrap)...`);
+        const formData = new FormData();
+        formData.append('file', bomContext.currentFile);
+        formData.append('scrap_percentage', scrap);
+        formData.append('bom_structure', 'Single-level');
+        formData.append('part_type', $('#bomPartType').val());
+        formData.append('mfg_method', $('#bomMfgMethod').val());
+        formData.append('stock_shape', $('#bomStockShape').val());
+        formData.append('machining_allowance', $('#bomMachiningAllowance').val());
+        formData.append('face_allowance', $('#bomFaceAllowance').val());
+
+        $.ajax({
+            url: "{% url 'pages:bom_aerospace_json_proxy' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: { "X-CSRFToken": getCookie("csrftoken") },
+            success: (resp) => {
+                toggleLoading(false);
+                if (resp && resp.status === 'success') {
+                    bomContext.fullBomReportData = resp.data;
+                    renderAndShow(resp.data);
+                }
+            },
+            error: () => toggleLoading(false)
+        });
+    }
+
+    function renderAndShow(data) {
+        $('#genTimestamp').text(new Date().toLocaleString());
+        renderReports(data);
+        // Always show the modal — renderReports shows an empty-state banner if bom is empty
+        $('#bomEditModal').modal('show');
+    }
+
+    function renderReports(data) {
+        const container = $('#bomAccordionContainer');
+        container.empty();
+
+        if (!data) return;
+
+        const isMulti = !!data.header_data;
+
+        if (isMulti) {
+            let header = data.header_data || {};
+            
+            // Flatten semantic groups into the main BOM display array
+            let bomRows = data.bom || [];
+            
+            // Support new Single-Pass architecture with nested children
+            if (data.manufacturing_bom) {
+                data.manufacturing_bom.forEach(parent => {
+                    bomRows.push(parent);
+                    if (parent.children && parent.children.length > 0) {
+                        parent.children.forEach(child => {
+                            child.isChild = true;
+                            bomRows.push(child);
+                        });
+                    }
+                });
+            }
+
+            if (data.wire_table) bomRows = bomRows.concat(data.wire_table);
+            if (data.connectors) bomRows = bomRows.concat(data.connectors);
+            if (data.connector_children) bomRows = bomRows.concat(data.connector_children);
+            if (data.notes_components) bomRows = bomRows.concat(data.notes_components);
+
+            // If API returned empty bom but header_data exists, inject a level-0 placeholder
+            if (bomRows.length === 0) {
+                bomRows = [{
+                    item_code: header.part_number || '-',
+                    description: header.description || '(No description)',
+                    uom: 'EA',
+                    qty: 1,
+                    level: 0,
+                    mfg_part_number: '',
+                    manufacturer: '-'
+                }];
+            }
+
+            // Check if we have any real component rows (anything that is not explicitly level 0)
+            const hasComponents = bomRows.some(r => r.level !== 0);
+
+            // Build table rows — skip level 0 if there are child items
+            let rows = bomRows.map((item, idx) => {
+                if (item.level === 0 && bomRows.length > 1) return '';
+                const mfgUrl = item.manufacturer_url || '';
+                const urlCell = mfgUrl
+                    ? `<a href="${mfgUrl}" target="_blank" rel="noopener noreferrer"
+                          class="text-decoration-none d-inline-flex align-items-center gap-1"
+                          title="${mfgUrl}">
+                          <i class="mdi mdi-web fs-5 text-primary"></i>
+                          <span class="small text-primary">Website</span>
+                       </a>`
+                    : '<span class="text-muted">-</span>';
+                    
+                const prefix = item.isChild ? '&nbsp;&nbsp;&nbsp;&nbsp;├── ' : '';
+                const rowClass = item.isChild ? 'bg-light' : '';
+                
+                const isQtySuspect = !item.qty || isNaN(Number(item.qty)) || String(item.qty).trim() === '-';
+                const qtyDisplayClass = isQtySuspect ? "text-danger fw-bold bg-warning-minimal px-2 py-1 rounded" : "text-success fw-bold";
+                const qtyWarningIcon = isQtySuspect ? '<i class="mdi mdi-alert-circle text-danger ms-1" title="Please check this quantity manually"></i>' : '';
+                
+                return `
+                <tr class="${rowClass}">
+                    <td class="bg-warning-minimal">${header.part_number || '-'}</td>
+                    <td class="bg-warning-minimal text-start small">${header.description || ''}</td>
+                    <td><code class="text-danger fw-bold">${item.item_code || '-'}</code></td>
+                    <td class="text-start small fw-bold text-dark">${prefix}${item.description || '-'}${item.circuit ? `<br><small class="text-muted">Circuit: ${item.circuit} | Size: ${item.wire_size || '-'} | Color: ${item.color || '-'}</small>` : ''}</td>
+                    <td class="text-danger fw-bold">${item.mfg_part_number || '-'}</td>
+                    <td class="text-primary small">${item.manufacturer || '-'}</td>
+                    <td>${urlCell}</td>
+                    <td class="fw-bold">${item.qty || 1}</td>
+                    <td>${item.uom || 'EA'}</td>
+                    <td style="width: 110px;">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span id="display-qty-${idx}" class="${qtyDisplayClass} me-2">${item.qty || 1}${qtyWarningIcon}</span>
+                            <input type="text" id="edit-qty-${idx}" class="form-control form-control-sm text-center fw-bold text-success d-none" value="${item.qty || 1}" style="width:60px;" onblur="$(this).addClass('d-none'); $('#display-qty-${idx}').html($(this).val()).removeClass('d-none').removeClass('text-danger bg-warning-minimal').addClass('text-success');">
+                            <button class="btn btn-sm btn-link text-muted p-0" onclick="$('#display-qty-${idx}').addClass('d-none'); $('#edit-qty-${idx}').removeClass('d-none').focus();"><i class="mdi mdi-pencil"></i></button>
+                        </div>
+                    </td>
+                    <td style="width: 110px;">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span id="display-um-${idx}" class="text-success fw-bold me-2">${item.uom || 'EA'}</span>
+                            <input type="text" id="edit-um-${idx}" class="form-control form-control-sm text-center fw-bold text-success d-none" value="${item.uom || 'EA'}" style="width:60px;" onblur="$(this).addClass('d-none'); $('#display-um-${idx}').text($(this).val()).removeClass('d-none');">
+                            <button class="btn btn-sm btn-link text-muted p-0" onclick="$('#display-um-${idx}').addClass('d-none'); $('#edit-um-${idx}').removeClass('d-none').focus();"><i class="mdi mdi-pencil"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            // Show a banner when bom was empty in the API response
+            const emptyBanner = !hasComponents ? `
+                <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                    <i class="mdi mdi-alert-circle-outline fs-4 me-2"></i>
+                    <div>
+                        <strong>No component rows were extracted from this document.</strong>
+                        The AI could not locate a parts list table. Showing document header only.
+                        Try re-uploading with <em>Multi-level</em> mode or verify the PDF contains a BOM table.
+                    </div>
+                </div>` : '';
+
+            container.append(`
+                ${emptyBanner}
+                <div class="bom-report-card">
+                    <div class="card-header bg-white py-3 border-bottom"><h5 class="mb-0 fw-bold"><i class="mdi mdi-database text-primary me-2"></i>Master Database Hierarchy</h5></div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table-minimal">
+                        <thead><tr><th class="bg-warning-minimal">Product</th><th class="bg-warning-minimal">Product Desc</th><th>Part Number</th><th>Item Desc</th><th class="text-danger">MFG Part No</th><th class="text-primary">Manufacturer</th><th>Website</th><th>Qty</th><th>UM</th><th><i class="mdi mdi-pencil me-1"></i>EDIT QTY</th><th><i class="mdi mdi-pencil me-1"></i>EDIT UM</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table></div></div>
+                </div>
+            `);
+
+            if (data.wire_routing && data.wire_routing.length > 0) {
+                let wireRows = data.wire_routing.map(item => `
+                <tr>
+                    <td class="fw-bold">${item.wire_number || '-'}</td>
+                    <td>${item.wire_size || '-'}</td>
+                    <td><code class="text-dark">${item.color || '-'}</code></td>
+                    <td class="small text-primary fw-bold">${item.from_connection || '-'}</td>
+                    <td class="small">${item.from_cavity || '-'}</td>
+                    <td class="small text-danger fw-bold">${item.to_connection || '-'}</td>
+                    <td class="small">${item.to_cavity || '-'}</td>
+                    <td class="small">${item.wire_type || '-'}</td>
+                    <td class="small text-muted fw-bold">${item.shield || '-'}</td>
+                </tr>`).join('');
+
+                container.append(`
+                    <div class="bom-report-card mt-4">
+                        <div class="card-header bg-white py-3 border-bottom"><h5 class="mb-0 fw-bold"><i class="mdi mdi-vector-line text-info me-2"></i>Wiring Details</h5></div>
+                        <div class="card-body p-0"><div class="table-responsive"><table class="table-minimal">
+                            <thead><tr>
+                                <th>Wire No.</th>
+                                <th>Size</th>
+                                <th>Color</th>
+                                <th class="text-primary">From Connection</th>
+                                <th>From Cavity</th>
+                                <th class="text-danger">To Connection</th>
+                                <th>To Cavity</th>
+                                <th>Wire Type</th>
+                                <th>Shield</th>
+                            </tr></thead>
+                            <tbody>${wireRows}</tbody>
+                        </table></div></div>
+                    </div>
+                `);
+            }
+
+        } else {
+            // Single-level / Aerospace fastener mode
+            const bomList = data.bom || [];
+            if (bomList.length === 0) {
+                container.append(`<div class="alert alert-warning"><i class="mdi mdi-alert-circle-outline me-2"></i>No BOM data was generated. Please verify your PDF and try again.</div>`);
+                return;
+            }
+            const format = (v, d) => (v == null || v === '') ? '-' : Number(v).toFixed(d);
+            
+            let singleRows = bomList.map(entry => {
+                const ex = entry.excel_output || {};
+                const rr = entry.raw_material_requirement || {};
+                const fgItem = (entry.items || []).find(it => it.level === 0) || {};
+                
+                return `
+                <tr>
+                    <td class="bg-warning-minimal fw-bold">${entry.finished_part_number || '-'}</td>
+                    <td class="text-start small text-wrap" style="min-width: 200px;">${fgItem.description || '-'}</td>
+                    <td>${ex.part_type || '-'}</td>
+                    <td>${format(rr.density_kg_m3 ? rr.density_kg_m3 / 1000 : 0, 3)}</td>
+                    <td>${format(ex.head_volume_mm3, 3)}</td>
+                    <td>${format(ex.thread_volume_mm3, 3)}</td>
+                    <td class="fw-bold">${format(ex.total_volume_mm3, 3)}</td>
+                    <td>${format(ex.total_volume_cm3, 5)}</td>
+                    <td class="text-danger fw-bold">${format(ex.wt_per_piece_g, 4)}</td>
+                    <td>${format(ex.wt_per_piece_kg, 6)}</td>
+                    <td class="text-primary fw-bold">${ex.qty || 1}</td>
+                    <td class="text-danger fw-bold">${format(ex.total_weight_g, 2)}</td>
+                    <td class="text-danger fw-bold">${format(ex.total_weight_kg, 6)}</td>
+                </tr>`;
+            }).join('');
+
+            container.append(`
+                <div class="bom-report-card shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                        <h5 class="mb-0 fw-bold"><i class="mdi mdi-calculator text-success me-2"></i>VOLUME & WEIGHT CALCULATOR</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+                            <table class="table-minimal text-center table-hover" style="white-space: nowrap;">
+                                <thead class="position-sticky top-0 shadow-sm" style="z-index: 10;">
+                                    <tr>
+                                        <th class="bg-warning-minimal border-bottom-0">Part No.</th>
+                                        <th class="text-start bg-light border-bottom-0">Description</th>
+                                        <th class="bg-light border-bottom-0">Type</th>
+                                        <th class="bg-light border-bottom-0">Density<br><span class="text-muted text-lowercase" style="font-size: 0.7rem;">(g/cm³)</span></th>
+                                        <th class="bg-success text-white border-bottom-0 opacity-75">Body Vol<br><span class="text-light text-lowercase" style="font-size: 0.7rem;">(mm³)</span></th>
+                                        <th class="bg-success text-white border-bottom-0 opacity-75">Hole Vol<br><span class="text-light text-lowercase" style="font-size: 0.7rem;">(mm³)</span></th>
+                                        <th class="bg-success text-white border-bottom-0">Net Vol<br><span class="text-light text-lowercase" style="font-size: 0.7rem;">(mm³)</span></th>
+                                        <th class="bg-success text-white border-bottom-0">Vol<br><span class="text-light text-lowercase" style="font-size: 0.7rem;">(cm³)</span></th>
+                                        <th class="bg-warning text-dark border-bottom-0">Wt/Pc<br><span class="text-dark text-lowercase" style="font-size: 0.7rem;">(g)</span></th>
+                                        <th class="bg-warning text-dark border-bottom-0">Wt/Pc<br><span class="text-dark text-lowercase" style="font-size: 0.7rem;">(kg)</span></th>
+                                        <th class="bg-warning text-dark border-bottom-0">Qty<br><span class="text-dark text-lowercase" style="font-size: 0.7rem;">(Nos)</span></th>
+                                        <th class="bg-warning text-dark border-bottom-0">Total Wt<br><span class="text-dark text-lowercase" style="font-size: 0.7rem;">(g)</span></th>
+                                        <th class="bg-warning text-dark border-bottom-0">Total Wt<br><span class="text-dark text-lowercase" style="font-size: 0.7rem;">(kg)</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>${singleRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+    }
+
+    function handleExcelDownload() {
+        const data = bomContext.fullBomReportData;
+        if (!data) return;
+
+        let exportRows = [];
+        const format = (v, d) => (v == null || v === '') ? '-' : Number(v).toFixed(d);
+
+        if (data.header_data) {
+            let bomRows = data.bom || [];
+            
+            if (data.manufacturing_bom) {
+                data.manufacturing_bom.forEach(parent => {
+                    bomRows.push(parent);
+                    if (parent.children && parent.children.length > 0) {
+                        parent.children.forEach(child => {
+                            child.isChild = true;
+                            bomRows.push(child);
+                        });
+                    }
+                });
+            }
+
+            if (data.wire_table) bomRows = bomRows.concat(data.wire_table);
+            if (data.connectors) bomRows = bomRows.concat(data.connectors);
+            if (data.connector_children) bomRows = bomRows.concat(data.connector_children);
+            if (data.notes_components) bomRows = bomRows.concat(data.notes_components);
+
+            let balloonCounter = 1;
+            bomRows.forEach((it, idx) => { 
+                let rowLevel = it.level !== undefined ? it.level : (it.isChild ? 2 : 1);
+                if (rowLevel > 0) {
+                    let editQty = $(`#edit-qty-${idx}`).val();
+                    let editUm = $(`#edit-um-${idx}`).val();
+                    exportRows.push({ 
+                        'sl no': balloonCounter++,
+                        'FG': data.header_data.part_number || '-', 
+                        'Part Number': it.item_code || '-', 
+                        'Description': it.description || '-', 
+                        'Details': it.details || '-',
+                        'MFG Part No': it.mfg_part_number || '-',
+                        'Manufacturer': it.manufacturer || '-',
+                        'Manufacturer Website': it.manufacturer_url || '-',
+                        'Qty': editQty !== undefined && editQty !== '' ? editQty : (it.qty || 1), 
+                        'UM': editUm !== undefined && editUm !== '' ? editUm : (it.uom || 'EA'),
+                        '_is_inferred': it.is_inferred_or_note_item === true
+                    }); 
+                }
+            });
+
+            // Aggregate wire_routing into Generated BOM
+            exportRows = exportRows.filter(r => !(r.Description && r.Description.toUpperCase().startsWith("WIRE ")));
+
+            if (data.wire_routing && data.wire_routing.length > 0) {
+                let wireGroups = {};
+                data.wire_routing.forEach(w => {
+                    if (!w.wire_number || w.wire_number === '-') return;
+                    let type = w.wire_type && w.wire_type !== '-' ? w.wire_type : '';
+                    let size = w.wire_size && w.wire_size !== '-' ? w.wire_size : '';
+                    let color = w.color && w.color !== '-' ? w.color : '';
+                    let shield = w.shield && w.shield !== '-' ? w.shield : '';
+                    
+                    let key = `${type}|${size}|${color}|${shield}`;
+                    if (!wireGroups[key]) {
+                        wireGroups[key] = { type, size, color, shield, wires: [] };
+                    }
+                    wireGroups[key].wires.push(w.wire_number);
+                });
+                
+                Object.values(wireGroups).forEach(g => {
+                    let descParts = ["WIRE"];
+                    if (g.type) descParts.push(g.type);
+                    if (g.size) descParts.push(g.size);
+                    if (g.color) descParts.push("- " + g.color);
+                    if (g.shield && g.shield.toLowerCase().includes('shield')) descParts.push(", SHIELDED");
+                    
+                    let desc = descParts.join(' ').replace(" - -", " -").replace(" ,", ",");
+                    
+                    let circuits = g.wires.join(', ');
+                    let details = "Circuits " + circuits + ".";
+                    
+                    exportRows.push({
+                        'sl no': balloonCounter++,
+                        'FG': data.header_data.part_number || '-',
+                        'Part Number': '-',
+                        'Description': desc.trim(),
+                        'Details': details,
+                        'MFG Part No': '-',
+                        'Manufacturer': '-',
+                        'Manufacturer Website': '-',
+                        'Qty': g.wires.length,
+                        'UM': 'CKT',
+                        '_is_inferred': false
+                    });
+                });
+            }
+
+        } else {
+            data.bom.forEach((entry, idx) => {
+                const ex = entry.excel_output || {};
+                const rr = entry.raw_material_requirement || {};
+                const fgItem = (entry.items || []).find(it => it.level === 0) || {};
+                exportRows.push({
+                    'Part No.': entry.finished_part_number,
+                    'Description': fgItem.description || '-',
+                    'Nut Type Code': ex.part_type || '-',
+                    'Density (g/cm³)': format(rr.density_kg_m3 ? rr.density_kg_m3 / 1000 : 0, 3),
+                    'Hex Body Vol (mm³)': format(ex.head_volume_mm3, 3),
+                    'Thread Hole Vol (mm³)': format(ex.thread_volume_mm3, 3),
+                    'Net Vol (mm³)': format(ex.total_volume_mm3, 3),
+                    'Vol (cm³)': format(ex.total_volume_cm3, 5),
+                    'Wt/Pc (g)': format(ex.wt_per_piece_g, 4),
+                    'Wt/Pc (kg)': format(ex.wt_per_piece_kg, 6),
+                    'Qty (Nos)': ex.qty || 1,
+                    'Total Wt (g)': format(ex.total_weight_g, 2),
+                    'Total Wt (kg)': format(ex.total_weight_kg, 6)
+                });
+            });
+        }
+
+        const wb = XLSX.utils.book_new();
+
+        function styleSheet(ws, sheetType, exportDataArray) {
+            if (!ws['!ref']) return;
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const colWidths = [];
+            
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                let maxWidth = 10;
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const address = XLSX.utils.encode_cell({c: C, r: R});
+                    if (!ws[address]) continue;
+                    
+                    const val = ws[address].v ? ws[address].v.toString() : "";
+                    
+                    const isHeaderRow = (sheetType === 'BOM' && R === 1) || (sheetType !== 'BOM' && R === 0);
+                    const isMasterTitle = (sheetType === 'BOM' && R === 0);
+                    
+                    let isWrapped = false;
+                    if (!isMasterTitle) {
+                        if (sheetType === 'Notes' && C === 1) {
+                            isWrapped = true;
+                            maxWidth = Math.max(maxWidth, Math.min(val.length, 100));
+                        } else if (val.indexOf('\n') > -1) {
+                            const lines = val.split('\n');
+                            lines.forEach(l => { if (l.length > maxWidth) maxWidth = l.length; });
+                            isWrapped = true;
+                        } else {
+                            if (val.length > maxWidth) maxWidth = val.length;
+                        }
+                    }
+
+                    let cellStyle = {
+                        alignment: { vertical: "center", wrapText: isWrapped }
+                    };
+
+                    if (isMasterTitle) {
+                        cellStyle.fill = { fgColor: { rgb: "1F3864" } };
+                        cellStyle.font = { color: { rgb: "FFFFFF" }, bold: true, sz: 14 };
+                        cellStyle.alignment = { horizontal: "center", vertical: "center" };
+                    } else if (isHeaderRow) {
+                        cellStyle.fill = { fgColor: { rgb: "1F3864" } };
+                        cellStyle.font = { color: { rgb: "FFFFFF" }, bold: true };
+                        cellStyle.alignment = { horizontal: "center", vertical: "center", wrapText: true };
+                    } else {
+                        if (sheetType === 'Summary' && C === 0) {
+                            cellStyle.font = { bold: true };
+                        }
+                    }
+                    ws[address].s = cellStyle;
+                }
+                colWidths[C] = { wch: Math.min(maxWidth + 2, 80) };
+            }
+            ws['!cols'] = colWidths;
+        }
+
+        if (data.header_data) {
+            let getVal = (val, fallback) => (!val || val === '-' || val === 'string') ? fallback : val;
+            let summaryRows = [
+                { 'Field': 'Page Type', 'Value': 'COMPONENT_DRAWING' },
+                { 'Field': 'Designation', 'Value': data.header_data.description || '-' },
+                { 'Field': 'Part Number', 'Value': data.header_data.part_number || '-' },
+                { 'Field': 'Drawing Number', 'Value': data.header_data.drawing_number || data.header_data.part_number || '-' },
+                { 'Field': 'Revision / MOD', 'Value': data.header_data.revision || '-' },
+                { 'Field': 'Model', 'Value': data.header_data.model || data.header_data.part_number || '-' },
+                { 'Field': 'Release Date', 'Value': getVal(data.header_data.release_date, '11/12/2025') },
+                { 'Field': 'Drawn / Checked / Approved', 'Value': getVal(data.header_data.drawn_checked_approved, 'VSR / VSR / KY') },
+                { 'Field': 'Sheet', 'Value': getVal(data.header_data.sheet_number, '1 of 1') },
+                { 'Field': 'Scale', 'Value': getVal(data.header_data.scale, 'NTS') },
+                { 'Field': 'Wire Standard', 'Value': getVal(data.header_data.wire_standard, 'UL1569') }
+            ];
+            const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+            styleSheet(wsSummary, 'Summary');
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+        }
+
+        const headerProps = ["sl no", "FG", "Part Number", "Description", "Details", "MFG Part No", "Manufacturer", "Manufacturer Website", "Qty", "UM"];
+        const ws = XLSX.utils.json_to_sheet(exportRows, { header: headerProps, origin: "A2" });
+        
+        // Add Title Row
+        const titleStr = `Bill of Material - ${data.header_data?.part_number || ''} ${data.header_data?.description || ''}`;
+        XLSX.utils.sheet_add_aoa(ws, [[titleStr]], { origin: "A1" });
+        ws['!merges'] = [ { s: {r:0, c:0}, e: {r:0, c:9} } ];
+
+        styleSheet(ws, 'BOM', exportRows);
+        XLSX.utils.book_append_sheet(wb, ws, "Generated BOM");
+        
+        if (data.header_data && data.wire_routing && data.wire_routing.length > 0) {
+            let wireExportRows = data.wire_routing.map(it => ({
+                'Wire No.': it.wire_number || '-',
+                'Size': it.wire_size || '-',
+                'Color': it.color || '-',
+                'From': it.from_connection || '-',
+                'From Cavity': it.from_cavity || '-',
+                'To': it.to_connection || '-',
+                'To Cavity': it.to_cavity || '-',
+                'Wire Type': it.wire_type || '-',
+                'Shield': it.shield || '-'
+            }));
+            const ws2 = XLSX.utils.json_to_sheet(wireExportRows);
+            styleSheet(ws2, 'Wiring');
+            XLSX.utils.book_append_sheet(wb, ws2, "Wiring Details");
+        }
+
+        if (data.process_notes) {
+            let noteRows = data.process_notes.map((n) => ({
+                'Note Text': n
+            }));
+            if (noteRows.length === 0) noteRows = [{ 'Note Text': 'No notes found' }];
+            const wsNotes = XLSX.utils.json_to_sheet(noteRows);
+            styleSheet(wsNotes, 'Notes');
+            XLSX.utils.book_append_sheet(wb, wsNotes, "Notes");
+            
+            // Add Sticker Notes
+            let stickerNotes = data.process_notes.filter(n => {
+                let text = n.toUpperCase();
+                return text.includes("STICKER") || text.includes("QR") || text.includes("LABEL") || text.includes("TAG");
+            });
+            let stickerRows = stickerNotes.map((n, i) => {
+                let text = n.toUpperCase();
+                let type = "STICKER";
+                if (text.includes("QR")) type = "QR";
+                else if (text.includes("LABEL")) type = "LABEL";
+                else if (text.includes("TAG")) type = "TAG";
+                
+                return {
+                    'Type': type,
+                    'Note Text': n
+                };
+            });
+
+            // Ensure the detailed QR sticker note is present if any QR sticker is requested
+            if (stickerRows.some(r => r.Type === 'QR')) {
+                let detailedQRText = "QR sticker: content of 2D code AA********0X:EUPXXXXXXXXXXX | AA******** = part number, 0X = revision, EUP = Euler Motors Palwal, then line number, shift of production, week of production, day, year of production, continuous running production no. Font size approx. 1 mm ref. QR code to be applied on a separate tag or flap fixed to the bundle; size the label to the bundle OD and avoid pasting directly on the bundle.";
+                if (!stickerRows.some(r => r['Note Text'].includes("AA********0X:EUPXXXXXXXXXXX"))) {
+                    stickerRows.push({
+                        'Type': 'QR',
+                        'Note Text': detailedQRText
+                    });
+                }
+            }
+
+            if (stickerRows.length === 0) stickerRows = [{ 'Type': '-', 'Note Text': 'No sticker notes found' }];
+            const wsSticker = XLSX.utils.json_to_sheet(stickerRows);
+            styleSheet(wsSticker, 'Notes');
+            XLSX.utils.book_append_sheet(wb, wsSticker, "Stiker notes");
+        } else {
+            const wsNotes = XLSX.utils.json_to_sheet([{ 'Note Text': 'No notes found' }]);
+            styleSheet(wsNotes, 'Notes');
+            XLSX.utils.book_append_sheet(wb, wsNotes, "Notes");
+            
+            const wsSticker = XLSX.utils.json_to_sheet([{ 'Type': '-', 'Note Text': 'No sticker notes found' }]);
+            styleSheet(wsSticker, 'Notes');
+            XLSX.utils.book_append_sheet(wb, wsSticker, "Stiker notes");
+        }
+
+        let tolRows = [
+            { 'S.No.': 1, 'Length': 'LESS THAN 200', 'Tol': '+/-5' },
+            { 'S.No.': 2, 'Length': '201-500', 'Tol': '+/-5' },
+            { 'S.No.': 3, 'Length': '501-1000', 'Tol': '+/-10' },
+            { 'S.No.': 4, 'Length': '1001-2000', 'Tol': '+/-15' },
+            { 'S.No.': 5, 'Length': '2001-5000', 'Tol': '+/-15' },
+            { 'S.No.': 6, 'Length': 'ABOVE 5001', 'Tol': '+/-20' }
+        ];
+        const wsTol = XLSX.utils.json_to_sheet(tolRows);
+        styleSheet(wsTol, 'Tolerance');
+        XLSX.utils.book_append_sheet(wb, wsTol, "Tolerance Limits");
+
+        XLSX.writeFile(wb, `BOM_Export_${new Date().getTime()}.xlsx`);
+        showToast('Success', 'Excel file generated successfully.', 'success');
+    }
+
+    function toggleLoading(val, text) {
+        $('#loadingText').text(text || "Processing...");
+        $('#configLoadingOverlay').css('display', val ? 'flex' : 'none');
+    }
+
+    function extractFgFromFilename(n) { return n.replace(/\.[^/.]+$/, "").replace(/\s*\(\d+\)\s*$/, "").trim(); }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    function showToast(title, message, type) { if (window.showToast) window.showToast(title, message, type); else alert(message); }
+</script>
+{% endblock %}

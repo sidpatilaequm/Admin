@@ -1,0 +1,345 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Permissions - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        border: none;
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+    .card-header {
+        background-color: #198754 !important;
+        padding: 1.25rem;
+        border-top-left-radius: 12px !important;
+        border-top-right-radius: 12px !important;
+    }
+    .card-title {
+        color: #fff;
+        margin-bottom: 0;
+        font-weight: 600;
+    }
+    .step-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        margin-right: 10px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        padding: 15px;
+    }
+    .table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+    .module-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .form-check-input:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    .form-check-input:disabled {
+        opacity: 0.4;
+    }
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+        padding: 10px 25px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .btn-outline-theme {
+        color: #198754;
+        border-color: #198754;
+        font-weight: 600;
+    }
+    .btn-outline-theme:hover {
+        background-color: #198754;
+        color: #fff;
+    }
+    .vendor-select-container {
+        max-width: 400px;
+    }
+    .copy-permissions-box {
+        background-color: #f0f7ff;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px dashed #0d6efd;
+    }
+    .select-all-row {
+        background-color: #fff9e6 !important;
+    }
+    .toast-container {
+        z-index: 1060;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3">
+        <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage"></div>
+        </div>
+    </div>
+
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0"><i class="fas fa-key me-2"></i>Vendor Permissions</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Vendor Permissions</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Step 1: Select Vendor -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title"><span class="step-badge">1</span>Select Vendor</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="vendor-select-container">
+                                <label for="vendorSelect" class="form-label text-muted">Choose a vendor to manage their permissions</label>
+                                <select class="form-select form-select-lg" id="vendorSelect">
+                                    <option value="" selected disabled>Select Vendor</option>
+                                    {% for vendor in vendors %}
+                                    <option value="{{ vendor.userId }}">{{ vendor.companyName|default:vendor.email }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                            <div class="copy-permissions-box d-inline-block text-start">
+                                <label class="form-label fw-bold text-primary mb-1"><i class="fas fa-copy me-1"></i> Quick Copy</label>
+                                <div class="input-group">
+                                    <select class="form-select" id="copyFromVendor">
+                                        <option value="" selected disabled>Copy from...</option>
+                                        {% for vendor in vendors %}
+                                        <option value="{{ vendor.userId }}">{{ vendor.companyName|default:vendor.email }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-primary" type="button" id="copyBtn">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Permissions Table -->
+        <div class="col-12">
+            <div class="card" id="permissionsCard" style="opacity: 0.5; pointer-events: none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title"><span class="step-badge">2</span>Permissions Table</h4>
+                    <div class="text-white">
+                        <i class="fas fa-info-circle me-1"></i> Manage access levels for each module
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% include "partials/vendor_permissions_table.html" %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Actions -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center p-4">
+                    <button type="button" class="btn btn-theme me-3" id="savePermissionsBtn" disabled>
+                        <i class="fas fa-save me-2"></i>Save Permissions
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="resetBtn">
+                        <i class="fas fa-undo me-2"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        const toast = new bootstrap.Toast(document.getElementById('liveToast'));
+        
+        function showNotification(title, message, type = 'success') {
+            $('#toastTitle').text(title);
+            $('#toastMessage').text(message);
+            const bgColor = type === 'success' ? '#198754' : '#dc3545';
+            $('#liveToast').css('background-color', bgColor).css('color', '#fff');
+            $('.toast-header').css('background-color', 'rgba(255,255,255,0.1)').css('color', '#fff');
+            toast.show();
+        }
+
+        // Enable permissions card when a vendor is selected
+        $('#vendorSelect').on('change', function() {
+            if ($(this).val()) {
+                $('#permissionsCard').css('opacity', '1').css('pointer-events', 'all');
+                $('#savePermissionsBtn').prop('disabled', false);
+                showNotification('Vendor Selected', 'You can now manage permissions for ' + $("#vendorSelect option:selected").text());
+            }
+        });
+
+        // View Check Logic: Disable others if View is unchecked
+        $(document).on('change', '.view-check', function() {
+            const row = $(this).closest('tr');
+            const otherChecks = row.find('.perm-check').not('.view-check');
+            
+            if (this.checked) {
+                otherChecks.prop('disabled', false);
+            } else {
+                otherChecks.prop('checked', false).prop('disabled', true);
+            }
+            updateSelectAllStates();
+        });
+
+        // Row Select All
+        $('.row-select-all').on('click', function() {
+            const row = $(this).closest('tr');
+            const checks = row.find('.perm-check');
+            const allChecked = checks.filter(':checked').length === checks.length;
+            
+            if (allChecked) {
+                checks.prop('checked', false);
+                row.find('.perm-check').not('.view-check').prop('disabled', true);
+            } else {
+                checks.prop('checked', true).prop('disabled', false);
+            }
+            updateSelectAllStates();
+        });
+
+        // Column Select All
+        $('.col-select-all').on('change', function() {
+            const type = $(this).data('col');
+            const checked = this.checked;
+            
+            if (type === 'view') {
+                $('.view-check').prop('checked', checked).trigger('change');
+            } else {
+                $(`.${type}-check`).each(function() {
+                    if (!$(this).is(':disabled')) {
+                        $(this).prop('checked', checked);
+                    }
+                });
+            }
+            updateSelectAllStates();
+        });
+
+        function updateSelectAllStates() {
+            ['view', 'create', 'edit', 'delete'].forEach(type => {
+                const checks = $(`.${type}-check`);
+                const allChecked = checks.filter(':checked').length === checks.length;
+                $(`.col-select-all[data-col="${type}"]`).prop('checked', allChecked);
+            });
+        }
+
+        // Reset Button
+        $('#resetBtn').on('click', function() {
+            $('.perm-check').prop('checked', false);
+            $('.perm-check').not('.view-check').prop('disabled', true);
+            $('.col-select-all').prop('checked', false);
+            $('#vendorSelect').val('').trigger('change');
+            $('#permissionsCard').css('opacity', '0.5').css('pointer-events', 'none');
+            $('#savePermissionsBtn').prop('disabled', true);
+        });
+
+        // Copy Permissions
+        $('#copyBtn').on('click', function() {
+            const fromVendor = $('#copyFromVendor').val();
+            const toVendor = $('#vendorSelect').val();
+            
+            if (!toVendor) {
+                showNotification('Error', 'Please select a target vendor first', 'error');
+                return;
+            }
+            if (!fromVendor) {
+                showNotification('Error', 'Please select a source vendor to copy from', 'error');
+                return;
+            }
+            
+            // In a real app, this would be an API call. For now, we simulate success.
+            showNotification('Success', 'Permissions copied from ' + $("#copyFromVendor option:selected").text());
+            
+            // Randomly check some boxes to simulate copied state
+            $('.view-check').prop('checked', true).trigger('change');
+            $('.create-check').prop('checked', Math.random() > 0.5);
+            $('.edit-check').prop('checked', Math.random() > 0.5);
+            $('.delete-check').prop('checked', false);
+        });
+
+        // Save Button
+        $('#savePermissionsBtn').on('click', function() {
+            const vendorId = $('#vendorSelect').val();
+            const permissions = [];
+            
+            $('.permissions-body tr').each(function() {
+                const module = $(this).data('module');
+                permissions.push({
+                    module: module,
+                    view: $(this).find('.view-check').is(':checked'),
+                    create: $(this).find('.create-check').is(':checked'),
+                    edit: $(this).find('.edit-check').is(':checked'),
+                    delete: $(this).find('.delete-check').is(':checked')
+                });
+            });
+            
+            console.log('Saving permissions for vendor:', vendorId, permissions);
+            
+            // Simulation of API save
+            $(this).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+            setTimeout(() => {
+                $(this).html('<i class="fas fa-save me-2"></i>Save Permissions');
+                showNotification('Success', 'Permissions saved successfully for ' + $("#vendorSelect option:selected").text());
+            }, 1000);
+        });
+
+        // Handle regular checkbox changes to update select-all states
+        $(document).on('change', '.perm-check', function() {
+            updateSelectAllStates();
+        });
+    });
+</script>
+{% endblock %}

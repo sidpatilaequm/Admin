@@ -1,0 +1,56 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Scheduling Agreements{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div>
+                <h4 class="fw-bold text-uppercase mb-1">Scheduling Agreements</h4>
+                <p class="text-muted mb-0">Long-term delivery schedules and agreements</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0">Active Agreements</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        
+                        <div class="list-group-item p-4 po-item cursor-pointer">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h5 class="fs-16 fw-bold text-success mb-0 me-3">SCH-5500001234</h5>
+                                        <span class="badge bg-soft-success text-success text-uppercase">Active</span>
+                                    </div>
+                                    <p class="text-muted mb-1">Raw Material Supply - Annual Contract</p>
+                                    <div class="d-flex align-items-center text-muted fs-13">
+                                        <span><i class="ri-calendar-line me-1"></i> Valid until: 31 Dec 2026</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="fw-bold mb-0">₹ 50,00,000.00</h5>
+                                    <small class="text-muted">Target Value</small>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .po-item:hover { background-color: #f8f9fa; }
+</style>
+{% endblock %}

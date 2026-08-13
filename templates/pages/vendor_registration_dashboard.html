@@ -1,0 +1,403 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Registration Management | aequm{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h3 class="mb-1 text-success fw-bold"><i class="fas fa-user-plus me-2"></i>Vendor Registration Workflow</h3>
+            <p class="text-muted mb-0">Manage incoming supplier registration requests, onboarding invitations, and document approvals.</p>
+        </div>
+    </div>
+    
+    <div id="alert-container"></div>
+    
+    <!-- Summary Counter Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 text-uppercase fw-semibold mb-2">Pending Approvals (Step 2)</h6>
+                        <h2 class="mb-0 fw-bold">{{ pending_approvals_count }}</h2>
+                    </div>
+                    <div class="bg-white-50 p-3 rounded">
+                        <i class="fas fa-user-clock fa-2x text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 text-uppercase fw-semibold mb-2">Pending KYC Verifications (Step 6)</h6>
+                        <h2 class="mb-0 fw-bold">{{ pending_kyc_count }}</h2>
+                    </div>
+                    <div class="bg-white-50 p-3 rounded">
+                        <i class="fas fa-file-signature fa-2x text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 text-uppercase fw-semibold mb-2">Active Suppliers (Step 7)</h6>
+                        <h2 class="mb-0 fw-bold">{{ active_count }}</h2>
+                    </div>
+                    <div class="bg-white-50 p-3 rounded">
+                        <i class="fas fa-check-double fa-2x text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom p-0">
+            <ul class="nav nav-tabs card-header-tabs m-0 border-0" id="registrationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active text-success fw-semibold px-4 py-3 border-0 rounded-0" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab" aria-controls="pending" aria-selected="true">
+                        <i class="fas fa-clock me-2"></i>Pending Requests
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-success fw-semibold px-4 py-3 border-0 rounded-0" id="kyc-tab" data-bs-toggle="tab" data-bs-target="#kyc" type="button" role="tab" aria-controls="kyc" aria-selected="false">
+                        <i class="fas fa-file-alt me-2"></i>Pending KYC & Docs
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-success fw-semibold px-4 py-3 border-0 rounded-0" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="false">
+                        <i class="fas fa-user-check me-2"></i>Active Vendors
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-4">
+            <div class="tab-content" id="registrationTabsContent">
+                
+                <!-- TAB 1: PENDING REGISTRATION REQUESTS -->
+                <div class="tab-pane fade show active" id="pending" role="tabpanel" aria-labelledby="pending-tab">
+                    <h5 class="fw-bold mb-3 text-success">New Vendor Registration Requests</h5>
+                    {% if pending_approvals %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover border-light">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Legal Entity Name</th>
+                                    <th>Address</th>
+                                    <th>Contact Person</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Submitted Date</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in pending_approvals %}
+                                <tr id="row-pending-{{ req.id }}">
+                                    <td><strong>{{ req.vendor_name }}</strong></td>
+                                    <td><span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ req.address }}">{{ req.address }}</span></td>
+                                    <td>{{ req.contact_name }} <br><small class="text-muted">{{ req.designation }}</small></td>
+                                    <td><a href="mailto:{{ req.email }}">{{ req.email }}</a></td>
+                                    <td>{{ req.phone }}</td>
+                                    <td>{{ req.created_date|date:"Y-m-d H:i" }}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-success px-3 me-1 btn-approve" data-id="{{ req.id }}" data-name="{{ req.vendor_name }}">
+                                            <i class="fas fa-check me-1"></i> Approve
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger btn-reject" data-id="{{ req.id }}" data-name="{{ req.vendor_name }}">
+                                            <i class="fas fa-times me-1"></i> Reject
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
+                        <p class="mb-0">No pending registration requests found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- TAB 2: PENDING KYC & DOCS -->
+                <div class="tab-pane fade" id="kyc" role="tabpanel" aria-labelledby="kyc-tab">
+                    <h5 class="fw-bold mb-3 text-success">Submitted KYC & Document Verification</h5>
+                    {% if pending_kyc %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover border-light">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Vendor Legal Entity</th>
+                                    <th>Vendor Code</th>
+                                    <th>Contact Email</th>
+                                    <th>KYC Submission Date</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Verification</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in pending_kyc %}
+                                <tr>
+                                    <td><strong>{{ req.vendor_name }}</strong></td>
+                                    <td><code class="text-success fw-bold">{{ req.vendor_code }}</code></td>
+                                    <td>{{ req.email }}</td>
+                                    <td>{{ req.created_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded">
+                                            {{ req.status }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'pages:admin_verify_kyc_detail' req.id %}" class="btn btn-sm btn-success px-3">
+                                            <i class="fas fa-shield-alt me-1"></i> Verify Documents
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-folder-open fa-3x mb-3 text-light"></i>
+                        <p class="mb-0">No pending KYC document submissions.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- TAB 3: ACTIVE VENDORS -->
+                <div class="tab-pane fade" id="active" role="tabpanel" aria-labelledby="active-tab">
+                    <h5 class="fw-bold mb-3 text-success">Active Registered Suppliers</h5>
+                    {% if active_vendors %}
+                    <div class="table-responsive">
+                        <table class="table align-middle table-hover border-light">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Vendor Code</th>
+                                    <th>Legal Entity Name</th>
+                                    <th>Contact Person</th>
+                                    <th>Email</th>
+                                    <th>Activated Date</th>
+                                    <th>Approved By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in active_vendors %}
+                                <tr>
+                                    <td><code class="text-success fw-bold" style="font-size: 1.05rem;">{{ req.vendor_code }}</code></td>
+                                    <td><strong>{{ req.vendor_name }}</strong></td>
+                                    <td>{{ req.contact_name }}</td>
+                                    <td>{{ req.email }}</td>
+                                    <td>{{ req.approved_date|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ req.approved_by }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-users-slash fa-3x mb-3 text-light"></i>
+                        <p class="mb-0">No active vendors registered yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Approve Success / Copy Onboarding Link -->
+<div class="modal fade" id="approveSuccessModal" tabindex="-1" aria-labelledby="approveSuccessModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="approveSuccessModalLabel"><i class="fas fa-check-circle me-2"></i>Registration Request Approved</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p>The registration request has been approved. The vendor code and onboarding token have been generated.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Generated Vendor Code</label>
+                    <div class="p-2 bg-light border rounded"><code class="text-success fw-bold" id="modal-vendor-code">V-00001</code></div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Secure Onboarding URL</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="modal-onboarding-url" readonly>
+                        <button class="btn btn-outline-success" type="button" onclick="copyOnboardingUrl()">
+                            <i class="far fa-copy"></i> Copy Link
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="info-box-green mt-3 p-3 bg-success-subtle rounded text-success-emphasis" style="font-size: 0.85rem;">
+                    <i class="fas fa-envelope-open-text me-2"></i>
+                    An automated onboarding invite email has been printed to the server terminal. You can share this link directly with the vendor for quick testing.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let approveSuccessModal;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        approveSuccessModal = new bootstrap.Modal(document.getElementById('approveSuccessModal'));
+        
+        document.querySelectorAll('.btn-approve').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const regId = this.getAttribute('data-id');
+                const vendorName = this.getAttribute('data-name');
+                approveRegistration(regId, vendorName);
+            });
+        });
+        
+        document.querySelectorAll('.btn-reject').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const regId = this.getAttribute('data-id');
+                const vendorName = this.getAttribute('data-name');
+                rejectRegistration(regId, vendorName);
+            });
+        });
+    });
+    
+    function copyOnboardingUrl() {
+        const urlInput = document.getElementById('modal-onboarding-url');
+        urlInput.select();
+        urlInput.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(urlInput.value);
+        
+        const copyBtn = document.querySelector('[onclick="copyOnboardingUrl()"]');
+        const origContent = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+            copyBtn.innerHTML = origContent;
+        }, 1500);
+    }
+    
+    async function approveRegistration(regId, vendorName) {
+        if (!confirm(`Are you sure you want to approve registration request for ${vendorName}?`)) {
+            return;
+        }
+        
+        const alertContainer = document.getElementById('alert-container');
+        alertContainer.innerHTML = '';
+        
+        try {
+            const response = await fetch(`/admin/approve-vendor/${regId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                // Populate Modal details
+                document.getElementById('modal-vendor-code').textContent = data.vendor_code;
+                
+                // Construct onboarding URL
+                const onboardingUrl = window.location.origin + `/vendor/onboarding/?token=${data.token}`;
+                document.getElementById('modal-onboarding-url').value = onboardingUrl;
+                
+                // Remove row from UI
+                const row = document.getElementById(`row-pending-${regId}`);
+                if (row) row.remove();
+                
+                // Show modal
+                approveSuccessModal.show();
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        Failed to approve registration: ${data.error || 'Unknown error.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.error(err);
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    A connection error occurred. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+    }
+    
+    async function rejectRegistration(regId, vendorName) {
+        if (!confirm(`Are you sure you want to reject registration request for ${vendorName}?`)) {
+            return;
+        }
+        
+        const alertContainer = document.getElementById('alert-container');
+        alertContainer.innerHTML = '';
+        
+        try {
+            const response = await fetch(`/admin/approve-vendor/${regId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'reject' })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                // Remove row from UI
+                const row = document.getElementById(`row-pending-${regId}`);
+                if (row) row.remove();
+                
+                alertContainer.innerHTML = `
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        Registration request for ${vendorName} has been rejected.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        Failed to reject: ${data.error || 'Unknown error.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            console.error(err);
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    A connection error occurred. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+        }
+    }
+</script>
+{% endblock %}

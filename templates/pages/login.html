@@ -1,0 +1,763 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Supplier Portal | Aequm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="family">
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .auth-container {
+            width: 100%;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Left Sidebar styling */
+        .auth-sidebar {
+            width: 40%;
+            background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4.5rem 3.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-sidebar::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 50%;
+            top: -100px;
+            left: -100px;
+        }
+
+        .auth-sidebar::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: rgba(16, 185, 129, 0.03);
+            border-radius: 50%;
+            bottom: -150px;
+            right: -150px;
+        }
+
+        .sidebar-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .brand-logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #10b981;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo i {
+            color: #10b981;
+        }
+
+        .sidebar-middle {
+            margin: 4rem 0;
+        }
+
+        .sidebar-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-desc {
+            color: #a7f3d0;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 3rem;
+        }
+
+        /* Timeline steps */
+        .timeline-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .timeline-step {
+            display: flex;
+            gap: 1.25rem;
+            position: relative;
+        }
+
+        .timeline-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid #10b981;
+            color: #10b981;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+
+        .step-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+        }
+
+        .step-desc {
+            font-size: 0.9rem;
+            color: #a7f3d0;
+            line-height: 1.4;
+        }
+
+        .sidebar-footer {
+            font-size: 0.85rem;
+            color: #6ee7b7;
+        }
+
+        /* Right Content styling */
+        .auth-content {
+            width: 60%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 2.5rem;
+            overflow-y: auto;
+        }
+
+        .auth-nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .auth-nav a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .auth-nav a:hover {
+            color: #059669;
+        }
+
+        .btn-outline-green {
+            border: 1px solid #059669;
+            color: #059669;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-outline-green:hover {
+            background-color: #059669;
+            color: #ffffff;
+        }
+
+        .auth-form-wrapper {
+            max-width: 480px;
+            width: 100%;
+            margin: auto;
+            padding: 1rem 0;
+        }
+
+        .form-card {
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-card-header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+            padding: 1.75rem 2rem 0.75rem;
+        }
+
+        .form-card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 0.35rem;
+        }
+
+        .form-card-subtitle {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+
+        .form-card-body {
+            padding: 2rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control, .form-select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: none;
+            color: #6b7280;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .btn-green-submit {
+            background-color: #059669;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: none;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        .btn-green-submit:hover {
+            background-color: #047857;
+            color: #ffffff;
+        }
+
+        .divider-text {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin: 2rem 0;
+            font-weight: 500;
+        }
+
+        .divider-text::before, .divider-text::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .divider-text:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        .divider-text:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+        .info-box-green {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box-orange {
+            background-color: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-box-green i, .info-box-orange i {
+            margin-top: 2px;
+            font-size: 1.1rem;
+        }
+
+        .right-footer {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin-top: 2rem;
+        }
+
+        /* Toggling Screen Display */
+        .auth-screen {
+            display: none;
+        }
+
+        .auth-screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 991.98px) {
+            .auth-sidebar {
+                display: none;
+            }
+            .auth-content {
+                width: 100%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        
+        <!-- Left Sidebar Onboarding Steps -->
+        <div class="auth-sidebar">
+            <div class="sidebar-content">
+                <a href="/" class="brand-logo">
+                    <img src="{% static 'images/logo-dark.png' %}" alt="logo" class="logo-lg" style="height: 32px; filter: brightness(0) invert(1);">
+                </a>
+                
+                <div class="sidebar-middle">
+                    <h1 class="sidebar-title">Supplier Onboarding Portal</h1>
+                    <p class="sidebar-desc">One portal for your documents, approvals and payments. Invited vendors complete onboarding in a guided wizard. Track your upload status here — we handle the rest internally.</p>
+                    
+                    <div class="timeline-steps">
+                        <div class="timeline-step">
+                            <div class="step-number">1</div>
+                            <div class="step-info">
+                                <div class="step-title">Receive your invite</div>
+                                <div class="step-desc">A secure link from our procurement team, valid for 72 hours</div>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-number">2</div>
+                            <div class="step-info">
+                                <div class="step-title">Upload documents</div>
+                                <div class="step-desc">PAN, GSTIN, bank proof and forms - one guided step at a time</div>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-number">3</div>
+                            <div class="step-info">
+                                <div class="step-title">We review and approve</div>
+                                <div class="step-desc">You'll see live upload status while approvals run internally</div>
+                            </div>
+                        </div>
+                        <div class="timeline-step">
+                            <div class="step-number">4</div>
+                            <div class="step-info">
+                                <div class="step-title">Get your vendor code</div>
+                                <div class="step-desc">Approval mail with your number, e.g. V-00128</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-footer">
+                    &copy; 2026 aequm Procurement System. All rights reserved.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column Forms -->
+        <div class="auth-content">
+            <div class="auth-nav">
+                <a href="#"><i class="far fa-question-circle me-1"></i> Help</a>
+                <button class="btn btn-outline-green" id="navActionBtn" onclick="toggleScreens('signup')">Become a Supplier</button>
+            </div>
+            
+            <div class="auth-form-wrapper">
+                <div id="alert-container"></div>
+                
+                <!-- SCREEN 1: SIGN IN / LOGIN -->
+                <div id="screen-login" class="auth-screen active">
+                    <div class="form-card card">
+                        <div class="form-card-header">
+                            <h2 class="form-card-title">Sign in</h2>
+                            <p class="form-card-subtitle">For registered vendors with an active account or administrators</p>
+                        </div>
+                        <div class="form-card-body">
+                            <form id="loginForm" method="post">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="loginType" class="form-label">Account Type</label>
+                                    <select class="form-select" id="loginType" name="login_type">
+                                        <option value="vendor" selected>Vendor Portal</option>
+                                        <option value="standard">Administrator</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Work email</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="name@company.com" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="password" class="form-label mb-0">Password</label>
+                                        <a href="#" class="text-success text-decoration-none small">Forgot password?</a>
+                                    </div>
+                                    <div class="password-container">
+                                        <input type="password" class="form-control pe-5" id="password" name="password" placeholder="Password" required>
+                                        <button class="password-toggle-btn" type="button" onclick="togglePasswordVisibility('password')">
+                                            <i class="far fa-eye" id="password-eye-icon"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4 form-check">
+                                    <input type="checkbox" class="form-check-input" id="keepSignedIn">
+                                    <label class="form-check-label text-muted small" for="keepSignedIn">Keep me signed in</label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-green-submit" id="loginSubmitBtn">Sign in</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+
+                </div>
+                
+                <!-- SCREEN 2: BECOME A SUPPLIER / REGISTRATION REQUEST -->
+                <div id="screen-signup" class="auth-screen">
+                    <div class="form-card card">
+                        <div class="form-card-header">
+                            <h2 class="form-card-title">Become a supplier</h2>
+                            <p class="form-card-subtitle">Submit a registration request to our procurement team</p>
+                        </div>
+                        <div class="form-card-body">
+                            <form id="registerRequestForm">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="vendor_name" class="form-label">Vendor Legal Entity Name</label>
+                                    <input type="text" class="form-control" id="vendor_name" placeholder="e.g. ABC Pvt Ltd" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Vendor Address</label>
+                                    <textarea class="form-control" id="address" rows="2" placeholder="Street, City, State, Pin Code" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="contact_name" class="form-label">Vendor Contact Name</label>
+                                    <input type="text" class="form-control" id="contact_name" placeholder="Full name of contact person" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="designation" class="form-label">Vendor Designation</label>
+                                    <input type="text" class="form-control" id="designation" placeholder="e.g. Sales Manager, Director" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="vendor_email" class="form-label">Vendor Email</label>
+                                        <input type="email" class="form-control" id="vendor_email" placeholder="email@company.com" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">Vendor Phone Number</label>
+                                        <input type="tel" class="form-control" id="phone" placeholder="10-digit number" required>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-green-submit" id="signupSubmitBtn">Submit Request</button>
+                            </form>
+                            
+                            <div class="text-center mt-4">
+                                <a href="javascript:void(0)" class="text-success text-decoration-none fw-semibold" onclick="toggleScreens('login')">Already have an account? Sign in</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="right-footer">
+                Need support? <a href="#" class="text-success text-decoration-none">Contact Procurement Support</a>
+            </div>
+        </div>
+        
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const alertContainer = document.getElementById('alert-container');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if error %}
+                showAlert("{{ error }}", "danger");
+            {% endif %}
+            
+            {% if force_signup %}
+                toggleScreens('signup');
+                const emailInput = document.getElementById('vendor_email');
+                if (emailInput) {
+                    emailInput.value = "{{ supplier_email }}";
+                    emailInput.readOnly = true;
+                }
+            {% endif %}
+            
+            {% if hide_register_toggle %}
+                const navActionBtn = document.getElementById('navActionBtn');
+                if (navActionBtn) {
+                    navActionBtn.style.display = 'none';
+                }
+                const registerLinks = document.querySelectorAll("a[onclick*='signup']");
+                registerLinks.forEach(link => {
+                    link.style.display = 'none';
+                });
+            {% endif %}
+        });
+        
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas ${type === 'danger' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+                        <div>${message}</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function togglePasswordVisibility(fieldId) {
+            const passwordField = document.getElementById(fieldId);
+            const eyeIcon = document.getElementById(fieldId + '-eye-icon');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+        
+        function toggleScreens(screen) {
+            const loginScreen = document.getElementById('screen-login');
+            const signupScreen = document.getElementById('screen-signup');
+            const navActionBtn = document.getElementById('navActionBtn');
+            
+            alertContainer.innerHTML = '';
+            
+            if (screen === 'signup') {
+                loginScreen.classList.remove('active');
+                signupScreen.classList.add('active');
+                navActionBtn.textContent = 'Sign In';
+                navActionBtn.setAttribute('onclick', "toggleScreens('login')");
+            } else {
+                signupScreen.classList.remove('active');
+                loginScreen.classList.add('active');
+                navActionBtn.textContent = 'Become a Supplier';
+                navActionBtn.setAttribute('onclick', "toggleScreens('signup')");
+            }
+        }
+        
+        // Handle login submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            alertContainer.innerHTML = '';
+            
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing in...';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginType = document.getElementById('loginType').value;
+            
+            try {
+                const response = await fetch('/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        login_type: loginType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    showAlert('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1000);
+                } else {
+                    showAlert(data.error || 'Login failed. Please verify your credentials.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign in';
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert('Could not connect to the authentication server. Trying local offline authentication...', 'warning');
+                
+                // Retry as local fallback if needed (which is handled inside login_view POST endpoint anyway)
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign in';
+            }
+        });
+        
+
+        
+        // Handle Registration Request Form Submission
+        document.getElementById('registerRequestForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            alertContainer.innerHTML = '';
+            
+            const submitBtn = document.getElementById('signupSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Submitting Request...';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const adminId = urlParams.get('adminId');
+            
+            const payload = {
+                vendor_name: document.getElementById('vendor_name').value,
+                address: document.getElementById('address').value,
+                contact_name: document.getElementById('contact_name').value,
+                designation: document.getElementById('designation').value,
+                email: document.getElementById('vendor_email').value,
+                phone: document.getElementById('phone').value,
+                token: "{{ token|default:'' }}"
+            };
+            
+            if (adminId) {
+                payload.admin_id = adminId;
+            }
+            
+            try {
+                const response = await fetch('/vendor/register-request/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    const statusText = "{{ token }}" ? "REGISTRATION_SUBMITTED" : "PENDING_APPROVAL";
+                    showAlert(`Your Supplier registration request has been submitted successfully! Status is set to ${statusText}. Our procurement team will review it.`, 'success');
+                    document.getElementById('registerRequestForm').reset();
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Request';
+                    
+                    // Show check invitation alert info
+                    setTimeout(() => {
+                        toggleScreens('login');
+                        if ("{{ token }}") {
+                            showAlert('Request submitted! Our team will review the registration and send you an onboarding link.', 'info');
+                        } else {
+                            showAlert('Request submitted! Once approved by an Admin, you will receive a secure onboarding invite token.', 'info');
+                        }
+                    }, 5000);
+                } else {
+                    showAlert(data.error || 'Submission failed. Please check the fields.', 'danger');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Request';
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert('A network error occurred. Please try again.', 'danger');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Request';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,416 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Verify KYC - {{ reg.vendor_name }} | Invoika{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    
+    <!-- Back & Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <a href="{% url 'pages:vendor_registration' %}" class="btn btn-outline-success btn-sm mb-3">
+                <i class="fas fa-arrow-left me-1"></i> Back to Registrations
+            </a>
+            <h3 class="mb-1 text-success fw-bold"><i class="fas fa-shield-alt me-2"></i>Verify Supplier KYC Documents</h3>
+            <p class="text-muted mb-0">Reviewing details for vendor: <strong>{{ reg.vendor_name }}</strong> (Code: <code class="text-success">{{ reg.vendor_code }}</code>)</p>
+        </div>
+    </div>
+    
+    <div id="alert-container"></div>
+    
+    <div class="row g-4">
+        
+        <!-- Details Column -->
+        <div class="col-lg-6">
+            
+            <!-- Company & Contact Info -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Company & Contact Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tbody>
+                            <tr>
+                                <th width="35%" class="text-muted">Legal Entity Name:</th>
+                                <td><strong>{{ reg.vendor_name }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Address:</th>
+                                <td>{{ reg.address }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Contact Person:</th>
+                                <td>{{ reg.contact_name }} ({{ reg.designation }})</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Email:</th>
+                                <td><a href="mailto:{{ reg.email }}">{{ reg.email }}</a></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Phone:</th>
+                                <td>{{ reg.phone }}</td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Status:</th>
+                                <td>
+                                    <span class="badge bg-warning text-dark">{{ reg.status }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Tax & Identity Registry -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-id-card me-2"></i>Registration Identifiers</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tbody>
+                            <tr>
+                                <th width="35%" class="text-muted">GSTIN:</th>
+                                <td><code class="fs-6 fw-bold text-success">{{ reg.gstin_number|default:"Not Provided" }}</code></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">PAN Number:</th>
+                                <td><code class="fs-6 fw-bold text-success">{{ reg.pan_number|default:"Not Provided" }}</code></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">MSME / Udyam:</th>
+                                <td><code>{{ reg.msme_number|default:"Not Provided" }}</code></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">CIN:</th>
+                                <td><code>{{ reg.cin_number|default:"Not Provided" }}</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Banking Coordinates -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-university me-2"></i>Banking Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless align-middle mb-0">
+                        <tbody>
+                            <tr>
+                                <th width="35%" class="text-muted">Bank Name:</th>
+                                <td><strong>{{ reg.bank_name|default:"Not Provided" }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">Account Number:</th>
+                                <td><code>{{ reg.bank_account_number|default:"Not Provided" }}</code></td>
+                            </tr>
+                            <tr>
+                                <th class="text-muted">IFSC Code:</th>
+                                <td><code>{{ reg.bank_ifsc_code|default:"Not Provided" }}</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Documents & Action Column -->
+        <div class="col-lg-6">
+            
+            <!-- Document List -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-upload me-2"></i>Uploaded Documents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="far fa-file-pdf me-2 text-danger"></i>GST Certificate</h6>
+                                <p class="mb-0 text-muted small">Official GST registration document</p>
+                            </div>
+                            {% if reg.gst_doc_path %}
+                            <a href="/media/{{ reg.gst_doc_path }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-external-link-alt"></i> View File
+                            </a>
+                            {% else %}
+                            <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="far fa-file-pdf me-2 text-danger"></i>PAN Card copy</h6>
+                                <p class="mb-0 text-muted small">Business or Proprietor PAN</p>
+                            </div>
+                            {% if reg.pan_doc_path %}
+                            <a href="/media/{{ reg.pan_doc_path }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-external-link-alt"></i> View File
+                            </a>
+                            {% else %}
+                            <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="far fa-file-pdf me-2 text-danger"></i>Cancelled Cheque / Bank Proof</h6>
+                                <p class="mb-0 text-muted small">Verification proof of bank account details</p>
+                            </div>
+                            {% if reg.cheque_doc_path %}
+                            <a href="/media/{{ reg.cheque_doc_path }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-external-link-alt"></i> View File
+                            </a>
+                            {% else %}
+                            <span class="badge bg-danger">Not Uploaded</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="far fa-file-pdf me-2 text-danger"></i>MSME Certificate</h6>
+                                <p class="mb-0 text-muted small">Optional MSME registration proof</p>
+                            </div>
+                            {% if reg.msme_doc_path %}
+                            <a href="/media/{{ reg.msme_doc_path }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-external-link-alt"></i> View File
+                            </a>
+                            {% else %}
+                            <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><i class="far fa-file-pdf me-2 text-danger"></i>COI Certificate</h6>
+                                <p class="mb-0 text-muted small">Optional Certificate of Incorporation</p>
+                            </div>
+                            {% if reg.coi_doc_path %}
+                            <a href="/media/{{ reg.coi_doc_path }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-external-link-alt"></i> View File
+                            </a>
+                            {% else %}
+                            <span class="text-muted small">N/A</span>
+                            {% endif %}
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Actions Card -->
+            <div class="card border-0 shadow-sm border-top border-5 border-success">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 text-success fw-bold"><i class="fas fa-gavel me-2"></i>Decide Verification</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small">Review the uploaded documents, add auditor feedback if needed, and make your decision.</p>
+                    
+                    <div class="mb-3">
+                        <label for="auditorNotes" class="form-label fw-semibold">Auditor Comments / Feedback (Required for rejection or correction)</label>
+                        <textarea class="form-control border-success-subtle" id="auditorNotes" rows="3" placeholder="e.g. Please upload a clear copy of your cancelled cheque.">{{ reg.verification_notes|default:'' }}</textarea>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-sm-4">
+                            <button class="btn btn-success w-100 py-2 fw-semibold" id="btnActivate" data-id="{{ reg.id }}">
+                                <i class="fas fa-check-circle me-1"></i> Approve & Activate
+                            </button>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-warning w-100 py-2 fw-semibold text-white" id="btnCorrection" data-id="{{ reg.id }}">
+                                <i class="fas fa-exclamation-triangle me-1"></i> Request Correction
+                            </button>
+                        </div>
+                        <div class="col-sm-4">
+                            <button class="btn btn-danger w-100 py-2 fw-semibold" id="btnReject" data-id="{{ reg.id }}">
+                                <i class="fas fa-times-circle me-1"></i> Reject Request
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnActivate = document.getElementById('btnActivate');
+        if (btnActivate) {
+            btnActivate.addEventListener('click', function() {
+                const regId = this.getAttribute('data-id');
+                activateVendor(regId);
+            });
+        }
+        
+        const btnCorrection = document.getElementById('btnCorrection');
+        if (btnCorrection) {
+            btnCorrection.addEventListener('click', function() {
+                const regId = this.getAttribute('data-id');
+                requestCorrection(regId);
+            });
+        }
+        
+        const btnReject = document.getElementById('btnReject');
+        if (btnReject) {
+            btnReject.addEventListener('click', function() {
+                const regId = this.getAttribute('data-id');
+                rejectKYC(regId);
+            });
+        }
+    });
+
+    async function activateVendor(regId) {
+        if (!confirm("Confirm activating this supplier account? This will set status to ACTIVE and send an email notification.")) {
+            return;
+        }
+        
+        const btn = document.getElementById('btnActivate');
+        const notes = document.getElementById('auditorNotes').value.trim();
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Activating...';
+        
+        try {
+            const response = await fetch(`/admin/verify-kyc/${regId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'activate', notes: notes })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showAlert('Supplier account has been successfully activated!', 'success');
+                setTimeout(() => {
+                    window.location.href = "{% url 'pages:vendor_registration' %}";
+                }, 1500);
+            } else {
+                showAlert(data.error || 'Failed to activate account.', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Approve & Activate';
+            }
+        } catch (err) {
+            console.error(err);
+            showAlert('Connection error. Please try again.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Approve & Activate';
+        }
+    }
+
+    async function requestCorrection(regId) {
+        const notes = document.getElementById('auditorNotes').value.trim();
+        if (!notes) {
+            alert("Please provide auditor comments explaining what corrections are required.");
+            document.getElementById('auditorNotes').focus();
+            return;
+        }
+        
+        if (!confirm("Confirm requesting corrections from this supplier? They will receive an email with your feedback.")) {
+            return;
+        }
+        
+        const btn = document.getElementById('btnCorrection');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+        
+        try {
+            const response = await fetch(`/admin/verify-kyc/${regId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'correction', notes: notes })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showAlert('Supplier correction request sent successfully!', 'warning');
+                setTimeout(() => {
+                    window.location.href = "{% url 'pages:vendor_registration' %}";
+                }, 1500);
+            } else {
+                showAlert(data.error || 'Failed to request correction.', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Request Correction';
+            }
+        } catch (err) {
+            console.error(err);
+            showAlert('Connection error. Please try again.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Request Correction';
+        }
+    }
+    
+    async function rejectKYC(regId) {
+        const notes = document.getElementById('auditorNotes').value.trim();
+        if (!notes) {
+            alert("Please provide comments explaining the reason for rejection.");
+            document.getElementById('auditorNotes').focus();
+            return;
+        }
+        
+        if (!confirm("Are you sure you want to permanently reject this registration request?")) {
+            return;
+        }
+        
+        const btn = document.getElementById('btnReject');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Rejecting...';
+        
+        try {
+            const response = await fetch(`/admin/verify-kyc/${regId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'reject', notes: notes })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                showAlert('Supplier onboarding request has been permanently rejected.', 'danger');
+                setTimeout(() => {
+                    window.location.href = "{% url 'pages:vendor_registration' %}";
+                }, 1500);
+            } else {
+                showAlert(data.error || 'Failed to reject registration request.', 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-times-circle me-1"></i> Reject Request';
+            }
+        } catch (err) {
+            console.error(err);
+            showAlert('Connection error. Please try again.', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-times-circle me-1"></i> Reject Request';
+        }
+    }
+    
+    function showAlert(msg, type) {
+        const container = document.getElementById('alert-container');
+        container.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${msg}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

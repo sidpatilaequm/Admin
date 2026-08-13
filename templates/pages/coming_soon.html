@@ -1,0 +1,81 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}{{ module_name }} - Coming Soon{% endblock %}
+
+{% block extra_css %}
+<style>
+    .coming-soon-container {
+        height: 70vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-top: 20px;
+    }
+    .coming-soon-icon {
+        font-size: 80px;
+        color: #a3d9bc;
+        margin-bottom: 20px;
+    }
+    .coming-soon-title {
+        font-weight: 700;
+        color: #343a40;
+        margin-bottom: 10px;
+    }
+    .coming-soon-text {
+        color: #6c757d;
+        font-size: 1.1rem;
+        max-width: 500px;
+    }
+    .pulse {
+        animation: pulse-animation 2s infinite;
+    }
+    @keyframes pulse-animation {
+        0% { transform: scale(1); opacity: 0.2; }
+        50% { transform: scale(1.05); opacity: 0.4; }
+        100% { transform: scale(1); opacity: 0.2; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="las la-tools me-2"></i>{{ module_name }}
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">{{ module_name }}</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="coming-soon-container">
+        <div class="coming-soon-icon pulse">
+            <i class="las la-rocket"></i>
+        </div>
+        <h1 class="coming-soon-title">{{ module_name }} Module</h1>
+        <p class="coming-soon-text">
+            We are working hard to bring this feature to life. 
+            <br>
+            <strong>Coming Soon!!</strong>
+        </p>
+        <div class="mt-4">
+            <a href="{% url 'pages:vendor_dashboard' %}" class="btn px-4" style="background-color: #9358ac; color: #fff; border: none;">
+                <i class="las la-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Action - Invoika</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #198754;
+            --primary-hover: #157347;
+            --border: #e9ecef;
+            --text-dim: #6c757d;
+            --surface: #ffffff;
+            --surface-elevated: #f8f9fa;
+            --bg: #f3f4f6;
+            --green: #198754;
+            --red: #dc3545;
+            --amber: #ffc107;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: #343a40;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 48px 40px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-decoration: none;
+            box-sizing: border-box;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--surface-elevated);
+            color: #495057;
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background-color: #e9ecef;
+        }
+
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        .loader-icon {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            
+            <!-- Loading State -->
+            <div id="state-loading">
+                <i data-lucide="loader-2" class="loader-icon" style="color: var(--primary); margin: 0 auto 16px; width: 40px; height: 40px;"></i>
+                <h2 style="font-size: 20px; margin-bottom: 8px;">Processing your action…</h2>
+                <p style="color: var(--text-dim); font-size: 14px;">Please wait a moment.</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="state-success" style="display: none;">
+                <div id="success-icon-box"></div>
+                <h2 id="success-status" style="font-size: 20px; margin-bottom: 8px; text-transform: capitalize;">Request Actioned</h2>
+                <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 4px;">
+                    <strong id="success-title">Request Title</strong>
+                </p>
+                <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 24px;" id="success-workflow-box">
+                    Workflow: <span id="success-workflow">Workflow Name</span>
+                </p>
+                <a href="/" class="btn btn-primary" style="display: inline-flex; width: 100%;">
+                    Go to Dashboard
+                </a>
+            </div>
+
+            <!-- Error State -->
+            <div id="state-error" style="display: none;">
+                <i data-lucide="alert-circle" style="color: var(--amber); margin: 0 auto 16px; width: 48px; height: 48px;"></i>
+                <h2 style="font-size: 20px; margin-bottom: 8px;">Action could not be processed</h2>
+                <p style="color: var(--text-dim); font-size: 14px; margin-bottom: 24px;" id="error-message">
+                    The link may have expired or the request has already been actioned.
+                </p>
+                <a href="/" class="btn btn-secondary" style="display: inline-flex; width: 100%;">
+                    Go to Dashboard
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const token = "{{ token }}";
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            processTokenAction();
+        });
+
+        async function processTokenAction() {
+            if (!token) {
+                showError("No valid token was provided in the link.");
+                return;
+            }
+
+            try {
+                // Try fetching from the real backend endpoint
+                let res;
+                try {
+                    res = await fetch(`/api/requests/action/${token}`);
+                } catch (fetchErr) {
+                    console.log("Mock fallback triggered due to network/route error.");
+                }
+
+                if (res && res.ok) {
+                    const data = await res.json();
+                    showSuccess(data);
+                    return;
+                }
+
+                // LocalStorage mock fallback for testing
+                // Expects token format: 'approve_101' or 'reject_101'
+                const parts = token.split('_');
+                if (parts.length >= 2) {
+                    const action = parts[0]; // "approve" or "reject"
+                    const requestId = parseInt(parts[1]);
+                    
+                    let reqs = JSON.parse(localStorage.getItem('workflows_requests') || '[]');
+                    const idx = reqs.findIndex(r => r.id === requestId);
+                    
+                    if (idx !== -1) {
+                        const req = reqs[idx];
+                        
+                        req.history.push({
+                            user_name: "Email Approver Link",
+                            action: action === 'approve' ? 'approved' : 'rejected',
+                            comment: "Actioned via single-click email link",
+                            created_at: new Date().toISOString()
+                        });
+
+                        if (action === 'approve') {
+                            if (req.current_stage + 1 >= req.stages.length) {
+                                req.status = 'approved';
+                                req.pending_group_name = 'Completed';
+                            } else {
+                                req.current_stage += 1;
+                                req.pending_group_name = "Next Group";
+                            }
+                        } else {
+                            req.status = 'rejected';
+                        }
+                        
+                        localStorage.setItem('workflows_requests', JSON.stringify(reqs));
+
+                        // Log activity
+                        let activities = JSON.parse(localStorage.getItem('workflows_activities') || '[]');
+                        activities.unshift({
+                            id: Date.now(),
+                            detail: `Email actioned request #${requestId} (${action})`,
+                            created_at: new Date().toISOString()
+                        });
+                        localStorage.setItem('workflows_activities', JSON.stringify(activities));
+
+                        showSuccess(req);
+                        return;
+                    }
+                }
+                
+                if (res && !res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || 'Action failed');
+                }
+                
+                throw new Error("Invalid action token or request not found in mock store.");
+
+            } catch (err) {
+                showError(err.message);
+            }
+        }
+
+        function showSuccess(request) {
+            document.getElementById('state-loading').style.display = 'none';
+            document.getElementById('state-error').style.display = 'none';
+            
+            const isApproved = request.status === 'approved';
+            const iconBox = document.getElementById('success-icon-box');
+            
+            if (isApproved) {
+                iconBox.innerHTML = '<i data-lucide="check-circle-2" style="color: var(--green); margin: 0 auto 16px; width: 48px; height: 48px;"></i>';
+                document.getElementById('success-status').style.color = 'var(--green)';
+            } else {
+                iconBox.innerHTML = '<i data-lucide="x-circle" style="color: var(--red); margin: 0 auto 16px; width: 48px; height: 48px;"></i>';
+                document.getElementById('success-status').style.color = 'var(--red)';
+            }
+
+            document.getElementById('success-status').innerText = `Request ${request.status}`;
+            document.getElementById('success-title').innerText = request.title || 'Request details';
+            
+            if (request.workflow_name) {
+                document.getElementById('success-workflow').innerText = request.workflow_name;
+                document.getElementById('success-workflow-box').style.display = 'block';
+            } else {
+                document.getElementById('success-workflow-box').style.display = 'none';
+            }
+
+            document.getElementById('state-success').style.display = 'block';
+            
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('state-loading').style.display = 'none';
+            document.getElementById('state-success').style.display = 'none';
+            
+            if (msg) {
+                document.getElementById('error-message').innerText = msg;
+            }
+            
+            document.getElementById('state-error').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

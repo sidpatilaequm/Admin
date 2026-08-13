@@ -1,0 +1,655 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}Variant Matrix - Create Product Variants{% endblock %}
+
+{% block extra_css %}
+<style>
+    .matrix-container {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .attribute-section {
+        background: white;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .attribute-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .attribute-name {
+        font-weight: 600;
+        color: #495057;
+        margin-right: 10px;
+    }
+    
+    .value-tag {
+        display: inline-block;
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin: 2px;
+        font-size: 0.85rem;
+    }
+    
+    .value-tag .remove-value {
+        margin-left: 5px;
+        cursor: pointer;
+        color: #d32f2f;
+    }
+    
+    .preview-section {
+        background: white;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .combination-preview {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 10px;
+        background: #f8f9fa;
+    }
+    
+    .combination-item {
+        background: white;
+        padding: 8px 12px;
+        margin: 4px 0;
+        border-radius: 4px;
+        border-left: 3px solid #28a745;
+        font-size: 0.9rem;
+    }
+    
+    .price-inputs {
+        background: white;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .btn-add-value {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .btn-add-value:hover {
+        background: #218838;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title">Create Product Variants</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Variant Matrix Generator</h4>
+                    <p class="text-muted mb-0">Select a product and define variant attributes to generate all possible combinations</p>
+                </div>
+                <div class="card-body">
+                    <form id="variantMatrixForm">
+                        <!-- Location Filter -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="locationFilter" class="form-label">Filter by Location *</label>
+                                <select class="form-select" id="locationFilter" required>
+                                    <option value="">Loading locations...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Material Selection -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="materialSelect" class="form-label">Select Parent Product *</label>
+                                <select class="form-select" id="materialSelect" required disabled>
+                                    <option value="">Select location first</option>
+                                    <!-- Options will be loaded dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Default Pricing -->
+                        <div class="price-inputs">
+                            <h5 class="mb-3">Default Pricing (for all variants)</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="defaultMrp" class="form-label">MRP</label>
+                                    <input type="number" class="form-control" id="defaultMrp" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="defaultSp" class="form-label">Selling Price</label>
+                                    <input type="number" class="form-control" id="defaultSp" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="defaultCost" class="form-label">Cost Price</label>
+                                    <input type="number" class="form-control" id="defaultCost" step="0.01" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attribute Matrix (dynamic) -->
+                        <div class="matrix-container">
+                            <h5 class="mb-3">Variant Attributes</h5>
+                            <div id="attributeMatrix"></div>
+                            <div class="text-center mt-3">
+                                <button type="button" class="btn btn-outline-secondary" id="addNewAttributeBtn">
+                                    <i class="mdi mdi-plus"></i> Add New Attribute
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="preview-section">
+                            <h5 class="mb-3">Generated Combinations Preview</h5>
+                            <div class="combination-preview" id="combinationPreview">
+                                <p class="text-muted text-center">Select attributes and add values to see combinations</p>
+                            </div>
+                            <div class="mt-3">
+                                <strong>Total Combinations: <span id="totalCombinations">0</span></strong>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="text-center mt-4">
+                            <button type="button" class="btn btn-primary btn-lg" id="generateVariantsBtn" disabled>
+                                <i class="mdi mdi-cube-outline"></i> Generate Variants
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="text-center text-white">
+        <div class="spinner mb-3"></div>
+        <h5>Generating Variants...</h5>
+        <p>Please wait while we create all variant combinations</p>
+    </div>
+</div>
+
+<!-- Add Value Modal -->
+<div class="modal fade" id="addValueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Value for <span id="modalAttributeName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newValue" class="form-label">Value</label>
+                    <input type="text" class="form-control" id="newValue" placeholder="Enter value">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveValueBtn">Add Value</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Attribute Modal -->
+<div class="modal fade" id="addAttributeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Attribute</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newAttributeName" class="form-label">Attribute Name</label>
+                    <input type="text" class="form-control" id="newAttributeName" placeholder="e.g., Color, Size, Material">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveAttributeBtn">Add Attribute</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let currentAttribute = '';
+    let attributeValues = {};
+    let variantAttributes = [];
+    
+    // Add this function at the top of your script
+    function sanitizeForId(name) {
+        return name.replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+    
+    // Fetch variant attributes from API
+    function loadVariantAttributes() {
+        $.ajax({
+            url: '/api/attributes/by-type/VARIANT',
+            type: 'GET',
+            success: function(response) {
+                if (response.status === 'success' || response.status === '200') {
+                    variantAttributes = response.data.attributes || [];
+                    renderVariantAttributes(variantAttributes);
+                } else {
+                    $('#attributeMatrix').html('<div class="alert alert-warning">Failed to load attributes.</div>');
+                }
+            },
+            error: function() {
+                $('#attributeMatrix').html('<div class="alert alert-danger">Error loading attributes.</div>');
+            }
+        });
+    }
+
+    function renderVariantAttributes(attributes) {
+        $('#attributeMatrix').empty();
+        attributeValues = {};
+        attributes.forEach(attr => {
+            const attrName = attr.attributeName || attr.name;
+            const safeId = sanitizeForId(attrName);
+            attributeValues[attrName] = [];
+            const html = `
+                <div class="attribute-section" data-attribute="${attrName}">
+                    <div class="attribute-header">
+                        <span class="attribute-name">${attrName}</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary add-value-btn" data-attribute="${attrName}">
+                            <i class="mdi mdi-plus"></i> Add Value
+                        </button>
+                    </div>
+                    <div class="attribute-values" id="values-${safeId}"></div>
+                </div>
+            `;
+            $('#attributeMatrix').append(html);
+        });
+    }
+
+    // Initial load
+    loadVariantAttributes();
+    
+    // Add value button click
+    $(document).on('click', '.add-value-btn', function() {
+        currentAttribute = $(this).data('attribute');
+        $('#modalAttributeName').text(currentAttribute);
+        $('#newValue').val('');
+        $('#addValueModal').modal('show');
+    });
+    
+    // Save value
+    $('#saveValueBtn').on('click', function() {
+        const value = $('#newValue').val().trim();
+        if (value) {
+            addAttributeValue(currentAttribute, value);
+            $('#addValueModal').modal('hide');
+            updateCombinationPreview();
+        }
+    });
+    
+    // Add new attribute
+    $('#addNewAttributeBtn').on('click', function() {
+        $('#newAttributeName').val('');
+        $('#addAttributeModal').modal('show');
+    });
+    
+    // Save new attribute
+    $('#saveAttributeBtn').on('click', function() {
+        const attrName = $('#newAttributeName').val().trim();
+        if (attrName) {
+            addNewAttribute(attrName);
+            $('#addAttributeModal').modal('hide');
+        }
+    });
+    
+    // Remove value
+    $(document).on('click', '.remove-value', function(e) {
+        e.stopPropagation();
+        const value = $(this).parent().contents().filter(function() { return this.nodeType === 3; }).text().replace('×', '').trim();
+        const attrName = $(this).closest('.attribute-section').data('attribute');
+        removeAttributeValue(attrName, value);
+        $(this).parent().remove(); // Remove the tag visually
+        updateCombinationPreview();
+    });
+    
+    // Generate variants
+    $('#generateVariantsBtn').on('click', function() {
+        const $btn = $(this);
+        $btn.prop('disabled', true);
+        const originalHtml = $btn.html();
+        $btn.html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Generating...');
+        // Simulate async operation (replace with your real AJAX call)
+        setTimeout(function() {
+            generateVariants();
+            $btn.html(originalHtml);
+            $btn.prop('disabled', false);
+        }, 1000);
+    });
+    
+    function addAttributeValue(attrName, value) {
+        if (!attributeValues[attrName]) {
+            attributeValues[attrName] = [];
+        }
+        if (!attributeValues[attrName].includes(value)) {
+            attributeValues[attrName].push(value);
+            const safeId = sanitizeForId(attrName);
+            const valueHtml = `
+                <span class="value-tag">
+                    ${value}
+                    <span class="remove-value">×</span>
+                </span>
+            `;
+            $(`#values-${safeId}`).append(valueHtml);
+        }
+    }
+    
+    function removeAttributeValue(attrName, value) {
+        const index = attributeValues[attrName].indexOf(value);
+        if (index > -1) {
+            attributeValues[attrName].splice(index, 1);
+        }
+    }
+    
+    function addNewAttribute(attrName) {
+        if (!attributeValues[attrName]) {
+            attributeValues[attrName] = [];
+            const safeId = sanitizeForId(attrName);
+            const attributeHtml = `
+                <div class="attribute-section" data-attribute="${attrName}">
+                    <div class="attribute-header">
+                        <span class="attribute-name">${attrName}</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary add-value-btn" data-attribute="${attrName}">
+                            <i class="mdi mdi-plus"></i> Add Value
+                        </button>
+                    </div>
+                    <div class="attribute-values" id="values-${safeId}">
+                        <!-- Values will be added here -->
+                    </div>
+                </div>
+            `;
+            $('#attributeMatrix').append(attributeHtml);
+        }
+    }
+    
+    function updateCombinationPreview() {
+        const validAttributes = {};
+        let totalCombinations = 1;
+        
+        // Filter attributes with values
+        Object.keys(attributeValues).forEach(attr => {
+            if (attributeValues[attr].length > 0) {
+                validAttributes[attr] = attributeValues[attr];
+                totalCombinations *= attributeValues[attr].length;
+            }
+        });
+        
+        $('#totalCombinations').text(totalCombinations);
+        
+        if (totalCombinations === 0) {
+            $('#combinationPreview').html('<p class="text-muted text-center">Select attributes and add values to see combinations</p>');
+            $('#generateVariantsBtn').prop('disabled', true);
+            return;
+        }
+        
+        // Generate preview (show first 10 combinations)
+        const combinations = generateCombinations(validAttributes);
+        let previewHtml = '';
+        
+        combinations.slice(0, 10).forEach(combination => {
+            const combinationText = Object.entries(combination).map(([attr, value]) => `${attr}: ${value}`).join(', ');
+            previewHtml += `<div class="combination-item">${combinationText}</div>`;
+        });
+        
+        if (combinations.length > 10) {
+            previewHtml += `<div class="combination-item text-muted">... and ${combinations.length - 10} more combinations</div>`;
+        }
+        
+        $('#combinationPreview').html(previewHtml);
+        $('#generateVariantsBtn').prop('disabled', false);
+    }
+    
+    function generateCombinations(attributes) {
+        const attributeNames = Object.keys(attributes);
+        const attributeValueLists = Object.values(attributes);
+        
+        if (attributeNames.length === 0) return [];
+        
+        const combinations = [];
+        const cartesian = (arr) => {
+            return arr.reduce((a, b) => {
+                return a.flatMap(x => b.map(y => [...x, y]));
+            }, [[]]);
+        };
+        
+        const allCombinations = cartesian(attributeValueLists);
+        
+        allCombinations.forEach(combination => {
+            const combinationObj = {};
+            attributeNames.forEach((attrName, index) => {
+                combinationObj[attrName] = combination[index];
+            });
+            combinations.push(combinationObj);
+        });
+        
+        return combinations;
+    }
+    
+    function generateVariants() {
+        const materialId = $('#materialSelect').val();
+        if (!materialId) {
+            alert('Please select a product first');
+            return;
+        }
+        // Get attributeId mapping
+        const attributeIdMap = {};
+        variantAttributes.forEach(attr => {
+            attributeIdMap[attr.attributeName] = attr.attributeId;
+        });
+
+        // Build combinations
+        const validAttributes = {};
+        Object.keys(attributeValues).forEach(attr => {
+            if (attributeValues[attr].length > 0) {
+                validAttributes[attr] = attributeValues[attr];
+            }
+        });
+        const combinations = generateCombinations(validAttributes);
+
+        // Prepare variants array
+        const mrp = parseFloat($('#defaultMrp').val()) || 0;
+        const sellingPrice = parseFloat($('#defaultSp').val()) || 0;
+        const cost = parseFloat($('#defaultCost').val()) || 0;
+
+        const variants = combinations.map(comb => ({
+            attributes: Object.entries(comb).map(([attrName, value]) => ({
+                attributeId: attributeIdMap[attrName],
+                attributeValue: value
+            })),
+            mrp: mrp,
+            sellingPrice: sellingPrice,
+            cost: cost,
+            stock: 0
+        }));
+
+        $.ajax({
+            url: `/api/materials/${materialId}/variants/bulk`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ variants: variants }),
+            success: function(response) {
+                showToast('Success', 'All variants created!', 'success');
+                setTimeout(() => {
+                    window.location.href = `{% url 'pages:variant_list' %}?material=${materialId}`;
+                }, 2000);
+            },
+            error: function() {
+                showToast('Error', 'Failed to create variants.', 'danger');
+            }
+        });
+    }
+    
+    function showToast(title, message, type) {
+        const toastHtml = `
+            <div class="toast" role="alert">
+                <div class="toast-header">
+                    <strong class="me-auto">${title}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            </div>
+        `;
+        
+        $('.toast-container').append(toastHtml);
+        $('.toast').toast('show');
+    }
+
+    // Load materials dynamically
+    // Load locations for dropdown
+    function loadLocations() {
+        $.ajax({
+            url: '{% url "pages:locations_list_proxy" %}',
+            type: 'GET',
+            success: function(response) {
+                const locationSelect = $('#locationFilter');
+                locationSelect.empty();
+                
+                if (response && response.length > 0) {
+                    response.forEach(location => {
+                        locationSelect.append(`<option value="${location.locationId}">${location.locationName}</option>`);
+                    });
+                    
+                    // Auto-select first location and load its materials
+                    if (response.length > 0) {
+                        const firstLocation = response[0];
+                        locationSelect.val(firstLocation.locationId);
+                        loadMaterialsByLocation(firstLocation.locationId);
+                    }
+                } else {
+                    locationSelect.append('<option value="">No locations found</option>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading locations:', error);
+                $('#locationFilter').html('<option value="">Error loading locations</option>');
+            }
+        });
+    }
+    
+    // Load materials by location
+    function loadMaterialsByLocation(locationId) {
+        if (!locationId) {
+            return;
+        }
+        
+        console.log('Loading materials for location:', locationId);
+        
+        $.ajax({
+            url: '{% url "pages:materials_list_proxy" %}?locationId=' + locationId,
+            type: 'GET',
+            success: function(response) {
+                console.log('Location-specific materials response:', response);
+                const $select = $('#materialSelect');
+                $select.empty();
+                $select.append('<option value="">Choose a product...</option>');
+                
+                if (response.status === "200" && response.data && response.data.materials) {
+                    response.data.materials.forEach(material => {
+                        $select.append(
+                            `<option value="${material.materialId}" data-sku="${material.sku}">
+                                ${material.materialName} (${material.sku})
+                            </option>`
+                        );
+                    });
+                    $select.prop('disabled', false);
+                } else {
+                    $select.append('<option value="">No materials found for this location</option>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading materials for location:', error);
+                const $select = $('#materialSelect');
+                $select.html('<option value="">Failed to load materials</option>');
+                $select.prop('disabled', false);
+            }
+        });
+    }
+    
+    // Location dropdown change handler
+    $('#locationFilter').on('change', function() {
+        const selectedLocationId = $(this).val();
+        if (selectedLocationId) {
+            loadMaterialsByLocation(selectedLocationId);
+        } else {
+            const $select = $('#materialSelect');
+            $select.html('<option value="">Select location first</option>');
+            $select.prop('disabled', true);
+        }
+    });
+
+    // Call on page load - load locations first
+    loadLocations();
+});
+</script>
+{% endblock %} 

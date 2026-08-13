@@ -1,0 +1,195 @@
+{% extends 'index.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ title }}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.material_code.id_for_label }}">Material Code</label>
+                                    {{ form.material_code }}
+                                    {% if form.material_code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.material_code.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.material_name.id_for_label }}">Material Name</label>
+                                    {{ form.material_name }}
+                                    {% if form.material_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.material_name.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.category.id_for_label }}">Category</label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.category.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.subcategory.id_for_label }}">Subcategory</label>
+                                    {{ form.subcategory }}
+                                    {% if form.subcategory.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.subcategory.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.material_type.id_for_label }}">Material Type</label>
+                                    {{ form.material_type }}
+                                    {% if form.material_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.material_type.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.uom.id_for_label }}">Unit of Measurement</label>
+                                    {{ form.uom }}
+                                    {% if form.uom.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.uom.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.hsn_code.id_for_label }}">HSN Code</label>
+                                    {{ form.hsn_code }}
+                                    {% if form.hsn_code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.hsn_code.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.sku.id_for_label }}">SKU</label>
+                                    {{ form.sku }}
+                                    {% if form.sku.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.sku.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.tax_percentage.id_for_label }}">GST %</label>
+                                    {{ form.tax_percentage }}
+                                    {% if form.tax_percentage.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.tax_percentage.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.current_stock.id_for_label }}">Current Stock</label>
+                                    {{ form.current_stock }}
+                                    {% if form.current_stock.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.current_stock.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.price.id_for_label }}">Price</label>
+                                    {{ form.price }}
+                                    {% if form.price.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.price.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.base_unit.id_for_label }}">Base Unit</label>
+                                    {{ form.base_unit }}
+                                    {% if form.base_unit.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.base_unit.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.material_group.id_for_label }}">Material Group</label>
+                                    {{ form.material_group }}
+                                    {% if form.material_group.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.material_group.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.description.id_for_label }}">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.description.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <a href="{% url 'material_list' %}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

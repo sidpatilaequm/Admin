@@ -1,0 +1,1112 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}Channel Setup{% endblock %}
+
+{% block extra_css %}
+<style>
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">Channel Setup</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Channel Setup</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="card-title">Sales Channels</h4>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChannelModal">
+                            <i class="mdi mdi-plus"></i> Add Channel
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        {% for channel in channels %}
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="card border h-100 channel-card">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <div class="bg-light rounded p-3 channel-icon" style="height: 60px; display: flex; align-items: center; justify-content: center;">
+                                            {% if "Amazon" in channel.channel_name %}
+                                                <i class="mdi mdi-shopping" style="font-size: 2rem; color: #ff9900;"></i>
+                                            {% elif "Flipkart" in channel.channel_name %}
+                                                <i class="mdi mdi-bag-personal" style="font-size: 2rem; color: #2874f0;"></i>
+                                            {% elif "Myntra" in channel.channel_name %}
+                                                <i class="mdi mdi-hanger" style="font-size: 2rem; color: #ff3f6c;"></i>
+                                            {% elif "Nykaa" in channel.channel_name %}
+                                                <i class="mdi mdi-palette" style="font-size: 2rem; color: #ff3f6c;"></i>
+                                            {% elif "Electronics" in channel.description or "Digital" in channel.channel_name or "Croma" in channel.channel_name or "Vijay" in channel.channel_name %}
+                                                <i class="mdi mdi-cellphone" style="font-size: 2rem; color: #007bff;"></i>
+                                            {% elif "Grocery" in channel.description or "BigBasket" in channel.channel_name or "JioMart" in channel.channel_name %}
+                                                <i class="mdi mdi-food-apple" style="font-size: 2rem; color: #28a745;"></i>
+                                            {% else %}
+                                                <i class="mdi mdi-store" style="font-size: 2rem; color: #6c757d;"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <h6 class="card-title mb-1">{{ channel.channel_name }}</h6>
+                                    <p class="text-muted small mb-2">{{ channel.channel_code }}</p>
+                                    <p class="text-muted small mb-3" style="font-size: 0.75rem;">{{ channel.description }}</p>
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-primary edit-channel" 
+                                                data-channel-id="{{ channel.id }}"
+                                                data-channel-name="{{ channel.channel_name }}"
+                                                data-channel-code="{{ channel.channel_code }}"
+                                                title="Edit">
+                                            <i class="mdi mdi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-channel" 
+                                                data-channel-id="{{ channel.id }}"
+                                                data-channel-name="{{ channel.channel_name }}"
+                                                title="Delete">
+                                            <i class="mdi mdi-delete"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="text-center py-5">
+                                <i class="mdi mdi-store-off" style="font-size: 4rem; color: #6c757d;"></i>
+                                <h5 class="mt-3">No Channels Added</h5>
+                                <p class="text-muted">Add your first sales channel to start mapping materials.</p>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addChannelModal">
+                                    <i class="mdi mdi-plus"></i> Add First Channel
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Channel Modal -->
+<div class="modal fade" id="addChannelModal" tabindex="-1" aria-labelledby="addChannelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                <h5 class="modal-title" id="addChannelModalLabel">Add New Channel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addChannelForm">
+                {% csrf_token %}
+                <div class="modal-body px-4 py-4 pb-5">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="channelName" class="form-label">Channel Name *</label>
+                                <input type="text" class="form-control" id="channelName" name="channel_name" placeholder="e.g., Amazon, Flipkart" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="channelCode" class="form-label">Channel Code *</label>
+                                <input type="text" class="form-control" id="channelCode" name="channel_code" placeholder="e.g., AMZ, FLP" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="channelDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="channelDescription" name="description" rows="2" placeholder="Brief description of the channel"></textarea>
+                    </div>
+
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Channel Categories</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addCategoryBtn">
+                            <i class="mdi mdi-plus"></i> Add Category
+                        </button>
+                    </div>
+                    
+                    <div id="categoriesContainer">
+                        <!-- Categories will be added here dynamically -->
+                    </div>
+                    
+                    <div class="text-center mt-3" id="noCategoriesMessage">
+                        <p class="text-muted">No categories added yet. Click "Add Category" to get started.</p>
+                        <p class="text-warning small"><i class="mdi mdi-alert-circle"></i> At least one category is required to create a channel.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-theme">Add Channel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Channel Confirmation Modal -->
+<div class="modal fade" id="deleteChannelModal" tabindex="-1" aria-labelledby="deleteChannelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteChannelModalLabel">Delete Channel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the channel "<span id="deleteChannelName"></span>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteChannel">Yes, Delete</button>
+            </div>
+            {% csrf_token %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Channel Modal -->
+<div class="modal fade" id="editChannelModal" tabindex="-1" aria-labelledby="editChannelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editChannelModalLabel">Edit Channel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editChannelForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="editChannelId" name="channel_id">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editChannelName" class="form-label">Channel Name *</label>
+                                <input type="text" class="form-control" id="editChannelName" name="channel_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editChannelCode" class="form-label">Channel Code *</label>
+                                <input type="text" class="form-control" id="editChannelCode" name="channel_code" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editChannelDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editChannelDescription" name="description" rows="2" placeholder="Brief description of the channel"></textarea>
+                    </div>
+
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Channel Categories</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="editAddCategoryBtn">
+                            <i class="mdi mdi-plus"></i> Add Category
+                        </button>
+                    </div>
+                    
+                    <div id="editCategoriesContainer">
+                        <!-- Categories will be loaded here dynamically -->
+                    </div>
+                    
+                    <div class="text-center mt-3" id="editNoCategoriesMessage">
+                        <p class="text-muted">No categories added yet. Click "Add Category" to get started.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Channel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+<!-- Toast Container for Notifications -->
+<div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+
+<style>
+.channel-card {
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.channel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.channel-card .card-body {
+    padding: 1.5rem;
+}
+
+.channel-icon {
+    transition: all 0.3s ease;
+}
+
+.channel-card:hover .channel-icon {
+    transform: scale(1.1);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #495057;
+}
+
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* Category management styles */
+.category-row {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6 !important;
+    transition: all 0.2s ease;
+}
+
+.category-row:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd !important;
+}
+
+.category-row .form-control-sm,
+.category-row .form-select-sm {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.category-row .form-label.small {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.25rem;
+}
+
+.remove-category {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.modal-lg {
+    max-width: 800px;
+}
+
+/* Custom Toast Styling (same as Material page) */
+.toast-custom {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-width: 320px;
+    max-width: 400px;
+    background: #e6f9ed;
+    color: #198754;
+    border: 1px solid #b6e2c6;
+    font-size: 1rem;
+    position: relative;
+}
+
+.toast-custom.toast-warning {
+    background: #fffbe6;
+    color: #b8860b;
+    border: 1px solid #ffe58f;
+}
+
+.toast-custom .toast-icon {
+    background: #198754;
+    color: #fff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    margin-right: 12px;
+}
+
+.toast-custom.toast-warning .toast-icon {
+    background: #ffc107;
+    color: #fff;
+}
+
+.toast-custom .toast-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.2rem;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.toast-custom .toast-progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 4px;
+    background: #198754;
+    width: 100%;
+    border-radius: 0 0 10px 10px;
+    transition: width 2s linear;
+}
+
+.toast-custom.toast-warning .toast-progress {
+    background: #ffc107;
+}
+
+/* Disabled button styling */
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-secondary:disabled {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+</style>
+
+{% block extra_js %}
+<script>
+// Function to get cookie value
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+$(document).ready(function() {
+    let categoryCounter = 0;
+    let editCategoryCounter = 0;
+
+    // Function to create a category row
+    function createCategoryRow(containerId, isEdit = false) {
+        const counter = isEdit ? editCategoryCounter++ : categoryCounter++;
+        const prefix = isEdit ? 'edit' : '';
+        
+        const categoryHtml = `
+            <div class="category-row border rounded p-3 mb-2" data-category-id="${counter}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <label class="form-label small">Category Code *</label>
+                            <input type="text" class="form-control form-control-sm" name="categories[${counter}][code]" placeholder="e.g., ELEC, FASH" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-2">
+                            <label class="form-label small">Category Name *</label>
+                            <input type="text" class="form-control form-control-sm" name="categories[${counter}][name]" placeholder="e.g., Electronics, Fashion" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-2">
+                            <label class="form-label small">&nbsp;</label>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-category" title="Remove Category">
+                                <i class="mdi mdi-delete"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $(`#${containerId}`).append(categoryHtml);
+        updateNoCategoriesMessage(containerId);
+    }
+
+    // Function to create an edit category row with existing data
+    function createEditCategoryRow(categoryId, categoryCode, categoryName) {
+        const counter = editCategoryCounter++;
+        
+        const categoryHtml = `
+            <div class="category-row border rounded p-3 mb-2" data-category-id="${categoryId || counter}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-2">
+                            <label class="form-label small">Category Code *</label>
+                            <input type="text" class="form-control form-control-sm" name="categories[${counter}][code]" value="${categoryCode || ''}" placeholder="e.g., ELEC, FASH" required>
+                            ${categoryId ? `<input type="hidden" name="categories[${counter}][id]" value="${categoryId}">` : ''}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-2">
+                            <label class="form-label small">Category Name *</label>
+                            <input type="text" class="form-control form-control-sm" name="categories[${counter}][name]" value="${categoryName || ''}" placeholder="e.g., Electronics, Fashion" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-2">
+                            <label class="form-label small">&nbsp;</label>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-category" title="Remove Category">
+                                <i class="mdi mdi-delete"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#editCategoriesContainer').append(categoryHtml);
+        updateEditNoCategoriesMessage();
+    }
+
+    // Function to update "no categories" message visibility
+    function updateNoCategoriesMessage(containerId) {
+        const container = $(`#${containerId}`);
+        const messageId = containerId === 'categoriesContainer' ? 'noCategoriesMessage' : 'editNoCategoriesMessage';
+        
+        if (container.children().length === 0) {
+            $(`#${messageId}`).show();
+        } else {
+            $(`#${messageId}`).hide();
+        }
+    }
+
+    // Function to update edit "no categories" message visibility
+    function updateEditNoCategoriesMessage() {
+        const container = $('#editCategoriesContainer');
+        
+        if (container.children().length === 0) {
+            container.html('<p class="text-muted text-center py-3">No categories added yet</p>');
+        }
+    }
+
+    // Add Category Button for Add Channel Modal
+    $('#addCategoryBtn').on('click', function() {
+        createCategoryRow('categoriesContainer', false);
+        updateAddChannelButtonState(); // Update button state after adding category
+    });
+
+    // Add Category Button for Edit Channel Modal
+    $('#editAddCategoryBtn').on('click', function() {
+        createCategoryRow('editCategoriesContainer', true);
+    });
+
+    // Remove Category (delegate event) - only for new categories
+    $(document).on('click', '.remove-category', function() {
+        const categoryRow = $(this).closest('.category-row');
+        const categoryId = categoryRow.find('input[name*="[id]"]').val();
+        const channelId = $('#editChannelId').val();
+        
+        console.log('General remove category handler triggered:', { categoryId, channelId });
+        
+        // If this is an existing category (has categoryId) and we're in edit mode, 
+        // let the delete category handler deal with it
+        if (categoryId && channelId && categoryRow.closest('#editCategoriesContainer').length > 0) {
+            console.log('Existing category in edit mode - handled by delete category handler');
+            return false; // Stop event propagation
+        }
+        
+        console.log('New category or add mode - removing directly');
+        
+        // For new categories or categories in add mode, remove directly
+        const containerId = categoryRow.closest('[id$="Container"]').attr('id');
+        categoryRow.remove();
+        updateNoCategoriesMessage(containerId);
+        
+        // Update Add Channel button state if this is the add channel modal
+        if (containerId === 'categoriesContainer') {
+            updateAddChannelButtonState();
+        }
+    });
+
+    // Initialize category management
+    updateNoCategoriesMessage('categoriesContainer');
+    updateNoCategoriesMessage('editCategoriesContainer');
+    
+    // Function to update Add Channel button state
+    function updateAddChannelButtonState() {
+        const categoriesCount = $('#categoriesContainer .category-row').length;
+        const addChannelBtn = $('#addChannelForm button[type="submit"]');
+        
+        if (categoriesCount === 0) {
+            addChannelBtn.prop('disabled', true);
+            addChannelBtn.html('<i class="mdi mdi-plus"></i> Add Channel (Categories Required)');
+            addChannelBtn.addClass('btn-secondary').removeClass('btn-primary');
+        } else {
+            addChannelBtn.prop('disabled', false);
+            addChannelBtn.html('<i class="mdi mdi-plus"></i> Add Channel');
+            addChannelBtn.addClass('btn-primary').removeClass('btn-secondary');
+        }
+    }
+    
+    // Initialize button state
+    updateAddChannelButtonState();
+    
+    // Custom Toast function (same as Material page)
+    function showToast(title, message, type) {
+        var isSuccess = type === 'success';
+        var iconHtml = isSuccess
+            ? '<span class="toast-icon"><i class="mdi mdi-check-circle-outline"></i></span>'
+            : '<span class="toast-icon"><i class="mdi mdi-alert-circle-outline"></i></span>';
+        var toastClass = isSuccess ? '' : 'toast-warning';
+        var toast = `
+            <div class="toast-custom d-flex align-items-center position-relative p-3 mb-2 ${toastClass}">
+                ${iconHtml}
+                <div class="flex-grow-1">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                <div class="toast-progress"></div>
+            </div>
+        `;
+        $('.toast-container').empty();
+        $('.toast-container').append(toast);
+        var $toast = $('.toast-custom').last();
+        setTimeout(function() {
+            $toast.find('.toast-progress').css('width', '0%');
+        }, 50);
+        setTimeout(function() {
+            $toast.fadeOut(300, function() { $(this).remove(); });
+        }, 2000);
+    }
+    
+    // Add Channel Form
+    $('#addChannelForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Collect categories data
+        const categories = [];
+        $('#categoriesContainer .category-row').each(function() {
+            const row = $(this);
+            const category = {
+                categoryCode: row.find('input[name*="[code]"]').val(),
+                categoryName: row.find('input[name*="[name]"]').val(),
+                isActive: true
+            };
+            if (category.categoryCode && category.categoryName) {
+                categories.push(category);
+            }
+        });
+        
+        const formData = {
+            channelName: $('#channelName').val(),
+            channelCode: $('#channelCode').val(),
+            description: $('#channelDescription').val() || '',
+            isActive: true,
+            categories: categories
+        };
+
+        // Show loading state
+        const submitBtn = $('#addChannelForm button[type="submit"]');
+        const originalText = submitBtn.text();
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...');
+        
+        $.ajax({
+            url: '{% url "pages:channel_create" %}',
+            type: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                // Reset loader state immediately
+                submitBtn.prop('disabled', false).text(originalText);
+                
+                if (response.status === 'success') {
+                    // Show success toast message with proper color
+                    showToast('Success', response.message || 'Channel created successfully', 'success');
+                    $('#addChannelModal').modal('hide');
+                    
+                    // Reset form
+                    $('#addChannelForm')[0].reset();
+                    $('#categoriesContainer').empty();
+                    updateNoCategoriesMessage('categoriesContainer');
+                    
+                    // Reload page after toast is visible
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('Error', response.message || 'Error creating channel', 'danger');
+                }
+            },
+            error: function(xhr) {
+                // Reset loader state immediately
+                submitBtn.prop('disabled', false).text(originalText);
+                
+                console.error('Channel creation error:', xhr);
+                const response = xhr.responseJSON;
+                let errorMessage = 'Error creating channel';
+                
+                if (response) {
+                    if (response.message) {
+                        errorMessage = response.message;
+                    } else if (response.errors) {
+                        // Handle validation errors
+                        const errorList = Object.values(response.errors).flat();
+                        errorMessage = errorList.join(', ');
+                    }
+                } else if (xhr.status === 0) {
+                    errorMessage = 'Network error: Unable to connect to server';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Server error: Please try again later';
+                }
+                
+                showToast('Error', errorMessage, 'danger');
+            }
+        });
+    });
+
+
+
+    // Edit Channel
+    $('.edit-channel').on('click', function() {
+        const channelId = $(this).data('channel-id');
+        const channelName = $(this).data('channel-name');
+        const channelCode = $(this).data('channel-code');
+
+        // Show loading state
+        $('#editChannelModal').modal('show');
+        $('#editChannelForm').find('input, textarea, select').prop('disabled', true);
+        $('#editCategoriesContainer').html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm me-2"></div>Loading channel details...</div>');
+
+        // Load channel details from API
+        $.ajax({
+            url: `/api/channels/${channelId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('Channel detail API response:', response);
+                
+                if (response.status === 'SUCCESS' && response.data && response.data.channel) {
+                    const channel = response.data.channel;
+                    
+                    console.log('Parsed channel data:', channel);
+                    
+                    // Populate basic channel info
+                    $('#editChannelId').val(channelId);
+                    $('#editChannelName').val(channel.channelName || channelName);
+                    $('#editChannelCode').val(channel.channelCode || channelCode);
+                    $('#editChannelDescription').val(channel.description || '');
+                    
+                    // Clear existing categories
+                    $('#editCategoriesContainer').empty();
+                    
+                    // Populate categories
+                    if (channel.categories && channel.categories.length > 0) {
+                        console.log('Found categories:', channel.categories);
+                        channel.categories.forEach(category => {
+                            console.log('Creating category row for:', category);
+                            createEditCategoryRow(category.categoryId, category.categoryCode, category.categoryName);
+                        });
+                    } else {
+                        console.log('No categories found');
+                        $('#editCategoriesContainer').html('<p class="text-muted text-center py-3">No categories added yet</p>');
+                    }
+                    
+                    updateEditNoCategoriesMessage();
+                } else {
+                    console.log('API response format not as expected:', response);
+                    // Fallback to basic data if API fails
+                    $('#editChannelId').val(channelId);
+                    $('#editChannelName').val(channelName);
+                    $('#editChannelCode').val(channelCode);
+                    $('#editChannelDescription').val('');
+                    $('#editCategoriesContainer').html('<p class="text-muted text-center py-3">No categories added yet</p>');
+                }
+            },
+            error: function(xhr) {
+                console.error('Error loading channel details:', xhr);
+                
+                // Fallback to basic data if API fails
+                $('#editChannelId').val(channelId);
+                $('#editChannelName').val(channelName);
+                $('#editChannelCode').val(channelCode);
+                $('#editChannelDescription').val('');
+                $('#editCategoriesContainer').html('<p class="text-muted text-center py-3">No categories added yet</p>');
+                
+                showToast('Warning', 'Could not load channel details. Showing basic information.', 'warning');
+            },
+            complete: function() {
+                // Re-enable form fields
+                $('#editChannelForm').find('input, textarea, select').prop('disabled', false);
+            }
+        });
+    });
+
+    // Edit Channel Form
+    $('#editChannelForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const channelId = $('#editChannelId').val();
+        
+        // Collect categories data
+        const categories = [];
+        $('#editCategoriesContainer .category-row').each(function() {
+            const row = $(this);
+            const categoryId = row.find('input[name*="[id]"]').val();
+            const category = {
+                categoryCode: row.find('input[name*="[code]"]').val(),
+                categoryName: row.find('input[name*="[name]"]').val(),
+                isActive: true
+            };
+            
+            // Include category ID if it exists (for existing categories)
+            if (categoryId) {
+                category.categoryId = parseInt(categoryId);
+            }
+            
+            if (category.categoryCode && category.categoryName) {
+                categories.push(category);
+            }
+        });
+        
+        const formData = {
+            channelName: $('#editChannelName').val(),
+            channelCode: $('#editChannelCode').val(),
+            description: $('#editChannelDescription').val() || '',
+            isActive: true,
+            categories: categories
+        };
+
+        // Show loading state
+        const submitBtn = $('#editChannelForm button[type="submit"]');
+        const originalText = submitBtn.text();
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
+        
+        $.ajax({
+            url: `/api/channels/${channelId}`,
+            type: 'PUT',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                // Reset loader state immediately
+                submitBtn.prop('disabled', false).text(originalText);
+                
+                if (response.status === 'success') {
+                    // Show success toast message with proper color
+                    showToast('Success', response.message || 'Channel updated successfully', 'success');
+                    $('#editChannelModal').modal('hide');
+                    // Reload page after toast is visible
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('Error', response.message || 'Error updating channel', 'danger');
+                }
+            },
+            error: function(xhr) {
+                // Reset loader state immediately
+                submitBtn.prop('disabled', false).text(originalText);
+                
+                const response = xhr.responseJSON;
+                showToast('Error', response?.message || 'Error updating channel', 'danger');
+            }
+        });
+    });
+
+    // Delete Channel
+    $('.delete-channel').on('click', function() {
+        const channelId = $(this).data('channel-id');
+        const channelName = $(this).data('channel-name');
+
+        $('#deleteChannelName').text(channelName);
+        $('#confirmDeleteChannel').data('channel-id', channelId);
+        $('#deleteChannelModal').modal('show');
+    });
+
+    // Confirm Delete Channel
+    $('#confirmDeleteChannel').on('click', function() {
+        const channelId = $(this).data('channel-id');
+        
+        // Show loading state
+        const deleteBtn = $('#confirmDeleteChannel');
+        const originalText = deleteBtn.text();
+        deleteBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
+
+        $.ajax({
+            url: `/api/channels/${channelId}`,
+            type: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                // Reset loader state immediately
+                deleteBtn.prop('disabled', false).text(originalText);
+                
+                if (response.status === 'success') {
+                    showToast('Success', response.message, 'success');
+                    $('#deleteChannelModal').modal('hide');
+                    // Reload page after toast is visible
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showToast('Error', response.message || 'Error deleting channel', 'danger');
+                }
+            },
+            error: function(xhr) {
+                // Reset loader state immediately
+                deleteBtn.prop('disabled', false).text(originalText);
+                
+                const response = xhr.responseJSON;
+                showToast('Error', response?.message || 'Error deleting channel', 'danger');
+            }
+        });
+    });
+
+    // Reset form when modal is closed
+    $('#addChannelModal').on('hidden.bs.modal', function() {
+        $('#addChannelForm')[0].reset();
+        $('#categoriesContainer').empty();
+        updateNoCategoriesMessage('categoriesContainer');
+        updateAddChannelButtonState(); // Reset button state
+    });
+    
+    // Delete Category functionality
+    $(document).on('click', '.remove-category', function() {
+        const categoryRow = $(this).closest('.category-row');
+        const categoryId = categoryRow.find('input[name*="[id]"]').val();
+        const categoryName = categoryRow.find('input[name*="[name]"]').val();
+        const channelId = $('#editChannelId').val();
+        
+        console.log('Delete category clicked:', { categoryId, categoryName, channelId });
+        console.log('Category row found:', categoryRow.length > 0);
+        console.log('Category ID input found:', categoryRow.find('input[name*="[id]"]').length > 0);
+        console.log('Channel ID input found:', $('#editChannelId').length > 0);
+        
+        // Check if this is an existing category (has categoryId)
+        if (categoryId && channelId) {
+            console.log('Existing category - showing delete confirmation');
+            
+            // Store data for delete confirmation
+            $('#deleteCategoryName').text(categoryName || 'this category');
+            $('#confirmDeleteCategory').data('category-id', categoryId);
+            $('#confirmDeleteCategory').data('channel-id', channelId);
+            $('#confirmDeleteCategory').data('category-row', categoryRow);
+            
+            console.log('Data stored in confirm button:', {
+                'category-id': $('#confirmDeleteCategory').data('category-id'),
+                'channel-id': $('#confirmDeleteCategory').data('channel-id'),
+                'category-row': $('#confirmDeleteCategory').data('category-row')
+            });
+            
+            // Close edit modal first, then show delete confirmation
+            $('#editChannelModal').modal('hide');
+            
+            // Wait for edit modal to close, then show delete modal
+            setTimeout(function() {
+                $('#deleteCategoryModal').modal('show');
+            }, 300);
+        } else {
+            console.log('New category - removing from DOM directly');
+            
+            // For new categories, just remove from DOM
+            const containerId = categoryRow.closest('[id$="Container"]').attr('id');
+            categoryRow.remove();
+            updateNoCategoriesMessage(containerId);
+            
+            // Update Add Channel button state if this is the add channel modal
+            if (containerId === 'categoriesContainer') {
+                updateAddChannelButtonState();
+            }
+        }
+    });
+
+    // Confirm Delete Category
+    $('#confirmDeleteCategory').on('click', function() {
+        const categoryId = $(this).data('category-id');
+        const channelId = $(this).data('channel-id');
+        const categoryRow = $(this).data('category-row');
+        
+        console.log('Confirming category deletion:', { categoryId, channelId, categoryRow });
+        
+        // Validate required data
+        if (!categoryId || !channelId) {
+            console.error('Missing required data for deletion:', { categoryId, channelId });
+            showToast('Error', 'Missing category or channel information', 'danger');
+            return;
+        }
+        
+        // Show loading state
+        const deleteBtn = $('#confirmDeleteCategory');
+        const originalText = deleteBtn.text();
+        deleteBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
+
+        console.log('Making DELETE request to:', `/api/channels/${channelId}/categories/${categoryId}`);
+
+        // Call Django proxy to delete category
+        $.ajax({
+            url: `/api/channels/${channelId}/categories/${categoryId}`,
+            type: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('Delete category API success response:', response);
+                
+                // Reset loader state
+                deleteBtn.prop('disabled', false).text(originalText);
+                
+                if (response.status === 'SUCCESS') {
+                    // Show success toast
+                    showToast('Success', response.statusMsg || 'Category deleted successfully', 'success');
+                    
+                    // Close modal
+                    $('#deleteCategoryModal').modal('hide');
+                    
+                    // Remove category row from DOM (if it exists)
+                    if (categoryRow) {
+                        categoryRow.remove();
+                        updateEditNoCategoriesMessage();
+                    }
+                    
+                    // Reload channel details to refresh the data
+                    loadChannelDetails(channelId);
+                    
+                    // Reopen edit modal after successful deletion
+                    setTimeout(function() {
+                        $('#editChannelModal').modal('show');
+                    }, 500);
+                } else {
+                    showToast('Error', response.statusMsg || 'Error deleting category', 'danger');
+                }
+            },
+            error: function(xhr) {
+                console.log('Delete category API error response:', xhr);
+                console.log('Error status:', xhr.status);
+                console.log('Error response:', xhr.responseText);
+                
+                // Reset loader state
+                deleteBtn.prop('disabled', false).text(originalText);
+                
+                const response = xhr.responseJSON;
+                showToast('Error', response?.statusMsg || response?.message || 'Error deleting category', 'danger');
+            }
+        });
+    });
+
+    // Function to reload channel details
+    function loadChannelDetails(channelId) {
+        console.log('Reloading channel details for channel ID:', channelId);
+        
+        $.ajax({
+            url: `/api/channels/${channelId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                console.log('Reload channel details success response:', response);
+                
+                if (response.status === 'SUCCESS' && response.data && response.data.channel) {
+                    const channel = response.data.channel;
+                    
+                    // Clear existing categories
+                    $('#editCategoriesContainer').empty();
+                    
+                    // Populate categories
+                    if (channel.categories && channel.categories.length > 0) {
+                        channel.categories.forEach(category => {
+                            createEditCategoryRow(category.categoryId, category.categoryCode, category.categoryName);
+                        });
+                    } else {
+                        $('#editCategoriesContainer').html('<p class="text-muted text-center py-3">No categories added yet</p>');
+                    }
+                    
+                    updateEditNoCategoriesMessage();
+                }
+            },
+            error: function(xhr) {
+                console.error('Error reloading channel details:', xhr);
+            }
+        });
+    }
+    
+    // Handle delete category modal cancel - reopen edit modal
+    $('#deleteCategoryModal').on('hidden.bs.modal', function() {
+        // Check if we should reopen edit modal (only if we came from edit modal)
+        const shouldReopenEdit = $('#confirmDeleteCategory').data('category-id');
+        if (shouldReopenEdit) {
+            setTimeout(function() {
+                $('#editChannelModal').modal('show');
+            }, 300);
+        }
+    });
+    
+    // Handle delete category modal show - debug data
+    $('#deleteCategoryModal').on('shown.bs.modal', function() {
+        console.log('Delete category modal shown');
+        console.log('Category ID in confirm button:', $('#confirmDeleteCategory').data('category-id'));
+        console.log('Channel ID in confirm button:', $('#confirmDeleteCategory').data('channel-id'));
+        console.log('Category row in confirm button:', $('#confirmDeleteCategory').data('category-row'));
+    });
+    
+
+});
+</script>
+
+<!-- Delete Category Confirmation Modal -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the category "<span id="deleteCategoryName"></span>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteCategory">Yes, Delete</button>
+            </div>
+            {% csrf_token %}
+        </div>
+    </div>
+</div>
+{% endblock %}

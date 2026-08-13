@@ -1,0 +1,260 @@
+{% extends 'pages/base.html' %}
+{% load static %}
+
+{% block title %}Create Material Channel Assignment{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">Create Material Channel Assignment</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'pages:material_channel_assignments_list' %}">Material Channel Assignments</a></li>
+                        <li class="breadcrumb-item active" style="color: white;">Create Assignment</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Assign Material to Channel</h4>
+                    <p class="card-title-desc">Create a new assignment of material to a channel with specific pricing and category.</p>
+
+                    <form id="materialChannelAssignmentForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="material" class="form-label">Material *</label>
+                                    <select class="form-select" id="material" name="material_id" required>
+                                        <option value="">Select Material</option>
+                                        {% for material in materials %}
+                                        <option value="{{ material.material_id }}" data-sku="{{ material.sku }}">
+                                            {{ material.material_code }} - {{ material.material_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="channel" class="form-label">Channel *</label>
+                                    <select class="form-select" id="channel" name="channel_id" required>
+                                        <option value="">Select Channel</option>
+                                        {% for channel in channels %}
+                                        <option value="{{ channel.id }}">{{ channel.channel_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                                                 <div class="row">
+                             <div class="col-md-6">
+                                 <div class="mb-3">
+                                     <label for="channelCategory" class="form-label">Channel Category *</label>
+                                     <select class="form-select" id="channelCategory" name="channel_category_id" required>
+                                         <option value="">Select Channel First</option>
+                                     </select>
+                                 </div>
+                             </div>
+                         </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="sellingPrice" class="form-label">Selling Price *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control" id="sellingPrice" name="selling_price" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="mrp" class="form-label">MRP</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control" id="mrp" name="mrp" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="costPrice" class="form-label">Cost Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control" id="costPrice" name="cost_price" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="channelSku" class="form-label">Channel SKU</label>
+                                    <input type="text" class="form-control" id="channelSku" name="channel_sku">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="channelProductId" class="form-label">Channel Product ID</label>
+                                    <input type="text" class="form-control" id="channelProductId" name="channel_product_id">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="commissionPercentage" class="form-label">Commission %</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="commissionPercentage" name="commission_percentage" step="0.01" min="0" max="100">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="shippingCost" class="form-label">Shipping Cost</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control" id="shippingCost" name="shipping_cost" step="0.01" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="isActive" name="is_active" checked>
+                                        <label class="form-check-label" for="isActive">
+                                            Active
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'pages:material_channel_assignments_list' %}"><button type="button" class="btn btn-secondary">Cancel</button></a>
+                            <button type="submit" class="btn btn-primary">Create Assignment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Load channel categories when channel is selected
+    $('#channel').on('change', function() {
+        const channelId = $(this).val();
+        const channelCategorySelect = $('#channelCategory');
+        
+        if (channelId) {
+            // Show loading
+            channelCategorySelect.html('<option value="">Loading...</option>');
+            
+            $.ajax({
+                url: `/channels/${channelId}/categories/ajax/`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        let options = '<option value="">Select Category</option>';
+                        response.categories.forEach(function(category) {
+                            options += `<option value="${category.id}">${category.category_name}</option>`;
+                        });
+                        channelCategorySelect.html(options);
+                    } else {
+                        channelCategorySelect.html('<option value="">Error loading categories</option>');
+                    }
+                },
+                error: function() {
+                    channelCategorySelect.html('<option value="">Error loading categories</option>');
+                }
+            });
+        } else {
+            channelCategorySelect.html('<option value="">Select Channel First</option>');
+        }
+    });
+
+    // Auto-fill channel SKU when material is selected
+    $('#material').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const sku = selectedOption.data('sku');
+        if (sku) {
+            $('#channelSku').val(sku);
+        }
+    });
+
+    // Form submission
+    $('#materialChannelAssignmentForm').on('submit', function(e) {
+        e.preventDefault();
+        
+                 const formData = {
+             material_id: $('#material').val(),
+             channel_id: $('#channel').val(),
+             channel_category_id: $('#channelCategory').val(),
+             selling_price: parseFloat($('#sellingPrice').val()),
+             mrp: $('#mrp').val() ? parseFloat($('#mrp').val()) : null,
+             cost_price: $('#costPrice').val() ? parseFloat($('#costPrice').val()) : null,
+             channel_sku: $('#channelSku').val(),
+             channel_product_id: $('#channelProductId').val(),
+             commission_percentage: $('#commissionPercentage').val() ? parseFloat($('#commissionPercentage').val()) : null,
+             shipping_cost: $('#shippingCost').val() ? parseFloat($('#shippingCost').val()) : null,
+             notes: $('#notes').val(),
+             is_active: $('#isActive').is(':checked')
+         };
+
+         // Validate required fields
+         if (!formData.material_id || !formData.channel_id || !formData.channel_category_id || 
+             !formData.selling_price) {
+             toastr.error('Please fill in all required fields');
+             return;
+         }
+
+        $.ajax({
+            url: '{% url "pages:material_channel_assignment_save" %}',
+            type: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    toastr.success(response.message);
+                    setTimeout(function() {
+                        window.location.href = '{% url "pages:material_channel_assignments_list" %}';
+                    }, 1500);
+                } else {
+                    toastr.error(response.message || 'Error creating assignment');
+                }
+            },
+            error: function(xhr) {
+                const response = xhr.responseJSON;
+                toastr.error(response?.message || 'Error creating assignment');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

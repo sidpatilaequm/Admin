@@ -1,0 +1,490 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Vendor Registration{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">Vendor Registration</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Step 1: Basic Information -->
+                        <div class="mb-4" id="step1">
+                            <h5 class="card-title">Step 1: Basic Information</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Password</label>
+                                    <input type="password" class="form-control" name="password" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control" name="firstName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" name="lastName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" name="phoneNumber" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Document Uploads -->
+                        <div class="mb-4" id="step2" style="display: none;">
+                            <h5 class="card-title">Step 2: Required Documents</h5>
+                            
+                            <!-- GST Certificate -->
+                            <div class="mb-4">
+                                <label class="form-label">GST Certificate</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" name="gstFile" accept=".pdf,.jpg,.jpeg,.png" id="gstFile">
+                                    <button type="button" class="btn btn-primary view-file" data-file="gstFile" data-bs-toggle="modal" data-bs-target="#fileViewModal">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- PAN Card -->
+                            <div class="mb-4">
+                                <label class="form-label">PAN Card</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" name="panFile" accept=".pdf,.jpg,.jpeg,.png" id="panFile">
+                                    <button type="button" class="btn btn-primary view-file" data-file="panFile" data-bs-toggle="modal" data-bs-target="#fileViewModal">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Bank Cheque -->
+                            <div class="mb-4">
+                                <label class="form-label">Bank Cheque</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" name="chequeFile" accept=".pdf,.jpg,.jpeg,.png" id="chequeFile">
+                                    <button type="button" class="btn btn-primary view-file" data-file="chequeFile" data-bs-toggle="modal" data-bs-target="#fileViewModal">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Certificate of Incorporation -->
+                            <div class="mb-4">
+                                <label class="form-label">Certificate of Incorporation</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" name="coiFile" accept=".pdf,.jpg,.jpeg,.png" id="coiFile">
+                                    <button type="button" class="btn btn-primary view-file" data-file="coiFile" data-bs-toggle="modal" data-bs-target="#fileViewModal">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Company Address -->
+                        <div class="mb-4" id="step3" style="display: none;">
+                            <h5 class="card-title">Step 3: Company Address</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Address Line 1</label>
+                                    <input type="text" class="form-control" name="address1" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Address Line 2</label>
+                                    <input type="text" class="form-control" name="address2">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">City</label>
+                                    <input type="text" class="form-control" name="city" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">State</label>
+                                    <input type="text" class="form-control" name="state" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Country</label>
+                                    <input type="text" class="form-control" name="country" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Pincode</label>
+                                    <input type="text" class="form-control" name="pincode" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
+                            <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Preview Vendor Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Basic Information Block -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">Basic Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Email:</strong> <span id="previewEmail">-</span></p>
+                                <p><strong>First Name:</strong> <span id="previewFirstName">-</span></p>
+                                <p><strong>Last Name:</strong> <span id="previewLastName">-</span></p>
+                                <p><strong>Phone Number:</strong> <span id="previewPhone">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Address Block -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">Company Address</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Address Line 1:</strong> <span id="previewAddress1">-</span></p>
+                                <p><strong>Address Line 2:</strong> <span id="previewAddress2">-</span></p>
+                                <p><strong>City:</strong> <span id="previewCity">-</span></p>
+                                <p><strong>State:</strong> <span id="previewState">-</span></p>
+                                <p><strong>Country:</strong> <span id="previewCountry">-</span></p>
+                                <p><strong>Pincode:</strong> <span id="previewPincode">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GST Block -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">GST Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>GSTIN Number:</strong> <span id="gstinNumber">-</span></p>
+                                <p><strong>Legal Trade Name:</strong> <span id="legalTradeName">-</span></p>
+                                <p><strong>Date of Registration:</strong> <span id="dateOfRegistration">-</span></p>
+                                <p><strong>PAN/TIN/CST:</strong> <span id="panTinCst">-</span></p>
+                                <p><strong>Type of Registration:</strong> <span id="typeOfRegistration">-</span></p>
+                                <p><strong>Registered Address:</strong> <span id="registeredAddress">-</span></p>
+                                <p><strong>Company Name:</strong> <span id="companyName">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cheque Block -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">Bank Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Bank:</strong> <span id="bank">-</span></p>
+                                <p><strong>Code:</strong> <span id="code">-</span></p>
+                                <p><strong>Issued To:</strong> <span id="issuedTo">-</span></p>
+                                <p><strong>Signatory:</strong> <span id="signatory">-</span></p>
+                                <p><strong>Account Number:</strong> <span id="accountNumber">-</span></p>
+                                <p><strong>IFSC:</strong> <span id="ifsc">-</span></p>
+                                <p><strong>Issued:</strong> <span id="issued">-</span></p>
+                                <p><strong>Branch:</strong> <span id="branch">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PAN Block -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">PAN Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>PAN Number:</strong> <span id="panNumber">-</span></p>
+                                <p><strong>Name:</strong> <span id="name">-</span></p>
+                                <p><strong>Date of Birth/Incorporation:</strong> <span id="dateOfBirthIncorporation">-</span></p>
+                                <p><strong>Father's Name:</strong> <span id="fathersName">-</span></p>
+                                <p><strong>Category:</strong> <span id="category">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Certificate of Incorporation Block -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">Certificate of Incorporation</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>CIN No:</strong> <span id="cinNo">-</span></p>
+                                <p><strong>PAN No:</strong> <span id="incorpPanNo">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
+                <button type="button" class="btn btn-primary" id="finalSubmitBtn">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File View Modal -->
+<div class="modal fade" id="fileViewModal" tabindex="-1" aria-labelledby="fileViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fileViewModalLabel">View Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="fileViewer">
+                    <!-- File content will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Message -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="fileToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            No file has been uploaded yet
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // API Endpoints
+    const apiBaseUrl = typeof JAVA_API_URL !== 'undefined' ? JAVA_API_URL : '';
+    const urls = {
+        registerUser: apiBaseUrl + '/api/users/register',
+        uploadFiles: apiBaseUrl + '/api/upload/all',
+        registerAddress: apiBaseUrl + '/api/company-addresses'
+    };
+
+    // File upload tracking
+    const fileInputs = {
+        gstFile: document.querySelector('input[name="gstFile"]'),
+        panFile: document.querySelector('input[name="panFile"]'),
+        chequeFile: document.querySelector('input[name="chequeFile"]'),
+        coiFile: document.querySelector('input[name="coiFile"]')
+    };
+
+    // Track uploaded files
+    const uploadedFiles = {
+        gstFile: false,
+        panFile: false,
+        chequeFile: false,
+        coiFile: false
+    };
+
+    // Function to check if all files are uploaded
+    function checkAllFilesUploaded() {
+        return Object.values(uploadedFiles).every(value => value === true);
+    }
+
+    // Function to update Next button state
+    function updateNextButtonState() {
+        const nextBtn = document.getElementById('nextBtn');
+        if (checkAllFilesUploaded()) {
+            nextBtn.removeAttribute('disabled');
+            nextBtn.classList.remove('btn-secondary');
+            nextBtn.classList.add('btn-primary');
+        } else {
+            nextBtn.setAttribute('disabled', 'disabled');
+            nextBtn.classList.remove('btn-primary');
+            nextBtn.classList.add('btn-secondary');
+        }
+    }
+
+    // Handle file uploads
+    Object.keys(fileInputs).forEach(key => {
+        const input = fileInputs[key];
+        const viewBtn = input.nextElementSibling;
+
+        input.addEventListener('change', function(e) {
+            if (this.files.length > 0) {
+                uploadedFiles[key] = true;
+                viewBtn.removeAttribute('disabled');
+                showToast(`${key.replace('File', '')} uploaded successfully`, 'success');
+            } else {
+                uploadedFiles[key] = false;
+                viewBtn.setAttribute('disabled', 'disabled');
+            }
+            updateNextButtonState();
+        });
+
+        // Handle view button click
+        viewBtn.addEventListener('click', function() {
+            const file = input.files[0];
+            if (!file) {
+                showToast('No file uploaded yet', 'error');
+                return;
+            }
+
+            const fileViewer = document.getElementById('fileViewer');
+            const fileViewModal = new bootstrap.Modal(document.getElementById('fileViewModal'));
+
+            if (file.type.startsWith('image/')) {
+                // For images
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.style.maxWidth = '100%';
+                fileViewer.innerHTML = '';
+                fileViewer.appendChild(img);
+            } else if (file.type === 'application/pdf') {
+                // For PDFs
+                const embed = document.createElement('embed');
+                embed.src = URL.createObjectURL(file);
+                embed.style.width = '100%';
+                embed.style.height = '500px';
+                fileViewer.innerHTML = '';
+                fileViewer.appendChild(embed);
+            } else {
+                showToast('Unsupported file type', 'error');
+                return;
+            }
+
+            fileViewModal.show();
+        });
+    });
+
+    // Step navigation
+    let currentStep = 1;
+    const totalSteps = 3;
+    const steps = ['step1', 'step2', 'step3'];
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    function showStep(step) {
+        steps.forEach(s => {
+            document.getElementById(s).style.display = s === `step${step}` ? 'block' : 'none';
+        });
+        prevBtn.style.display = step === 1 ? 'none' : 'inline-block';
+        nextBtn.textContent = step === totalSteps ? 'Submit' : 'Next';
+    }
+
+    prevBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentStep < totalSteps) {
+            if (currentStep === 2 && !checkAllFilesUploaded()) {
+                showToast('Please upload all required documents', 'error');
+                return;
+            }
+            currentStep++;
+            showStep(currentStep);
+        } else {
+            document.querySelector('form').dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // Initialize the first step
+    showStep(1);
+
+    // Initialize Google Places Autocomplete
+    function initAutocomplete() {
+        const addressInput = document.querySelector('input[name="address1"]');
+        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+            componentRestrictions: { country: 'in' },
+            fields: ['address_components', 'geometry', 'name'],
+            types: ['address']
+        });
+
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (!place.address_components) return;
+
+            let address1 = '';
+            let address2 = '';
+            let city = '';
+            let state = '';
+            let country = '';
+            let pincode = '';
+
+            for (const component of place.address_components) {
+                const componentType = component.types[0];
+
+                switch (componentType) {
+                    case 'street_number':
+                    case 'route':
+                        address1 = (address1 + ' ' + component.long_name).trim();
+                        break;
+                    case 'sublocality_level_1':
+                    case 'sublocality':
+                        address2 = component.long_name;
+                        break;
+                    case 'locality':
+                        city = component.long_name;
+                        break;
+                    case 'administrative_area_level_1':
+                        state = component.long_name;
+                        break;
+                    case 'country':
+                        country = component.long_name;
+                        break;
+                    case 'postal_code':
+                        pincode = component.long_name;
+                        break;
+                }
+            }
+
+            document.querySelector('input[name="address1"]').value = address1;
+            document.querySelector('input[name="address2"]').value = address2;
+            document.querySelector('input[name="city"]').value = city;
+            document.querySelector('input[name="state"]').value = state;
+            document.querySelector('input[name="country"]').value = country;
+            document.querySelector('input[name="pincode"]').value = pincode;
+        });
+    }
+
+    // Load Google Places API
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDgvcsoFQrh7Pg1tOAaQiS4AGFUc74x9qw&libraries=places&callback=initAutocomplete`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+});
+</script>
+{% endblock %} 

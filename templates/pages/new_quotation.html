@@ -1,0 +1,880 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}New Quotation{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-12">
+                    <li class="breadcrumb-item"><a href="#">SupplierHub</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'pages:quotations' %}">Quotations</a></li>
+                    <li class="breadcrumb-item active">New Quotation</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div>
+                <h3 class="fw-bold mb-1">
+                    {% if pr_id %}
+                        New Quotation — {{ pr_id }}
+                    {% else %}
+                        New Standalone Quotation
+                    {% endif %}
+                </h3>
+                <p class="text-muted mb-0">
+                    {% if pr_id %}
+                        Quoting against {{ pr_id }}
+                    {% else %}
+                        No PR reference — specify requirements in line items
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            <div class="d-flex align-items-center gap-3">
+                <a href="{% url 'pages:quotations' %}" class="btn btn-link text-muted text-decoration-none"><i class="ri-arrow-left-line me-1"></i> Back</a>
+                <button class="btn btn-white border shadow-sm"><i class="ri-save-line me-1 text-primary"></i> Save Draft</button>
+                <button class="btn btn-dark shadow-sm px-4">Submit Quotation <i class="ri-arrow-right-line ms-1"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wizard Steps -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body py-4">
+                    <div class="d-flex justify-content-between wizard-steps position-relative">
+                        <div class="step-item active" id="step-btn-1" onclick="showStep(1)">
+                            <div class="step-number">1</div>
+                            <div class="step-label">Header & Terms</div>
+                        </div>
+                        <div class="step-item" id="step-btn-2" onclick="showStep(2)">
+                            <div class="step-number">2</div>
+                            <div class="step-label">Line Items</div>
+                        </div>
+                        <div class="step-item" id="step-btn-3">
+                            <div class="step-number">3</div>
+                            <div class="step-label">Upload & Docs</div>
+                        </div>
+                        <div class="step-item" id="step-btn-4">
+                            <div class="step-number">4</div>
+                            <div class="step-label">Review & Submit</div>
+                        </div>
+                        <div class="wizard-line"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 1: Header & Terms -->
+    <div id="step-1" class="wizard-content">
+        {% if pr_id %}
+        <!-- PR REFERENCE -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-links-line me-2 text-primary"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">PR Reference</h6>
+                <span class="ms-auto text-muted fs-10 fw-bold">EBAN.BANFN</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">PR Number</label>
+                        <input type="text" class="form-control bg-light border-0" value="{{ pr_id }}" readonly>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">PR Description</label>
+                        <input type="text" class="form-control bg-light border-0" value="{{ pr_data.remarks|default:'Standard Purchase Requisition' }}" readonly>
+                    </div>
+                </div>
+                <div class="alert alert-soft-info border-0 mt-3 d-flex align-items-center mb-0">
+                    <i class="ri-information-line me-2 fs-18"></i>
+                    <div class="fs-12">
+                        This quotation is linked to PR <strong>{{ pr_id }}</strong>. Quantities quoted cannot exceed the PR requested quantity. You may quote less. You can also add new lines (e.g. packaging) not in the PR.
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- QUOTATION HEADER -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-file-text-line me-2 text-warning"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Quotation Header</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Quotation Number</label>
+                        <input type="text" class="form-control bg-light border-0" value="QTN-2026-64647" readonly>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Your Reference No. <small class="text-muted fw-normal">(optional)</small></label>
+                        <input type="text" class="form-control border-light" placeholder="Your internal quotation reference">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Currency *</label>
+                        <select class="form-select border-light" id="input-currency">
+                            <option>INR — Indian Rupee</option>
+                            <option>USD — US Dollar</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Quotation Date</label>
+                        <input type="date" class="form-control border-light" value="2026-05-08">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Validity (days) *</label>
+                        <input type="number" class="form-control border-light" value="30">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Valid Until</label>
+                        <input type="date" class="form-control bg-light border-0" value="2026-06-07" readonly id="input-valid-until">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAYMENT TERMS -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-bank-card-line me-2 text-primary"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Payment Terms</h6>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <span class="fs-10 text-muted fw-bold">SET AT:</span>
+                    <div class="btn-group btn-group-sm rounded-pill border overflow-hidden">
+                        <input type="radio" class="btn-check" name="pay-term-level" id="pt-lvl-1" checked>
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="pt-lvl-1">Quotation level</label>
+                        <input type="radio" class="btn-check" name="pay-term-level" id="pt-lvl-2">
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="pt-lvl-2">Per line Item</label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Payment Terms *</label>
+                        <select class="form-select border-light" id="input-payment-terms">
+                            <option selected>— Select —</option>
+                            <option>Net 30 Days</option>
+                            <option>Net 45 Days</option>
+                            <option>100% Advance</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Advance Required (%)</label>
+                        <input type="number" class="form-control border-light" value="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Bank Guarantee Required?</label>
+                        <select class="form-select border-light">
+                            <option>No</option>
+                            <option>Yes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INCOTERMS & DELIVERY -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-truck-line me-2 text-danger"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Incoterms & Delivery</h6>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <span class="fs-10 text-muted fw-bold">SET AT:</span>
+                    <div class="btn-group btn-group-sm rounded-pill border overflow-hidden">
+                        <input type="radio" class="btn-check" name="inco-lvl" id="inco-lvl-1" checked>
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="inco-lvl-1">Quotation level</label>
+                        <input type="radio" class="btn-check" name="inco-lvl" id="inco-lvl-2">
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="inco-lvl-2">Per line Item</label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Incoterms *</label>
+                        <select class="form-select border-light" id="input-incoterms">
+                            <option selected>— Select —</option>
+                            <option>FOR - Free On Road</option>
+                            <option>Ex-Works</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Named Place / Location</label>
+                        <input type="text" class="form-control border-light" placeholder="e.g. Bangalore Plant, Gate 3">
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Quoted Delivery Date *</label>
+                        <input type="date" class="form-control border-light">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Lead Time (days)</label>
+                        <input type="number" class="form-control border-light" placeholder="e.g. 35">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Shipping Mode</label>
+                        <select class="form-select border-light">
+                            <option>Road</option>
+                            <option>Rail</option>
+                            <option>Air</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FREIGHT CHARGES -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-gas-station-line me-2 text-success"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Freight Charges</h6>
+                <div class="ms-auto d-flex align-items-center gap-3">
+                    <span class="fs-10 text-muted fw-bold">CHARGE AT:</span>
+                    <div class="btn-group btn-group-sm rounded-pill border overflow-hidden">
+                        <input type="radio" class="btn-check" name="freight-lvl" id="fl-1" checked>
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="fl-1">No separate freight</label>
+                        <input type="radio" class="btn-check" name="freight-lvl" id="fl-2">
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="fl-2">Quotation level</label>
+                        <input type="radio" class="btn-check" name="freight-lvl" id="fl-3">
+                        <label class="btn btn-outline-success border-0 px-3 fs-10 fw-bold" for="fl-3">Per line Item</label>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-soft-success border-0 mb-0 d-flex align-items-center">
+                    <i class="ri-checkbox-circle-line me-2 fs-18"></i>
+                    <div class="fs-12">
+                        Freight is included in unit pricing (incoterms cover transport). No separate freight charge.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COVER NOTE & REMARKS -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-chat-1-line me-2 text-warning"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Cover Note & Remarks</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Cover Note <small class="text-muted fw-normal">(visible to buyer)</small></label>
+                        <textarea class="form-control border-light" rows="4" placeholder="Introduce your quotation, highlight key strengths, certifications, or special offers..."></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted fs-11 fw-bold text-uppercase">Internal Notes <small class="text-muted fw-normal">(not sent to buyer)</small></label>
+                        <textarea class="form-control border-light" rows="4" placeholder="Internal memos, pricing rationale, approval notes..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mb-5">
+            <button class="btn btn-white border px-4">Cancel</button>
+            <button class="btn btn-dark px-4" onclick="showStep(2)">Next: Line Items <i class="ri-arrow-right-line ms-1"></i></button>
+        </div>
+    </div>
+
+    <!-- Step 2: Line Items -->
+    <div id="step-2" class="wizard-content" style="display: none;">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-pushpin-line me-2 text-danger"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Line Items</h6>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-warning btn-sm fs-11 fw-bold px-3"><i class="ri-add-line me-1"></i> Add PR Line</button>
+                    <button class="btn btn-outline-warning btn-sm fs-11 fw-bold px-3"><i class="ri-add-line me-1"></i> Add-on Item</button>
+                    <button class="btn btn-link btn-sm text-muted text-decoration-none" onclick="showStep(1)"><i class="ri-arrow-left-line me-1"></i> Back</button>
+                    <button class="btn btn-dark btn-sm px-4" onclick="showStep(3)">Next: Documents <i class="ri-arrow-right-line ms-1"></i></button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="bg-soft-info p-3 border-bottom d-flex align-items-center">
+                    <i class="ri-file-list-3-line me-2 fs-18"></i>
+                    <div class="fs-11">
+                        <strong>PR lines</strong> (white rows) are imported from the PR — you can edit price, quantity (≤ PR qty), delivery date, and terms. | 
+                        <i class="ri-magic-line ms-3 me-1 text-warning"></i> <strong>Add-on items</strong> (gold rows) are items not in the PR — packaging, testing, installation, etc.
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered border-light align-middle mb-0 fs-11 text-uppercase text-center">
+                        <thead class="bg-light text-muted fw-bold">
+                            <tr>
+                                <th style="width: 50px;">Type</th>
+                                <th style="width: 60px;">Item</th>
+                                <th>Description / Material</th>
+                                <th style="width: 80px;">HSN/SAC</th>
+                                <th style="width: 70px;">PR Qty</th>
+                                <th style="width: 90px;">Quoted Qty *</th>
+                                <th style="width: 60px;">UOM</th>
+                                <th style="width: 100px;">Unit Price *</th>
+                                <th style="width: 60px;">GST %</th>
+                                <th style="width: 100px;">Delivery Date</th>
+                                <th style="width: 80px;">Payment Terms</th>
+                                <th style="width: 80px;">Incoterms</th>
+                                <th style="width: 80px;">Freight</th>
+                                <th style="width: 100px;">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if pr_id and pr_data %}
+                                {% for item in pr_data.items %}
+                                <tr class="line-row" data-index="{{ forloop.counter0 }}" data-line-id="{{ item.id|default:1 }}" data-item-code="{{ item.sku|default:'ITEM-001' }}" data-desc="{{ item.materialDescription|default:'Material' }}" data-uom="{{ item.uom|default:'EA' }}">
+                                    <td><i class="ri-links-line text-primary fs-14"></i></td>
+                                    <td>{{ item.lineNumber|default:forloop.counter|stringformat:"d"|add:"0" }}</td>
+                                    <td class="text-start">{{ item.materialDescription|default:item.sku }}</td>
+                                    <td>{{ item.hsnSac|default:"-" }}</td>
+                                    <td>{{ item.quantity|floatformat:"0" }}</td>
+                                    <td><input type="number" class="form-control form-control-sm border-light text-center qty-input" value="{{ item.quantity|floatformat:"0" }}" oninput="calculateTotals()"></td>
+                                    <td>{{ item.uom }}</td>
+                                    <td><input type="number" class="form-control form-control-sm border-light text-center price-input" placeholder="Price" oninput="calculateTotals()"></td>
+                                    <td class="gst-percent">28%</td>
+                                    <td><input type="date" class="form-control form-control-sm border-light" value="{{ item.requiredDate|default:pr_data.requiredDate }}"></td>
+                                    <td>{{ pr_data.paymentTerms|default:"-" }}</td>
+                                    <td>{{ pr_data.incoterms|default:"-" }}</td>
+                                    <td>Incl.</td>
+                                    <td class="fw-bold line-total">₹ 0.00</td>
+                                </tr>
+                                {% endfor %}
+                            {% elif pr_id %}
+                                <tr>
+                                    <td colspan="14" class="py-5 text-muted">
+                                        Loading PR details...
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="14" class="py-5 text-muted">
+                                        No lines yet — click "+ Add PR Line" or "+ Add-on Item"
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                        <tfoot class="bg-light fw-bold">
+                            <tr>
+                                <td colspan="9" class="text-end border-0"></td>
+                                <td colspan="3" class="text-end border-0">LINES</td>
+                                <td colspan="2" class="text-end border-0 fs-13">{% if pr_id and pr_data %}{{ pr_data.items|length }}{% else %}0{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="9" class="text-end border-0"></td>
+                                <td colspan="3" class="text-end border-0">SUBTOTAL</td>
+                                <td colspan="2" class="text-end border-0 fs-13" id="step2-subtotal">₹ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="9" class="text-end border-0"></td>
+                                <td colspan="3" class="text-end border-0">FREIGHT</td>
+                                <td colspan="2" class="text-end border-0 fs-13" id="step2-freight">₹ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="9" class="text-end border-0"></td>
+                                <td colspan="3" class="text-end border-0">GRAND TOTAL</td>
+                                <td colspan="2" class="text-end border-0 fs-15 text-success" id="step2-grand-total">₹ 0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Step 3: Upload & Docs -->
+    <div id="step-3" class="wizard-content" style="display: none;">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-attachment-line me-2 text-primary"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Upload Documents</h6>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button class="btn btn-link btn-sm text-muted text-decoration-none" onclick="showStep(2)"><i class="ri-arrow-left-line me-1"></i> Back</button>
+                    <button class="btn btn-dark btn-sm px-4" onclick="showStep(4)">Next: Review <i class="ri-arrow-right-line ms-1"></i></button>
+                </div>
+            </div>
+            <div class="card-body">
+                <label class="form-label text-muted fs-11 fw-bold text-uppercase mb-3">Upload Your Quotation PDF <small class="text-muted fw-normal">(optional — can extract line items)</small></label>
+                
+                <div class="upload-dropzone border border-dashed rounded-3 p-5 text-center mb-4">
+                    <i class="ri-file-pdf-line fs-48 text-light mb-3 d-block"></i>
+                    <h6 class="fw-bold mb-1">Drop your PDF quotation here, or click to browse</h6>
+                    <p class="text-muted fs-11 mb-0">PDF, max 10 MB · System can auto-extract line items from the PDF</p>
+                </div>
+
+                <div class="alert alert-soft-warning border-0 d-flex align-items-center mb-4">
+                    <i class="ri-lightbulb-line me-2 fs-18"></i>
+                    <div class="fs-12">
+                        <strong>PDF Auto-Extract:</strong> After uploading, click "Parse PDF" to automatically extract line items, quantities, and prices from your PDF quotation. You can review and edit before submitting.
+                    </div>
+                </div>
+
+                <label class="form-label text-muted fs-11 fw-bold text-uppercase mb-3">Additional Supporting Documents</label>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-white border fs-11 fw-bold px-3 py-2"><i class="ri-add-line me-1"></i> Technical Specification</button>
+                    <button class="btn btn-white border fs-11 fw-bold px-3 py-2"><i class="ri-add-line me-1"></i> Quality Certificate</button>
+                    <button class="btn btn-white border fs-11 fw-bold px-3 py-2"><i class="ri-add-line me-1"></i> Product Brochure</button>
+                    <button class="btn btn-white border fs-11 fw-bold px-3 py-2"><i class="ri-add-line me-1"></i> Other Document</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Review & Submit -->
+    <div id="step-4" class="wizard-content" style="display: none;">
+        <div class="d-flex align-items-center mb-4">
+            <p class="text-muted mb-0 fs-12">Review your quotation before submitting</p>
+            <div class="ms-auto d-flex gap-2">
+                <button class="btn btn-link btn-sm text-muted text-decoration-none" onclick="showStep(3)"><i class="ri-arrow-left-line me-1"></i> Back</button>
+                <button class="btn btn-white btn-sm border px-3" style="border-radius: 6px;"><i class="ri-save-line me-1 text-primary"></i> Save as Draft</button>
+                <button class="btn btn-dark btn-sm px-4" style="border-radius: 6px; background-color: #064e3b; border-color: #064e3b;" onclick="submitQuotation()">Submit Quotation <i class="ri-arrow-right-line ms-1"></i></button>
+            </div>
+        </div>
+
+        <!-- QUOTATION SUMMARY -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px;">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-file-text-line me-2 text-warning"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Quotation Summary</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Quotation No.</label>
+                        <h6 class="fw-bold text-success mb-0" style="color: #065f46 !important;">QTN-2026-63596</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PR Reference</label>
+                        <h6 class="fw-bold mb-0 text-muted">{% if pr_id %}{{ pr_id }}{% else %}—{% endif %}</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Currency</label>
+                        <h6 class="fw-bold mb-0" id="summary-currency">INR</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Payment Terms</label>
+                        <h6 class="fw-bold mb-0 text-muted" id="summary-payment-terms">— Select —</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Incoterms</label>
+                        <h6 class="fw-bold mb-0 text-muted" id="summary-incoterms">---</h6>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Valid Until</label>
+                        <h6 class="fw-bold mb-0 text-muted" id="summary-valid-until">07 Jun 2026</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINE ITEMS SUMMARY -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 8px;">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+                <i class="ri-pushpin-line me-2 text-danger"></i>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">{% if pr_id %}2{% else %}0{% endif %} Line Items</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 fs-11">
+                        <thead class="bg-light text-muted text-uppercase fs-10 fw-bold text-center">
+                            <tr>
+                                <th style="width: 80px;">Type</th>
+                                <th class="text-start">Description</th>
+                                <th style="width: 120px;">HSN</th>
+                                <th style="width: 120px;">Qty / UOM</th>
+                                <th style="width: 150px;">Price</th>
+                                <th style="width: 150px;" class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-center">
+                            {% if pr_id and pr_data %}
+                                {% for item in pr_data.items %}
+                                <tr class="step4-row" data-index="{{ forloop.counter0 }}">
+                                    <td><span class="badge bg-soft-info text-info border border-info border-opacity-25 fs-9">PR LINE</span></td>
+                                    <td class="text-start">{{ item.materialDescription|default:item.sku }}</td>
+                                    <td>{{ item.hsnSac|default:"-" }}</td>
+                                    <td class="fw-medium"><span class="step4-qty">{{ item.quantity|floatformat:"0" }}</span> <span class="text-muted">{{ item.uom }}</span></td>
+                                    <td class="fw-medium text-muted step4-price">Pending Input</td>
+                                    <td class="text-end fw-bold step4-line-total">₹ 0.00</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="py-4 text-muted">No items added to this quotation</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                        <tfoot class="bg-light fw-bold">
+                            <tr>
+                                <td colspan="4" class="text-end border-0"></td>
+                                <td class="text-end border-0 fs-10 text-muted">SUBTOTAL</td>
+                                <td class="text-end border-0" id="step4-subtotal">₹ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end border-0"></td>
+                                <td class="text-end border-0 fs-10 text-muted">FREIGHT</td>
+                                <td class="text-end border-0" id="step4-freight">₹ 0.00</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="text-end border-0"></td>
+                                <td class="text-end border-0 fs-10 text-muted">GRAND TOTAL</td>
+                                <td class="text-end border-0 fs-14 text-success" id="step4-grand-total">₹ 0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-soft-success border-0 d-flex align-items-center mb-5" style="background-color: #ecfdf5; color: #065f46;">
+            <i class="ri-checkbox-circle-line me-2 fs-18"></i>
+            <div class="fs-12">
+                By submitting, you confirm that all prices, quantities, and terms in this quotation are accurate and commercially binding for the validity period.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fs-9 { font-size: 9px; }
+    .ls-1 { letter-spacing: 1px; }
+    .fs-10 { font-size: 10px; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-18 { font-size: 18px; }
+    .fw-bold { font-weight: 700 !important; }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        font-size: 10px;
+        padding-top: 2px;
+    }
+
+    /* Wizard Styling */
+    .wizard-steps {
+        z-index: 1;
+    }
+    .wizard-line {
+        position: absolute;
+        top: 20px;
+        left: 5%;
+        right: 5%;
+        height: 2px;
+        background: #eef2f7;
+        z-index: -1;
+    }
+    .step-item {
+        text-align: center;
+        background: #fff;
+        padding: 0 20px;
+        cursor: pointer;
+    }
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #eef2f7;
+        color: #98a6ad;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin: 0 auto 8px;
+        transition: all 0.3s;
+    }
+    .step-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #98a6ad;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .step-item.active .step-number {
+        background: #0acf97;
+        border-color: #0acf97;
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(10, 207, 151, 0.3);
+    }
+    .step-item.active .step-label {
+        color: #0acf97;
+    }
+    .step-item.completed .step-number {
+        background: #fff;
+        border-color: #0acf97;
+        color: #0acf97;
+    }
+
+    .alert-soft-info { background-color: rgba(63, 179, 255, 0.1); color: #3fb3ff; }
+    .alert-soft-success { background-color: rgba(10, 207, 151, 0.1); color: #0acf97; }
+    .bg-soft-info { background-color: rgba(63, 179, 255, 0.05); }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #727cf5;
+        box-shadow: none;
+    }
+    
+    .btn-white { background-color: #fff; }
+</style>
+
+<script>
+    function showStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.wizard-content').forEach(el => el.style.display = 'none');
+        // Show selected step
+        document.getElementById('step-' + step).style.display = 'block';
+        
+        // Update step buttons
+        document.querySelectorAll('.step-item').forEach((el, index) => {
+            if (index + 1 < step) {
+                el.classList.add('completed');
+                el.classList.remove('active');
+            } else if (index + 1 === step) {
+                el.classList.add('active');
+                el.classList.remove('completed');
+            } else {
+                el.classList.remove('active', 'completed');
+            }
+        });
+
+        if (step === 4) {
+            updateSummary();
+        }
+
+        // Scroll to top of wizard
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateSummary() {
+        // Currency
+        const currencySelect = document.getElementById('input-currency');
+        if (currencySelect && document.getElementById('summary-currency')) {
+            const currencyVal = currencySelect.value;
+            document.getElementById('summary-currency').innerText = currencyVal ? currencyVal.split(' ')[0] : '---';
+        }
+
+        // Payment Terms
+        const ptSelect = document.getElementById('input-payment-terms');
+        if (ptSelect && document.getElementById('summary-payment-terms')) {
+            document.getElementById('summary-payment-terms').innerText = ptSelect.value || '---';
+            if (ptSelect.value !== '— Select —') {
+                document.getElementById('summary-payment-terms').classList.remove('text-muted');
+            }
+        }
+
+        // Incoterms
+        const incoSelect = document.getElementById('input-incoterms');
+        if (incoSelect && document.getElementById('summary-incoterms')) {
+            document.getElementById('summary-incoterms').innerText = incoSelect.value || '---';
+            if (incoSelect.value !== '— Select —') {
+                document.getElementById('summary-incoterms').classList.remove('text-muted');
+            }
+        }
+
+        // Valid Until
+        const validUntil = document.getElementById('input-valid-until');
+        if (validUntil && document.getElementById('summary-valid-until')) {
+            if (validUntil.value) {
+                const d = new Date(validUntil.value);
+                const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                document.getElementById('summary-valid-until').innerText = d.toLocaleDateString('en-GB', options);
+                document.getElementById('summary-valid-until').classList.remove('text-muted');
+            }
+        }
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        let gstTotal = 0;
+        
+        document.querySelectorAll('.line-row').forEach(row => {
+            const index = row.getAttribute('data-index');
+            const qtyStr = row.querySelector('.qty-input').value;
+            const priceStr = row.querySelector('.price-input').value;
+            const qty = parseFloat(qtyStr) || 0;
+            const price = parseFloat(priceStr) || 0;
+            
+            const lineTotal = qty * price;
+            subtotal += lineTotal;
+            
+            // Update line total cell in Step 2
+            row.querySelector('.line-total').innerText = '₹ ' + lineTotal.toFixed(2);
+            
+            // Calculate GST
+            const gstCell = row.querySelector('.gst-percent');
+            let gstPercent = 28; // Default
+            if (gstCell) {
+                gstPercent = parseFloat(gstCell.innerText.replace('%', '')) || 0;
+            }
+            gstTotal += lineTotal * (gstPercent / 100);
+
+            // Update corresponding Step 4 review row if it exists
+            const step4Row = document.querySelector(`.step4-row[data-index="${index}"]`);
+            if (step4Row) {
+                step4Row.querySelector('.step4-qty').innerText = qty;
+                step4Row.querySelector('.step4-price').innerText = price > 0 ? '₹ ' + price.toFixed(2) : 'Pending Input';
+                step4Row.querySelector('.step4-line-total').innerText = '₹ ' + lineTotal.toFixed(2);
+            }
+        });
+        
+        // For freight, read if we have any inputs or set to 0
+        const freight = 0; 
+        
+        // Grand total is Subtotal + GST + Freight
+        const grandTotal = subtotal + gstTotal + freight;
+        
+        // Update Step 2 footer
+        if (document.getElementById('step2-subtotal')) document.getElementById('step2-subtotal').innerText = '₹ ' + subtotal.toFixed(2);
+        if (document.getElementById('step2-freight')) document.getElementById('step2-freight').innerText = '₹ ' + freight.toFixed(2);
+        if (document.getElementById('step2-grand-total')) document.getElementById('step2-grand-total').innerText = '₹ ' + grandTotal.toFixed(2);
+
+        // Update Step 4 footer
+        if (document.getElementById('step4-subtotal')) document.getElementById('step4-subtotal').innerText = '₹ ' + subtotal.toFixed(2);
+        if (document.getElementById('step4-freight')) document.getElementById('step4-freight').innerText = '₹ ' + freight.toFixed(2);
+        if (document.getElementById('step4-grand-total')) document.getElementById('step4-grand-total').innerText = '₹ ' + grandTotal.toFixed(2);
+    }
+
+    function submitQuotation() {
+        // Use actual PR ID from the backend object, fallback to parsing if necessary
+        const actualPrIdStr = "{{ pr_data.id|default:'' }}";
+        const actualPrId = actualPrIdStr ? parseInt(actualPrIdStr) : null;
+        const prIdStr = "{{ pr_id|default:'' }}";
+        let prId = actualPrId;
+        if (!prId) {
+            prId = prIdStr ? parseInt(prIdStr.replace(/[^0-9]/g, '')) || 1 : 1;
+        }
+        
+        // Build line items array dynamically
+        const lineItems = [];
+        document.querySelectorAll('.line-row').forEach((row, index) => {
+            const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
+            const price = parseFloat(row.querySelector('.price-input').value) || 0;
+            
+            // Try to extract line IDs if available, else just use an index
+            // Assuming we added data-id to the row, or we fallback to index + 1
+            const lineId = parseInt(row.getAttribute('data-line-id')) || (index + 1);
+            const itemCode = row.getAttribute('data-item-code') || "ITEM-001";
+            const desc = row.getAttribute('data-desc') || "Material";
+            const uom = row.getAttribute('data-uom') || "EA";
+            const reqDate = row.querySelector('input[type="date"]').value || new Date().toISOString().split('T')[0];
+
+            if (price > 0 && qty > 0) {
+                lineItems.push({
+                    "pr_line_id": lineId,
+                    "item_code": itemCode,
+                    "description": desc,
+                    "pr_qty": qty, // Assume quoted qty <= pr qty
+                    "quoted_qty": qty,
+                    "uom": uom,
+                    "unit_price": price,
+                    "gst_percent": 18,
+                    "delivery_date": reqDate,
+                    "payment_terms_id": null,
+                    "incoterm": null,
+                    "freight_amount": 0
+                });
+            }
+        });
+
+        // Get header info
+        const qCurrency = document.getElementById('input-currency') ? document.getElementById('input-currency').value.split(' ')[0] : 'INR';
+        const qValidUntil = document.getElementById('input-valid-until') ? document.getElementById('input-valid-until').value : new Date().toISOString().split('T')[0];
+        
+        const ptSelect = document.getElementById('input-payment-terms');
+        const ptId = (ptSelect && ptSelect.selectedIndex > 0) ? ptSelect.selectedIndex : 1;
+
+        const incoSelect = document.getElementById('input-incoterms');
+        const incoVal = (incoSelect && incoSelect.selectedIndex > 0) ? incoSelect.value : "EXW";
+
+        const payload = {
+            "pr_id": prId,
+            "quotation_header": {
+                "quotation_number": "QTN-" + Math.floor(Math.random() * 100000),
+                "quotation_date": new Date().toISOString().split('T')[0],
+                "vendor_reference_no": "REF-" + Math.floor(Math.random() * 1000),
+                "currency": qCurrency,
+                "validity_days": 30,
+                "valid_until": qValidUntil
+            },
+            "payment_terms": {
+                "payment_terms_id": ptId,
+                "advance_required_percent": 0,
+                "bank_guarantee_required": false
+            },
+            "delivery_details": {
+                "incoterm": incoVal,
+                "named_place": "Factory Gate",
+                "quoted_delivery_date": new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                "lead_time_days": 15,
+                "shipping_mode": "ROAD"
+            },
+            "freight_details": {
+                "freight_charge_type": "NO_SEPARATE_FREIGHT",
+                "freight_amount": 0
+            },
+            "remarks": {
+                "cover_note": "Please find our quotation.",
+                "internal_notes": ""
+            },
+            "line_items": lineItems.length > 0 ? lineItems : [
+                {
+                    "pr_line_id": 1,
+                    "item_code": "ITEM-001",
+                    "description": "Quoted Material",
+                    "pr_qty": 1,
+                    "quoted_qty": 1,
+                    "uom": "EA",
+                    "unit_price": 1000,
+                    "gst_percent": 18,
+                    "delivery_date": new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    "payment_terms_id": null,
+                    "incoterm": null,
+                    "freight_amount": 0
+                }
+            ],
+            "documents": {
+                "quotation_pdf": "",
+                "technical_specification": [],
+                "quality_certificate": [],
+                "product_brochure": [],
+                "other_documents": []
+            }
+        };
+
+        fetch('{% url "pages:submit_quotation_proxy" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Quotation submitted successfully!');
+                window.location.href = '{% url "pages:quotations" %}';
+            } else {
+                alert('Failed to submit quotation: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting quotation:', error);
+            alert('An error occurred while submitting.');
+        });
+    }
+</script>
+{% endblock %}

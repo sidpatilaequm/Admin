@@ -1,0 +1,756 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Payments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Area -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary-subtle rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                    <i class="ri-bank-card-line text-primary fs-20"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-1">Vendor Payments</h3>
+                    <p class="text-muted fs-12 mb-0">Payment advices received from SAP F110 · FBL1N · PAYR · <span class="badge bg-light text-muted border fs-9">Display Only</span></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-auto mt-3 mt-sm-0">
+            <div class="d-flex align-items-center gap-2">
+                <!-- Hidden file input for Excel Upload -->
+                <form id="uploadExcelForm" enctype="multipart/form-data" style="display: none;">
+                    {% csrf_token %}
+                    <input type="file" id="excelFileInput" name="excel_file" accept=".xlsx, .xls">
+                </form>
+                
+                {% if has_custom_data %}
+                <form action="{% url 'pages:reset_payment_data' %}" method="post" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3 border-danger-subtle shadow-sm bg-white">
+                        <i class="ri-close-circle-line me-1"></i> Clear Data
+                    </button>
+                </form>
+                {% else %}
+                <button type="button" class="btn btn-success shadow-sm" onclick="document.getElementById('excelFileInput').click();">
+                    <i class="ri-file-excel-line me-1"></i> Upload Excel
+                </button>
+
+                <a href="{% url 'pages:download_payment_template' %}" class="btn btn-outline-success me-1">
+                    <i class="ri-download-2-line me-1"></i> Download Template
+                </a>
+                {% endif %}
+                <button class="btn btn-outline-secondary btn-sm fw-bold px-3 border-light-subtle shadow-sm bg-white">
+                    <i class="ri-file-pdf-line me-1 text-danger"></i> Export PDF
+                </button>
+                <button class="btn btn-primary btn-sm fw-bold px-3 shadow-sm">
+                    <i class="ri-refresh-line me-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row -->
+    {% if not request.session.vendor_permissions or request.session.vendor_permissions.PAY_OVERVIEW.view %}
+    <div class="row mb-4" id="block-header-information">
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px; border-top: 3px solid #3b82f6 !important;">
+                <div class="card-body p-3">
+                    <p class="text-muted fs-11 fw-bold text-uppercase mb-2">Total Payments (FY)</p>
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h3 class="fw-bold mb-1">{% if has_custom_data %}{{ kpi.total_gross_display }}{% else %}₹48.6L{% endif %}</h3>
+                            <span class="text-muted fs-11">{% if has_custom_data %}{{ kpi.total_count }}{% else %}23{% endif %} transactions</span>
+                        </div>
+                        <div class="bg-primary-subtle rounded p-2">
+                            <i class="ri-wallet-3-line text-primary fs-18"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px; border-top: 3px solid #10b981 !important;">
+                <div class="card-body p-3">
+                    <p class="text-muted fs-11 fw-bold text-uppercase mb-2">Paid This Month</p>
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h3 class="fw-bold mb-1" style="color: #059669;">{% if has_custom_data %}{{ kpi.paid_display }}{% else %}₹12.4L{% endif %}</h3>
+                            <span class="text-success fs-10 fw-bold"><i class="ri-checkbox-circle-line me-1"></i>{% if has_custom_data %}{{ kpi.paid_count }}{% else %}8{% endif %} cleared · UTR confirmed</span>
+                        </div>
+                        <div class="bg-success-subtle rounded p-2">
+                            <i class="ri-hand-coin-line text-success fs-18"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px; border-top: 3px solid #f59e0b !important;">
+                <div class="card-body p-3">
+                    <p class="text-muted fs-11 fw-bold text-uppercase mb-2">In Process</p>
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h3 class="fw-bold mb-1" style="color: #d97706;">{% if has_custom_data %}{{ kpi.in_process_display }}{% else %}₹5.2L{% endif %}</h3>
+                            <span class="text-muted fs-11">{% if has_custom_data %}{{ kpi.in_process_count }}{% else %}3{% endif %} under F110 run</span>
+                        </div>
+                        <div class="bg-warning-subtle rounded p-2">
+                            <i class="ri-time-line text-warning fs-18"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px; border-top: 3px solid #ef4444 !important;">
+                <div class="card-body p-3">
+                    <p class="text-muted fs-11 fw-bold text-uppercase mb-2">Overdue Invoices</p>
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h3 class="fw-bold mb-1" style="color: #dc2626;">{% if has_custom_data %}{{ kpi.overdue_display }}{% else %}₹1.8L{% endif %}</h3>
+                            <span class="text-danger fs-11 fw-bold">{% if has_custom_data %}{{ kpi.overdue_count }}{% else %}2{% endif %} invoices · 15+ days</span>
+                        </div>
+                        <div class="bg-danger-subtle rounded p-2">
+                            <i class="ri-error-warning-line text-danger fs-18"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 12px; border-top: 3px solid #065f46 !important;">
+                <div class="card-body p-3">
+                    <p class="text-muted fs-11 fw-bold text-uppercase mb-2">TDS Deducted (YTD)</p>
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <h3 class="fw-bold mb-1">{% if has_custom_data %}{{ kpi.tds_display }}{% else %}₹2.1L{% endif %}</h3>
+                            <span class="text-muted fs-11">Sec 194C / 194J</span>
+                        </div>
+                        <div class="bg-secondary-subtle rounded p-2" style="background-color: #ecfdf5 !important;">
+                            <i class="ri-percent-line fs-18" style="color: #065f46;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabs Area -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm bg-transparent">
+                <div class="card-body p-0">
+                    <ul class="nav nav-tabs nav-tabs-custom border-bottom-0 gap-2" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active px-4 py-2 border-0 rounded-pill fs-12 fw-bold filter-tab" data-status="all" data-bs-toggle="tab" href="#all" role="tab">
+                                All Payments <span class="badge bg-light text-muted ms-1 border">{% if has_custom_data %}{{ kpi.total_count }}{% else %}23{% endif %}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 py-2 border-0 rounded-pill fs-12 fw-bold filter-tab" data-status="paid" data-bs-toggle="tab" href="#paid" role="tab">
+                                Paid <span class="badge bg-light text-muted ms-1 border">{% if has_custom_data %}{{ kpi.paid_count }}{% else %}18{% endif %}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 py-2 border-0 rounded-pill fs-12 fw-bold filter-tab" data-status="in_process" data-bs-toggle="tab" href="#process" role="tab">
+                                In Process <span class="badge bg-light text-muted ms-1 border">{% if has_custom_data %}{{ kpi.in_process_count }}{% else %}3{% endif %}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 py-2 border-0 rounded-pill fs-12 fw-bold filter-tab" data-status="pending" data-bs-toggle="tab" href="#pending" role="tab">
+                                Pending <span class="badge bg-light text-muted ms-1 border">{% if has_custom_data %}{{ kpi.overdue_count }}{% else %}2{% endif %}</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-4 py-2 border-0 rounded-pill fs-12 fw-bold filter-tab" data-status="hold" data-bs-toggle="tab" href="#hold" role="tab">
+                                On Hold <span class="badge bg-light text-muted ms-1 border">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-auto">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-muted fs-11 fw-bold text-uppercase mb-0 text-nowrap">Period</label>
+                        <select id="periodFilter" class="form-select form-select-sm border shadow-none bg-light fw-bold fs-11 px-3" style="min-width: 160px; border-radius: 8px;">
+                            <option value="all" selected>Apr 2025 – Mar 2026</option>
+                            <option value="last_quarter">Last Quarter</option>
+                            <option value="last_month">Last Month</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-auto ms-md-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-muted fs-11 fw-bold text-uppercase mb-0 text-nowrap">Payment Method</label>
+                        <select id="methodFilter" class="form-select form-select-sm border shadow-none bg-light fw-bold fs-11 px-3" style="min-width: 140px; border-radius: 8px;">
+                            <option value="all" selected>All Methods</option>
+                            <option value="rtgs">RTGS</option>
+                            <option value="neft">NEFT</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-auto ms-md-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-muted fs-11 fw-bold text-uppercase mb-0 text-nowrap">Doc Type</label>
+                        <select id="docTypeFilter" class="form-select form-select-sm border shadow-none bg-light fw-bold fs-11 px-3" style="min-width: 100px; border-radius: 8px;">
+                            <option value="all" selected>All</option>
+                            <option value="kz">KZ (Payment)</option>
+                            <option value="zp">ZP (Advice)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md ms-md-4">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="form-control form-control-sm border shadow-none fs-12 py-2 ps-4" placeholder="Search UTR / Doc No / Invoice Ref..." style="border-radius: 8px;">
+                        <i class="ri-search-line search-icon text-muted" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Advices Table -->
+    {% if not request.session.vendor_permissions or request.session.vendor_permissions.PAY_HISTORY.view %}
+    <div class="card border-0 shadow-sm mb-5" style="border-radius: 12px; overflow: hidden;" id="block-payment-details">
+        <div class="card-header bg-white py-3 border-bottom-0 d-flex align-items-center">
+            <div>
+                <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Payment Advices</h6>
+                <p class="text-muted fs-10 mb-0">SAP PAYR · BKPF · BSEG · FBL1N — Read-only view</p>
+            </div>
+            <div class="ms-auto text-end">
+                <p class="text-muted fs-9 mb-0 fw-bold">Last sync: 12-May-2026 09:41 IST</p>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 fs-11 text-start">
+                    <thead class="text-muted text-uppercase fs-10 fw-bold" style="background-color: #f9fafb; border-bottom: 1px solid #f1f5f9;">
+                        <tr>
+                            <th class="ps-4 py-3">Doc No</th>
+                            <th>Invoice Ref</th>
+                            <th>Invoice Date</th>
+                            <th>Payment Date</th>
+                            <th>Gross Amount</th>
+                            <th>TDS Deducted</th>
+                            <th>Net Paid</th>
+                            <th>Method</th>
+                            <th>UTR / Cheque No</th>
+                            <th>House Bank</th>
+                            <th>Status</th>
+                            <th class="pe-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if payments %}
+                            {% for payment in payments %}
+                            <tr class="payment-row" 
+                                data-status="{{ payment.status_slug }}" 
+                                data-method="{{ payment.payment_method|lower }}" 
+                                data-doctype="kz" 
+                                data-doc="{{ payment.document_number|lower }}" 
+                                data-inv="{{ payment.invoice_reference|lower }}" 
+                                data-utr="{{ payment.utr_cheque_number|lower|default:'' }}">
+                                <td class="ps-4">
+                                    <span class="fw-bold text-primary">{{ payment.document_number }}</span><br>
+                                    <small class="text-muted">{{ payment.fiscal_year }}</small>
+                                </td>
+                                <td><a href="#" class="text-primary fw-bold text-decoration-none">{{ payment.invoice_reference }}</a></td>
+                                <td>{{ payment.invoice_date }}</td>
+                                <td>{{ payment.payment_date|default:"—" }}</td>
+                                <td class="fw-bold">₹{{ payment.gross_amount }}</td>
+                                <td class="{% if payment.tds_deducted != '—' %}text-danger{% else %}text-muted{% endif %} fw-medium">{% if payment.tds_deducted != '—' %}₹{% endif %}{{ payment.tds_deducted }}</td>
+                                <td class="fw-bold {% if payment.net_paid_raw > 0 %}text-success{% else %}text-muted{% endif %}">₹{{ payment.net_paid }}</td>
+                                <td>
+                                    {% if payment.payment_method %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-light rounded p-1" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="{{ payment.method_icon }} fs-14"></i>
+                                        </div>
+                                        <span class="fw-bold fs-9 text-uppercase">{{ payment.payment_method }}</span>
+                                    </div>
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if payment.utr_cheque_number %}
+                                        {% if "Not Scheduled" in payment.utr_cheque_number %}
+                                            <span class="text-danger fs-10 fw-bold">{{ payment.utr_cheque_number }}</span>
+                                        {% elif "Awaiting" in payment.utr_cheque_number %}
+                                            <span class="text-warning fs-10 fw-bold italic">{{ payment.utr_cheque_number }}</span>
+                                        {% else %}
+                                            <span class="text-muted fs-10 fw-bold">{{ payment.utr_cheque_number }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td>{{ payment.house_bank|default:"—" }}</td>
+                                <td>
+                                    <span class="badge bg-{{ payment.status_badge }}-subtle text-{{ payment.status_badge }} border border-{{ payment.status_badge }}-subtle px-2 py-1">
+                                        {% if payment.status_slug == 'paid' %}<i class="ri-checkbox-circle-line me-1"></i>{% elif payment.status_slug == 'pending' %}<i class="ri-error-warning-line me-1"></i>{% elif payment.status_slug == 'in_process' %}<i class="ri-time-line me-1"></i>{% else %}<i class="ri-pie-chart-line me-1"></i>{% endif %}
+                                        {{ payment.status_display }}
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-center">
+                                    <button class="btn btn-light btn-sm fw-bold border fs-10 px-3 view-payment-btn" 
+                                        data-doc="{{ payment.document_number }}" 
+                                        data-inv="{{ payment.invoice_reference }}"
+                                        data-net="₹{{ payment.net_paid }}"
+                                        data-gross="₹{{ payment.gross_amount }}"
+                                        data-tds="{% if payment.tds_deducted != '—' %}₹{% endif %}{{ payment.tds_deducted }}"
+                                        data-utr="{{ payment.utr_cheque_number|default:'—' }}"
+                                        data-method="{{ payment.payment_method|default:'—' }}"
+                                        data-date="{{ payment.payment_date|default:'—' }}"
+                                        data-vend="{{ payment.vendor_name }}"
+                                        data-vendcode="{{ payment.vendor_code }}"
+                                        data-year="{{ payment.fiscal_year }}"
+                                        data-bank="{{ payment.house_bank }}"
+                                        data-cc="{{ payment.company_code }}"
+                                        data-doctype="{{ payment.doc_type }}"
+                                        data-recon="{{ payment.reconciliation_account }}"
+                                        data-rundate="{{ payment.payment_run_date }}"
+                                        data-runid="{{ payment.payment_run_id }}"
+                                        data-beneficiary="{{ payment.beneficiary_name }}"
+                                        data-account="{{ payment.account_number }}"
+                                        data-ifsc="{{ payment.ifsc_code }}"
+                                        data-bankname="{{ payment.bank_name }}"
+                                        data-branch="{{ payment.branch_name }}"
+                                        data-penny="{{ payment.penny_drop_status }}"
+                                        data-tl1="{{ payment.timeline_invoice_posted }}"
+                                        data-tl2="{{ payment.timeline_payment_proposal }}"
+                                        data-tl3="{{ payment.timeline_tds_deducted }}"
+                                        data-tl4="{{ payment.timeline_bank_transfer }}"
+                                        data-tl5="{{ payment.timeline_payment_confirmed }}"
+                                        data-sapraw="{{ payment.sap_raw_response }}">View</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="12" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="ri-file-excel-2-line fs-24 mb-2 d-block"></i>
+                                        <p class="mb-0 fs-12">No payment data uploaded yet.</p>
+                                        <p class="fs-10">Upload an Excel file to view payment advices.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white py-3 border-top d-flex align-items-center">
+            <p class="mb-0 text-muted fs-11">Showing <b>7</b> of <b>23</b> records</p>
+            <nav class="ms-auto">
+                <ul class="pagination pagination-sm mb-0 gap-1">
+                    <li class="page-item disabled"><a class="page-link border-0 bg-light rounded-circle" href="#"><i class="ri-arrow-left-s-line"></i></a></li>
+                    <li class="page-item active"><a class="page-link border-0 rounded-circle fw-bold" href="#" style="background-color: #3b82f6;">1</a></li>
+                    <li class="page-item"><a class="page-link border-0 rounded-circle fw-bold text-muted" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link border-0 rounded-circle fw-bold text-muted" href="#">3</a></li>
+                    <li class="page-item"><a class="page-link border-0 bg-light rounded-circle" href="#"><i class="ri-arrow-right-s-line"></i></a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Payment Details Offcanvas -->
+<div class="offcanvas offcanvas-end border-0 shadow" tabindex="-1" id="paymentDetailsDrawer" aria-labelledby="paymentDetailsDrawerLabel" style="width: 450px;">
+    <div class="offcanvas-header border-bottom py-3">
+        <div>
+            <h5 class="offcanvas-title fw-bold fs-15" id="paymentDetailsDrawerLabel">Payment · <span id="drawer-sap-doc">1900012341</span></h5>
+            <p class="text-muted fs-11 mb-0">Invoice: <span id="drawer-inv-ref">INV/2526/0481</span> · <span class="text-success fw-bold">Paid</span></p>
+        </div>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0 custom-scrollbar">
+        <!-- Summary Section -->
+        <div class="p-4 border-bottom bg-light-subtle">
+            <h6 class="text-primary fw-bold text-uppercase fs-10 ls-1 mb-3">Payment Summary</h6>
+            <div class="row g-4">
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">SAP Document No</label>
+                    <span class="fw-bold fs-12 text-dark" id="disp-sap-doc">1900012341</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Invoice Reference</label>
+                    <span class="fw-bold fs-12 text-dark" id="disp-inv-ref">INV/2526/0481</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Net Amount Paid</label>
+                    <h5 class="fw-bold text-success mb-0" id="disp-net-amt">₹4,03,750</h5>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Status</label>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-9 fw-bold">Paid</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Payment Method</label>
+                    <span class="fw-bold fs-12 text-dark" id="disp-method">RTGS</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">UTR / Ref No</label>
+                    <span class="fw-bold fs-12 text-dark" id="disp-utr">SBIN26120044321</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Payment Date</label>
+                    <span class="fw-bold fs-12 text-dark" id="disp-date">08-May-2026</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">TDS Deducted</label>
+                    <span class="fw-bold fs-11 text-danger" id="disp-tds">Sec 194C · ₹21,250</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAP FI Reference -->
+        <div class="p-4 border-bottom">
+            <h6 class="text-primary fw-bold text-uppercase fs-10 ls-1 mb-3">SAP FI Reference</h6>
+            <div class="row g-4">
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Company Code (BUKRS)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-company-code">1000</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Fiscal Year (GJAHR)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-fiscal-year">2026</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Doc Type (BLART)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-doc-type">KZ — Vendor Payment</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">House Bank (HBKID)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-house-bank">SBI-MAIN</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Vendor Code (LIFNR)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-vendor-code">V-100481</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Reconcil. Account</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-recon-acct">21000100</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Payment Run (LAUFD)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-run-date">12-May-2026</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Run ID (LAUFI)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-run-id">AP_RUN_001</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="p-4 border-bottom bg-light-subtle">
+            <h6 class="text-primary fw-bold text-uppercase fs-10 ls-1 mb-3">Bank Details</h6>
+            <div class="row g-4">
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Beneficiary Name</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-beneficiary">Acme Supplies Pvt Ltd</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Account Number</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-account">XXXX XXXX 4821</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">IFSC Code (BANKL)</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-ifsc">SBIN0001234</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Bank Name</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-bank-name">State Bank of India</span>
+                </div>
+                <div class="col-12">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Branch</label>
+                    <span class="fw-bold fs-11 text-dark" id="disp-branch">Connaught Place, Delhi</span>
+                </div>
+                <div class="col-6">
+                    <label class="text-muted fs-9 fw-bold text-uppercase d-block mb-1">Penny Drop</label>
+                    <span class="text-success fw-bold fs-10" id="disp-penny-drop"><i class="ri-checkbox-circle-fill me-1"></i> Verified</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Timeline -->
+        <div class="p-4 mb-5">
+            <h6 class="text-primary fw-bold text-uppercase fs-10 ls-1 mb-4">Payment Timeline</h6>
+            <div class="timeline-container ps-3">
+                <div class="timeline-item pb-4 position-relative border-start ps-4">
+                    <div class="timeline-dot position-absolute" style="left: -5px; top: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                    <p class="fw-bold fs-11 mb-0 text-dark">Invoice Posted in SAP</p>
+                    <p class="text-muted fs-10 mb-1">FI document created via 3-way match · BKPF/BSEG</p>
+                    <small class="text-muted fs-9 fw-bold" id="disp-tl1">05-Apr-2026 · Doc: 1900012341</small>
+                </div>
+                <div class="timeline-item pb-4 position-relative border-start ps-4">
+                    <div class="timeline-dot position-absolute" style="left: -5px; top: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                    <p class="fw-bold fs-11 mb-0 text-dark">Payment Proposal (F110)</p>
+                    <p class="text-muted fs-10 mb-1">Invoice included in payment run · REGUP record created</p>
+                    <small class="text-muted fs-9 fw-bold" id="disp-tl2">07-May-2026 · Run: AP_RUN_001</small>
+                </div>
+                <div class="timeline-item pb-4 position-relative border-start ps-4">
+                    <div class="timeline-dot position-absolute" style="left: -5px; top: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                    <p class="fw-bold fs-11 mb-0 text-dark">TDS Deducted</p>
+                    <p class="text-muted fs-10 mb-1">WITH_ITEM record created · Sec 194C @ 1%</p>
+                    <small class="text-muted fs-9 fw-bold" id="disp-tl3">08-May-2026 · Certificate pending</small>
+                </div>
+                <div class="timeline-item pb-4 position-relative border-start ps-4">
+                    <div class="timeline-dot position-absolute" style="left: -5px; top: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                    <p class="fw-bold fs-11 mb-0 text-dark">Bank Transfer Initiated</p>
+                    <p class="text-muted fs-10 mb-1">RTGS instruction sent to SBI house bank · PAYR updated</p>
+                    <small class="text-muted fs-9 fw-bold" id="disp-tl4">08-May-2026 · SBIN26128044321</small>
+                </div>
+                <div class="timeline-item position-relative ps-4">
+                    <div class="timeline-dot position-absolute" style="left: -5px; top: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                    <p class="fw-bold fs-11 mb-0 text-dark">Payment Confirmed</p>
+                    <p class="text-muted fs-10 mb-1">UTR confirmed · BSEG cleared · Vendor ledger updated</p>
+                    <small class="text-muted fs-9 fw-bold" id="disp-tl5">08-May-2026 · Augbl: 1900012341</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="offcanvas-footer p-3 bg-info-subtle border-top">
+        <div class="d-flex gap-2">
+            <i class="ri-information-line text-info fs-16"></i>
+            <p class="text-info fs-10 mb-0">
+                This is a <b>display-only</b> view. Payments are processed in SAP via T-code F110. Contact your AP team for any discrepancies.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .fs-9 { font-size: 9px; }
+    .fs-10 { font-size: 10px; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-15 { font-size: 15px; }
+    .fs-16 { font-size: 16px; }
+    .fs-18 { font-size: 18px; }
+    .fs-20 { font-size: 20px; }
+    .fw-bold { font-weight: 700 !important; }
+    
+    .nav-tabs-custom .nav-link {
+        color: #64748b;
+        background: transparent;
+        transition: all 0.3s ease;
+    }
+    .nav-tabs-custom .nav-link:hover {
+        background: #f1f5f9;
+        color: #334155;
+    }
+    .nav-tabs-custom .nav-link.active {
+        background: #fff !important;
+        color: #3b82f6 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    }
+    
+    .table thead th {
+        border-top: none;
+    }
+    
+    .pagination .page-link {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+    }
+
+    .italic { font-style: italic; }
+
+    .offcanvas-body::-webkit-scrollbar {
+        width: 4px;
+    }
+    .offcanvas-body::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+
+    .timeline-item.border-start {
+        border-left: 1px dashed #e2e8f0 !important;
+    }
+</style>
+
+<link href="{% static 'libs/sweetalert2/sweetalert2.min.css' %}" rel="stylesheet" type="text/css" />
+<script src="{% static 'libs/sweetalert2/sweetalert2.min.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const drawerElement = document.getElementById('paymentDetailsDrawer');
+    const bsOffcanvas = new bootstrap.Offcanvas(drawerElement);
+    
+    const viewButtons = document.querySelectorAll('.view-payment-btn');
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const data = this.dataset;
+            
+            // Populate Drawer Header
+            document.getElementById('drawer-sap-doc').textContent = data.doc;
+            document.getElementById('drawer-inv-ref').textContent = data.inv;
+            
+            // Populate Summary
+            document.getElementById('disp-sap-doc').textContent = data.doc;
+            document.getElementById('disp-inv-ref').textContent = data.inv;
+            document.getElementById('disp-net-amt').textContent = data.net;
+            document.getElementById('disp-method').textContent = data.method;
+            document.getElementById('disp-utr').textContent = data.utr;
+            document.getElementById('disp-date').textContent = data.date;
+            document.getElementById('disp-tds').textContent = data.tds === '—' ? '—' : `Sec 194C · ${data.tds}`;
+            
+            // Populate SAP FI Reference
+            document.getElementById('disp-company-code').textContent = data.cc || '—';
+            document.getElementById('disp-fiscal-year').textContent = data.year || '—';
+            document.getElementById('disp-doc-type').textContent = data.doctype || '—';
+            document.getElementById('disp-house-bank').textContent = data.bank || '—';
+            document.getElementById('disp-vendor-code').textContent = data.vendcode || '—';
+            document.getElementById('disp-recon-acct').textContent = data.recon || '—';
+            document.getElementById('disp-run-date').textContent = data.rundate || '—';
+            document.getElementById('disp-run-id').textContent = data.runid || '—';
+            
+            // Populate Bank Details
+            document.getElementById('disp-beneficiary').textContent = data.beneficiary || '—';
+            document.getElementById('disp-account').textContent = data.account || '—';
+            document.getElementById('disp-ifsc').textContent = data.ifsc || '—';
+            document.getElementById('disp-bank-name').textContent = data.bankname || '—';
+            document.getElementById('disp-branch').textContent = data.branch || '—';
+            document.getElementById('disp-penny-drop').innerHTML = data.penny === 'VERIFIED' ? '<i class="ri-checkbox-circle-fill me-1"></i> Verified' : '<i class="ri-close-circle-fill me-1 text-danger"></i> Failed';
+            if(data.penny !== 'VERIFIED') document.getElementById('disp-penny-drop').className = "text-danger fw-bold fs-10";
+            else document.getElementById('disp-penny-drop').className = "text-success fw-bold fs-10";
+
+            // Populate Timeline
+            if(data.tl1) document.getElementById('disp-tl1').textContent = data.tl1;
+            if(data.tl2) document.getElementById('disp-tl2').textContent = data.tl2;
+            if(data.tl3) document.getElementById('disp-tl3').textContent = data.tl3;
+            if(data.tl4) document.getElementById('disp-tl4').textContent = data.tl4;
+            if(data.tl5) document.getElementById('disp-tl5').textContent = data.tl5;
+            
+            bsOffcanvas.show();
+        });
+    });
+
+    // Excel Upload Logic
+    const excelFileInput = document.getElementById('excelFileInput');
+    if(excelFileInput) {
+        excelFileInput.addEventListener('change', function(e) {
+            if(this.files.length > 0) {
+                const formData = new FormData(document.getElementById('uploadExcelForm'));
+                
+                // Show loading state
+                const uploadBtn = document.querySelector('button[onclick="document.getElementById(\'excelFileInput\').click();"]');
+                const originalText = uploadBtn.innerHTML;
+                uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Uploading...';
+                uploadBtn.disabled = true;
+                
+                fetch('{% url "pages:upload_payment_excel" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Vendor Payments loaded successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload Failed',
+                        text: error.message || 'An error occurred during upload.'
+                    });
+                    uploadBtn.innerHTML = originalText;
+                    uploadBtn.disabled = false;
+                    excelFileInput.value = '';
+                });
+            }
+        });
+    }
+
+    // --- FILTER LOGIC ---
+    let currentStatus = 'all';
+    const rows = document.querySelectorAll('.payment-row');
+    const searchInput = document.getElementById('searchInput');
+    const methodFilter = document.getElementById('methodFilter');
+    const docTypeFilter = document.getElementById('docTypeFilter');
+    const periodFilter = document.getElementById('periodFilter');
+    const filterTabs = document.querySelectorAll('.filter-tab');
+
+    function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const methodVal = methodFilter.value.toLowerCase();
+        const docTypeVal = docTypeFilter.value.toLowerCase();
+        // Period filter logic can be complex (dates), ignoring for basic text match or assuming all for now unless extended.
+
+        rows.forEach(row => {
+            const rowStatus = row.getAttribute('data-status');
+            const rowMethod = row.getAttribute('data-method');
+            const rowDocType = row.getAttribute('data-doctype');
+            
+            const docText = row.getAttribute('data-doc');
+            const invText = row.getAttribute('data-inv');
+            const utrText = row.getAttribute('data-utr');
+            
+            let matchStatus = (currentStatus === 'all') || (rowStatus === currentStatus);
+            let matchMethod = (methodVal === 'all') || (rowMethod === methodVal) || (rowMethod.includes(methodVal));
+            let matchDocType = (docTypeVal === 'all') || (rowDocType === docTypeVal);
+            
+            let matchSearch = true;
+            if (searchTerm) {
+                matchSearch = docText.includes(searchTerm) || invText.includes(searchTerm) || utrText.includes(searchTerm);
+            }
+
+            if (matchStatus && matchMethod && matchDocType && matchSearch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // Event listeners for filters
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            currentStatus = this.getAttribute('data-status');
+            applyFilters();
+        });
+    });
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (methodFilter) methodFilter.addEventListener('change', applyFilters);
+    if (docTypeFilter) docTypeFilter.addEventListener('change', applyFilters);
+    if (periodFilter) periodFilter.addEventListener('change', applyFilters);
+});
+</script>
+
+{% endblock %}

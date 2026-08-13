@@ -1,0 +1,121 @@
+<div class="table-responsive">
+    <table class="table table-hover mb-0 perm-table">
+        <thead>
+            <tr>
+                <th style="width: 300px;">Module / Block</th>
+                <th class="text-center">View</th>
+                <th class="text-center">Create</th>
+                <th class="text-center">Edit</th>
+                <th class="text-center">Delete</th>
+            </tr>
+            <tr class="select-all-row" style="background-color: #fff9e6 !important;">
+                <td><span class="text-muted small fw-bold">SELECT ALL COLUMNS</span></td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input col-select-all" type="checkbox" data-col="view">
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input col-select-all" type="checkbox" data-col="create">
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input col-select-all" type="checkbox" data-col="edit">
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input col-select-all" type="checkbox" data-col="delete">
+                    </div>
+                </td>
+            </tr>
+        </thead>
+        <tbody class="permissions-body">
+            {% for module_data in modules_with_blocks %}
+            {% with module=module_data.name blocks=module_data.blocks is_sub=module_data.is_sub parent=module_data.parent %}
+            <tr data-module="{{ module }}" class="module-row {% if is_sub %}sub-module-row{% endif %}" 
+                {% if is_sub %}data-parent="{{ parent }}" style="background-color: #fcfcfc;"{% endif %}>
+                <td>
+                    <div class="d-flex align-items-center" {% if is_sub %}style="padding-left: 20px;"{% endif %}>
+                        {% if blocks %}
+                        <button class="btn btn-link btn-sm p-0 me-2 toggle-blocks" type="button">
+                            <i class="fas fa-chevron-right text-muted transition-rotate"></i>
+                        </button>
+                        {% elif is_sub %}
+                        <i class="mdi mdi-chevron-right text-muted me-1"></i>
+                        {% endif %}
+                        <div class="module-name {% if module == 'Purchase Order' %}text-primary fw-bold{% elif is_sub %}text-muted fw-normal{% else %}fw-bold{% endif %}">
+                            {{ module }}
+                        </div>
+                        <div class="ms-auto">
+                            <button class="btn btn-link btn-sm p-0 row-select-all" type="button" title="Select row">Select All</button>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input perm-check view-check" type="checkbox" data-module="{{ module }}" data-type="view">
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input perm-check create-check" type="checkbox" data-module="{{ module }}" data-type="create" 
+                               {% if module == 'Purchase Requisition' or module == 'Purchase Order' or module == 'Subcontracting Purchase Order' or module == 'Scheduling Agreement' or module == 'Service Purchase Order' or module == 'Inventory' or module == 'Vendor Payments' %}disabled{% endif %}>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input perm-check edit-check" type="checkbox" data-module="{{ module }}" data-type="edit" disabled>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input perm-check delete-check" type="checkbox" data-module="{{ module }}" data-type="delete" disabled>
+                    </div>
+                </td>
+            </tr>
+            
+            {% if blocks %}
+            {% for block in blocks %}
+            <tr class="block-row d-none" data-parent-module="{{ module }}" data-block="{{ block }}">
+                <td>
+                    <div class="d-flex align-items-center" style="padding-left: 40px;">
+                        <i class="ri-subtract-line text-muted me-2" style="font-size: 10px;"></i>
+                        <div class="block-name small text-muted">{{ block }}</div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <div class="form-check d-inline-block">
+                        <input class="form-check-input block-perm-check view-check" type="checkbox" data-module="{{ module }}" data-block="{{ block }}" data-type="view">
+                    </div>
+                </td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+                <td class="text-center"></td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+            
+            {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .transition-rotate {
+        transition: transform 0.2s ease-in-out;
+    }
+    .rotate-90 {
+        transform: rotate(90deg);
+    }
+    .block-row {
+        background-color: #f9fbfd !important;
+    }
+    .block-name {
+        font-size: 0.8rem;
+        letter-spacing: 0.3px;
+    }
+</style>

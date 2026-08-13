@@ -1,0 +1,133 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Vendor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h2 class="text-center mb-4"> Dashboard</h2>
+                    
+                    {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if user %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card mb-4">
+                                <div class="card-header bg-primary text-white text-center">
+                                    <h4 class="mb-0"><i class="fas fa-user me-2"></i>Admin Information</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-borderless text-center">
+                                            <tbody>
+                                                <tr>
+                                                    <th width="20%">Name:</th>
+                                                    <td>
+                                                        {% if user.firstName or user.lastName %}
+                                                            {{ user.firstName }} {{ user.lastName }}
+                                                        {% else %}
+                                                            Not provided
+                                                        {% endif %}
+                                                    </td>
+                                                    {% if company %}
+                                                    <th width="20%">Company Name:</th>
+                                                    <td>{{ company.companyName }}</td>
+                                                    {% endif %}
+                                                </tr>
+                                                <tr>
+                                                    <th>Email:</th>
+                                                    <td>{% if user.email %}{{ user.email }}{% else %}Not provided{% endif %}</td>
+                                                    {% if company %}
+                                                    <th>GSTIN:</th>
+                                                    <td>{{ company.gstinNumber }}</td>
+                                                    {% endif %}
+                                                </tr>
+                                                <tr>
+                                                    <th>Phone:</th>
+                                                    <td>{% if user.phoneNumber %}{{ user.phoneNumber }}{% else %}Not provided{% endif %}</td>
+                                                    {% if company %}
+                                                    <th>Status:</th>
+                                                    <td>
+                                                        <span class="badge {% if company.status == 'Active' %}bg-success{% else %}bg-warning{% endif %}">
+                                                            {{ company.status }}
+                                                        </span>
+                                                    </td>
+                                                    {% endif %}
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if address %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h4 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Address Information</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-borderless">
+                                            <tbody>
+                                                <tr>
+                                                    <th width="20%">Address Line 1:</th>
+                                                    <td>{{ address.address1 }}</td>
+                                                </tr>
+                                                {% if address.address2 %}
+                                                <tr>
+                                                    <th>Address Line 2:</th>
+                                                    <td>{{ address.address2 }}</td>
+                                                </tr>
+                                                {% endif %}
+                                                <tr>
+                                                    <th>City:</th>
+                                                    <td>{{ address.city }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>State:</th>
+                                                    <td>{{ address.state }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Country:</th>
+                                                    <td>{{ address.country }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Pincode:</th>
+                                                    <td>{{ address.pincode }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>No data available. Please complete the registration process.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

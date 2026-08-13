@@ -1,0 +1,56 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Credit Payments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div>
+                <h4 class="fw-bold text-uppercase mb-1">Credit Payments</h4>
+                <p class="text-muted mb-0">Track and manage your credit-based payment transactions</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0">Recent Transactions</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        
+                        <div class="list-group-item p-4 po-item cursor-pointer">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h5 class="fs-16 fw-bold text-danger mb-0 me-3">CRD-2026-0091</h5>
+                                        <span class="badge bg-soft-danger text-danger text-uppercase">Pending</span>
+                                    </div>
+                                    <p class="text-muted mb-1">Payment against Invoice #INV-88712</p>
+                                    <div class="d-flex align-items-center text-muted fs-13">
+                                        <span><i class="ri-calendar-line me-1"></i> Due date: 20 May 2026</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="fw-bold mb-0">₹ 28,400.00</h5>
+                                    <small class="text-muted">Transaction Amount</small>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .po-item:hover { background-color: #f8f9fa; }
+</style>
+{% endblock %}

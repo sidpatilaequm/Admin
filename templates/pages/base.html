@@ -1,0 +1,885 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Invoika{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- Bootstrap CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Icons CSS -->
+    <link href="{% static 'css/icons.min.css' %}" rel="stylesheet">
+
+    <!-- App CSS -->
+    <link href="{% static 'css/app.min.css' %}" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .leftside-menu {
+            background: #ffffff;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 250px;
+            z-index: 10;
+            padding-top: 70px;
+            box-shadow: 0 0 35px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: #fff;
+            z-index: 11;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            height: 70px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-dark {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo img.logo-lg {
+            height: 30px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .logo img.logo-sm {
+            height: 30px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .side-nav {
+            padding: 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .side-nav-item {
+            margin: 5px 0;
+        }
+
+        .side-nav-link {
+            display: block;
+            padding: 12px 25px;
+            color: #6c757d !important;
+            font-size: 0.9375rem;
+            position: relative;
+            transition: all 0.4s;
+            text-decoration: none;
+        }
+
+        .side-nav-link:hover,
+        .side-nav-link.active {
+            color: #198754 !important;
+            background-color: rgba(25, 135, 84, 0.1);
+        }
+
+        .side-nav-link i {
+            display: inline-block;
+            width: 24px;
+            margin-right: 8px;
+            font-size: 18px;
+            vertical-align: middle;
+            color: #6c757d;
+        }
+
+        .side-nav-link.active i,
+        .side-nav-link:hover i {
+            color: #198754;
+        }
+
+        .content-page {
+            margin-left: 250px;
+            overflow: hidden;
+            padding: 70px 12px 65px;
+            min-height: 100vh;
+            margin-top: 70px;
+            background: #f8f9fa;
+        }
+
+        .navbar-custom {
+            background-color: #ffffff;
+            padding: 0 24px;
+            position: fixed;
+            /* left: 250px; */
+            right: 0;
+            top: 0;
+            z-index: 1001;
+            height: 70px;
+            /* box-shadow: 0 0 15px rgba(0,0,0,0.1); */
+            display: flex;
+            align-items: center;
+        }
+
+        .button-menu-mobile {
+            border: none;
+            color: #6c757d;
+            width: 60px;
+            background-color: transparent;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .dropdown-menu {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border: none;
+            border-radius: 0.5rem;
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 1.5rem;
+            color: #6c757d;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+            color: #198754;
+        }
+
+        .nav-user img {
+            height: 32px;
+            width: 32px;
+        }
+
+        .pro-user-name {
+            color: #343a40;
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 767.98px) {
+            .leftside-menu {
+                transform: translateX(-100%);
+                transition: all .3s ease-out;
+            }
+
+            .content-page {
+                margin-left: 0 !important;
+            }
+
+            .navbar-custom {
+                left: 0;
+            }
+
+            body.sidebar-enable .leftside-menu {
+                transform: translateX(0);
+            }
+
+            .logo .logo-lg {
+                display: none;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .logo .logo-sm {
+                display: none;
+            }
+        }
+
+        html,
+        body,
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        /* Custom Toast styling (matching material theme) */
+        .toast-custom {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            min-width: 320px;
+            max-width: 400px;
+            font-size: 1rem;
+            position: relative;
+            border: 1px solid transparent;
+        }
+        .toast-custom.toast-success {
+            background: #e6f9ed;
+            color: #198754;
+            border-color: #b6e2c6;
+        }
+        .toast-custom.toast-error {
+            background: #fde8e8;
+            color: #e53e3e;
+            border-color: #f8b4b4;
+        }
+        .toast-custom.toast-warning {
+            background: #fef3c7;
+            color: #d97706;
+            border-color: #fde68a;
+        }
+        
+        .toast-custom .toast-icon {
+            color: #fff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .toast-custom.toast-success .toast-icon {
+            background: #198754;
+        }
+        .toast-custom.toast-error .toast-icon {
+            background: #e53e3e;
+        }
+        .toast-custom.toast-warning .toast-icon {
+            background: #d97706;
+        }
+
+        .toast-custom .toast-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.2rem;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+        .toast-custom .toast-progress {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            height: 4px;
+            width: 100%;
+            border-radius: 0 0 10px 10px;
+            transition: width 2s linear;
+        }
+        .toast-custom.toast-success .toast-progress {
+            background: #198754;
+        }
+        .toast-custom.toast-error .toast-progress {
+            background: #e53e3e;
+        }
+        .toast-custom.toast-warning .toast-progress {
+            background: #d97706;
+        }
+
+    </style>
+
+    {% block extra_css %}{% endblock %}
+
+    <script>
+        const IMAGE_SERVICE_URL = "{{ IMAGE_SERVICE_URL|default:'' }}";
+        const JAVA_API_URL = "{{ JAVA_API_URL|default:'' }}";
+    </script>
+</head>
+
+
+<body data-layout="default" data-sidebar="dark" data-sidebar-size="lg" data-layout-width="fluid" data-topbar="light"
+    data-bs-theme="light">
+    <!-- Begin page -->
+    <div class="wrapper">
+        <!-- ========== Left Sidebar Start ========== -->
+        <div class="leftside-menu">
+            <!-- Logo -->
+            <div class="logo">
+                <a href="{% url 'pages:vendor_dashboard' %}" class="logo-dark">
+                    <span class="logo-lg">
+                        <img src="{% static 'images/logo-dark.png' %}" alt="logo" class="logo-lg">
+                    </span>
+                    <span class="logo-sm">
+                        <img src="{% static 'images/logo-sm.png' %}" alt="small logo" class="logo-sm">
+                    </span>
+                </a>
+            </div>
+
+            <div class="h-100" id="leftside-menu-container" data-simplebar>
+                <!--- Sidemenu -->
+                <ul class="side-nav">
+                    {% if request.session.workflow_only %}
+                    <li class="side-nav-title mt-3 mb-2 px-3 text-muted small text-uppercase fw-bold">Workflow Menu</li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:workflow_requests' %}" class="side-nav-link {% if request.resolver_match.url_name == 'workflow_requests' %}active{% endif %}">
+                            <i class="uil-flow-chart"></i>
+                            <span> Requests </span>
+                        </a>
+                    </li>
+                    {% else %}
+                    {% with role=request.session.user_data.role|default_if_none:'' %}
+                    {% if role|upper == 'CUSTOMER' %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:catalog' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'catalog' %}active{% endif %}">
+                            <i class="uil-shopping-cart"></i>
+                            <span> Catalog </span>
+                        </a>
+                    </li>
+                    {% elif role|upper == 'VENDOR' %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:vendor_dashboard' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'vendor_dashboard' %}active{% endif %}">
+                            <i class="uil-dashboard"></i>
+                            <span> Dashboard </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-title mt-3 mb-2 px-3 text-muted small text-uppercase fw-bold">Vendor Menu</li>
+                    
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.PURCHASE_REQUISITION.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:purchase_requisitions' %}" class="side-nav-link {% if request.resolver_match.url_name == 'purchase_requisitions' %}active{% endif %}">
+                            <i class="uil-file-edit-alt"></i>
+                            <span> Purchase Requisition </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.QUOTATION.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:quotations' %}" class="side-nav-link {% if request.resolver_match.url_name == 'quotations' %}active{% endif %}">
+                            <i class="uil-file-bookmark-full"></i>
+                            <span> Quotation </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.STANDARD_PURCHASE_ORDER.view or request.session.vendor_permissions.SPO.view or request.session.vendor_permissions.SCHEDULING_AGREEMENT.view or request.session.vendor_permissions.SERVICE_PO.view %}
+                    <li class="side-nav-item">
+                        <a data-bs-toggle="collapse" href="#sidebarPOVendor" class="side-nav-link {% if 'purchase_orders' in request.path or 'subcontracting' in request.path or 'scheduling' in request.path or 'service_purchase_orders' in request.path %}active{% endif %}">
+                            <i class="uil-shopping-cart-alt"></i>
+                            <span> Purchase Order </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse {% if 'purchase_orders' in request.path or 'subcontracting' in request.path or 'scheduling' in request.path or 'service_purchase_orders' in request.path %}show{% endif %}" id="sidebarPOVendor">
+                            <ul class="side-nav-second-level">
+                                {% if not request.session.vendor_permissions or request.session.vendor_permissions.STANDARD_PURCHASE_ORDER.view %}
+                                <li class="{% if request.resolver_match.url_name == 'purchase_orders' %}active{% endif %}">
+                                    <a href="{% url 'pages:purchase_orders' %}">Standard PO</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if not request.session.vendor_permissions or request.session.vendor_permissions.SPO.view %}
+                                <li class="{% if request.resolver_match.url_name == 'subcontracting_purchase_orders' %}active{% endif %}">
+                                    <a href="{% url 'pages:subcontracting_purchase_orders' %}">Subcontracting PO</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if not request.session.vendor_permissions or request.session.vendor_permissions.SCHEDULING_AGREEMENT.view %}
+                                <li class="{% if request.resolver_match.url_name == 'scheduling_agreements' %}active{% endif %}">
+                                    <a href="{% url 'pages:scheduling_agreements' %}">Scheduling Agreement</a>
+                                </li>
+                                {% endif %}
+                                
+                                {% if not request.session.vendor_permissions or request.session.vendor_permissions.SERVICE_PO.view %}
+                                <li class="{% if request.resolver_match.url_name == 'service_purchase_orders' %}active{% endif %}">
+                                    <a href="{% url 'pages:service_purchase_orders' %}">Service PO</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.ASN.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:asn' %}" class="side-nav-link {% if request.resolver_match.url_name == 'asn' %}active{% endif %}">
+                            <i class="uil-truck"></i>
+                            <span> ASN </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.INVENTORY.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:inventory_list' %}" class="side-nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
+                            <i class="uil-clipboard-alt"></i>
+                            <span> Inventory </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.INVOICE.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:coming_soon' 'invoice' %}" class="side-nav-link {% if 'invoice' in request.path %}active{% endif %}">
+                            <i class="uil-invoice"></i>
+                            <span> Invoice </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.VENDOR_PAYMENTS.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:payments' %}" class="side-nav-link {% if request.resolver_match.url_name == 'payments' %}active{% endif %}">
+                            <i class="uil-bill"></i>
+                            <span> Vendor Payments </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.VENDOR_RETURNS.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:coming_soon' 'vendor-returns' %}" class="side-nav-link {% if 'vendor-returns' in request.path %}active{% endif %}">
+                            <i class="uil-history"></i>
+                            <span> Vendor Returns </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.CREDIT.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:coming_soon' 'credit' %}" class="side-nav-link {% if 'credit' in request.path %}active{% endif %}">
+                            <i class="uil-credit-card"></i>
+                            <span> Credit </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.CREDIT_PAYMENT.view %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:credit_payments' %}" class="side-nav-link {% if request.resolver_match.url_name == 'credit_payments' %}active{% endif %}">
+                            <i class="uil-money-withdrawal"></i>
+                            <span> Credit Payment </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% else %}
+                    <!-- ADMIN MENU -->
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:vendor_dashboard' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'vendor_dashboard' %}active{% endif %}">
+                            <i class="uil-dashboard"></i>
+                            <span> Dashboard </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item vendors-nav-item">
+                        <a href="{% url 'pages:vendors' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'vendors' %}active{% endif %}">
+                            <i class="uil-building"></i>
+                            <span> Vendors </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item vendor-prospects-nav-item">
+                        <a href="{% url 'pages:vendor_prospects' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'vendor_prospects' %}active{% endif %}">
+                            <i class="uil-user-check"></i>
+                            <span> Vendor Prospect </span>
+                        </a>
+                    </li>
+
+                    <!-- VENDOR POV SECTION FOR ADMIN -->
+                    <li class="side-nav-item supply-chain-nav-item">
+                        <a data-bs-toggle="collapse" href="#sidebarVendorPOVAdmin" class="side-nav-link">
+                            <i class="uil-user-check"></i>
+                            <span> Vendor POV </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse" id="sidebarVendorPOVAdmin">
+                            <ul class="side-nav-second-level">
+                                <li><a href="{% url 'pages:purchase_requisitions' %}">Purchase Requisition</a></li>
+                                <li><a href="{% url 'pages:quotations' %}">Quotation</a></li>
+                                <li>
+                                    <a data-bs-toggle="collapse" href="#sidebarPOAdmin" class="collapsed">
+                                        Purchase Order <span class="menu-arrow"></span>
+                                    </a>
+                                    <div class="collapse" id="sidebarPOAdmin">
+                                        <ul class="side-nav-third-level">
+                                            <li><a href="{% url 'pages:purchase_orders' %}">Standard PO</a></li>
+                                            <li><a href="{% url 'pages:subcontracting_purchase_orders' %}">Subcontracting PO</a></li>
+                                            <li><a href="{% url 'pages:scheduling_agreements' %}">Scheduling Agreement</a></li>
+                                            <li><a href="{% url 'pages:service_purchase_orders' %}">Service PO</a></li>
+                                        </ul>
+                                    </div>
+                                </li>
+                                <li><a href="{% url 'pages:asn' %}">ASN</a></li>
+                                <li><a href="{% url 'pages:coming_soon' 'invoice' %}">Invoice</a></li>
+                                <li><a href="{% url 'pages:payments' %}">Vendor Payments</a></li>
+                                <li><a href="{% url 'pages:coming_soon' 'vendor-returns' %}">Vendor Returns</a></li>
+                                <li><a href="{% url 'pages:coming_soon' 'credit' %}">Credit</a></li>
+                                <li><a href="{% url 'pages:credit_payments' %}">Credit Payment</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:catalog' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'catalog' %}active{% endif %}">
+                            <i class="uil-shopping-cart"></i>
+                            <span> Catalog </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:customers' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+                            <i class="uil-users-alt"></i>
+                            <span> Customers </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item materials-nav-item">
+                        <a href="{% url 'pages:material_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'material_list' %}active{% endif %}">
+                            <i class="uil-box"></i>
+                            <span> Materials </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item variants-nav-item">
+                        <a href="{% url 'pages:variant_matrix' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'variant_matrix' %}active{% endif %}">
+                            <i class="uil-layer-group"></i>
+                            <span> Create Variants </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item variants-nav-item">
+                        <a href="{% url 'pages:variant_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'variant_list' %}active{% endif %}">
+                            <i class="uil-list-ul"></i>
+                            <span> View Variants </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item categories-nav-item">
+                        <a href="{% url 'pages:categories_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'categories_list' %}active{% endif %}">
+                            <i class="uil-tags"></i>
+                            <span> Categories </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item material-bom-nav-item">
+                        <a href="{% url 'pages:material_bom' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'material_bom' %}active{% endif %}">
+                            <i class="uil-file-question" style="visibility: hidden; width: 0px; margin-right: 0;"></i>
+                            <span style="margin-left: 28px;"> Material BOM </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:locations_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'locations_list' %}active{% endif %}">
+                            <i class="uil-map-marker"></i>
+                            <span> Locations </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:inventory_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'inventory_list' %}active{% endif %}">
+                            <i class="uil-stock"></i>
+                            <span> Inventory </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:companies_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'companies_list' or request.resolver_match.url_name == 'departments_list' or request.resolver_match.url_name == 'countries_list' or request.resolver_match.url_name == 'currencies_list' or request.resolver_match.url_name == 'channels_list_org' %}active{% endif %}">
+                            <i class="uil-database"></i>
+                            <span> Master Data </span>
+                        </a>
+                    </li>
+
+                    <li class="side-nav-title mt-3 mb-2 px-3 text-muted small text-uppercase fw-bold">Procurement</li>
+                    <li class="side-nav-item">
+                        <a data-bs-toggle="collapse" href="#sidebarProcurement" class="side-nav-link">
+                            <i class="uil-shopping-basket"></i>
+                            <span> Procurement </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse" id="sidebarProcurement">
+                            <ul class="side-nav-second-level">
+                                <li><a href="{% url 'pages:pr_list' %}">Purchase Requisition</a></li>
+                                <li><a href="#">Approvals</a></li>
+                                <li><a href="#">Purchase Orders</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li class="side-nav-item">
+                        <a data-bs-toggle="collapse" href="#sidebarWorkflow" class="side-nav-link {% if 'workflow' in request.path or 'workflows' in request.path %}active{% endif %}">
+                            <i class="uil-flow-chart"></i>
+                            <span> Workflow </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse {% if 'workflow' in request.path or 'workflows' in request.path %}show{% endif %}" id="sidebarWorkflow">
+                            <ul class="side-nav-second-level">
+                                <li class="{% if request.resolver_match.url_name == 'workflow_dashboard' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflow_dashboard' %}">Dashboard</a>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'workflows' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflows' %}">Workflows</a>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'workflow_requests' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflow_requests' %}">Requests</a>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'workflow_groups' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflow_groups' %}">Groups</a>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'workflow_analytics' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflow_analytics' %}">Analytics</a>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'workflow_email_action' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflow_email_action' %}">Email Action</a>
+                                </li>
+                                <li class="{% if request.resolver_match.url_name == 'workflow_settings' %}active{% endif %}">
+                                    <a href="{% url 'pages:workflow_settings' %}">Settings</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="side-nav-title mt-3 mb-2 px-3 text-muted small text-uppercase fw-bold">Financials</li>
+                    <li class="side-nav-item">
+                        <a data-bs-toggle="collapse" href="#sidebarInvoices" class="side-nav-link">
+                            <i class="uil-invoice"></i>
+                            <span> Invoices Management </span>
+                            <span class="menu-arrow"></span>
+                        </a>
+                        <div class="collapse" id="sidebarInvoices">
+                            <ul class="side-nav-second-level">
+                                <li><a href="{% url 'pages:invoice' %}">Invoice List</a></li>
+                                <li><a href="{% url 'pages:invoice_add' %}">Add Invoice</a></li>
+                                <li><a href="{% url 'pages:payments' %}">Payments</a></li>
+                                <li><a href="{% url 'pages:taxes' %}">Taxes</a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+
+
+                    <li class="side-nav-title mt-3 mb-2 px-3 text-muted small text-uppercase fw-bold">Channel Management</li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:channels_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'channels_list' %}active{% endif %}">
+                            <i class="uil-broadcast"></i>
+                            <span> Channel Setup </span>
+                        </a>
+                    </li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:material_channel_assignments_list' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'material_channel_assignments_list' %}active{% endif %}">
+                            <i class="uil-sitemap"></i>
+                            <span> Material Mapping </span>
+                        </a>
+                    </li>
+                    
+                    <li class="side-nav-title mt-3 mb-2 px-3 text-muted small text-uppercase fw-bold">Administration</li>
+                    <li class="side-nav-item">
+                        <a href="{% url 'pages:users' %}"
+                            class="side-nav-link {% if request.resolver_match.url_name == 'users' %}active{% endif %}">
+                            <i class="uil-users-alt"></i>
+                            <span> Users </span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                </ul>
+                <!-- End Sidebar -->
+                <div class="clearfix"></div>
+            </div>
+            <!-- Sidebar -left -->
+        </div>
+        <!-- Left Sidebar End -->
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="content-page">
+            <!-- Topbar Start -->
+            <div class="navbar-custom">
+                <ul class="list-unstyled topnav-menu float-end mb-0">
+                    <li class="dropdown notification-list topbar-dropdown">
+                        <a class="nav-link dropdown-toggle nav-user me-0" data-bs-toggle="dropdown" href="#"
+                            role="button" aria-haspopup="false" aria-expanded="false">
+                            <img src="{% static 'images/users/avatar-1.jpg' %}" alt="user-image" class="rounded-circle">
+                            <span class="pro-user-name ms-1">
+                                {% with user=request.session.user_data %}
+                                {% if user %}
+                                {% if user.role|default_if_none:''|upper == 'CUSTOMER' %}
+                                {{ user.email|default:user.authName|default:"User" }}
+                                {% else %}
+                                {% if user.firstName or user.lastName %}
+                                {{ user.firstName|default:"" }} {{ user.lastName|default:"" }}
+                                {% else %}
+                                {{ user.email|default:user.authName|default:"User" }}
+                                {% endif %}
+                                {% endif %}
+                                {% else %}
+                                User
+                                {% endif %}
+                                {% endwith %}
+                            </span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end profile-dropdown">
+                            <a href="{% url 'pages:logout' %}" class="dropdown-item notify-item">
+                                <i class="fe-log-out"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+
+                <!-- <ul class="list-unstyled topnav-menu topnav-menu-left m-0">
+                    <li>
+                        <button class="button-menu-mobile">
+                            <i class="fe-menu"></i>
+                        </button>
+                    </li>
+                </ul> -->
+            </div>
+            <!-- end Topbar -->
+
+            <!-- Start Content-->
+            <div class="container-fluid">
+                {% block content %}{% endblock %}
+            </div>
+            <!-- container -->
+        </div>
+        <!-- content -->
+    </div>
+    <!-- ============================================================== -->
+    <!-- End Page content -->
+    <!-- ============================================================== -->
+
+    <!-- Footer Start -->
+    <footer class="footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <script>document.write(new Date().getFullYear())</script> &copy; Aequm - All rights reserved
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- end Footer -->
+
+    <!-- jQuery (must be first) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap Bundle JS (after jQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables (if used globally) -->
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Vendor/Other JS -->
+    <script src="https://cdn.jsdelivr.net/npm/simplebar@latest/dist/simplebar.min.js"></script>
+
+    <!-- App JS (after jQuery/Bootstrap) -->
+    <script src="{% static 'js/app.min.js' %}"></script>
+    <script src="{% static 'js/layout.js' %}"></script>
+    <script src="{% static 'js/custom.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+    <!-- Initialize layout -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize sidebar
+            if (typeof SimpleBar !== 'undefined') {
+                new SimpleBar(document.getElementById('leftside-menu-container'));
+            }
+
+            // Initialize mobile menu
+            var menuBtn = document.querySelector('.button-menu-mobile');
+            if (menuBtn) {
+                menuBtn.addEventListener('click', function () {
+                    document.body.classList.toggle('sidebar-enable');
+                });
+            }
+
+            // Initialize dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+            dropdownElementList.forEach(function (dropdownToggleEl) {
+                new bootstrap.Dropdown(dropdownToggleEl);
+            });
+
+            // Force sidebar refresh
+            setTimeout(function () {
+                const sidenavItems = document.querySelectorAll('.side-nav-item');
+                sidenavItems.forEach(item => {
+                    item.style.display = 'none';
+                    setTimeout(() => {
+                        item.style.display = 'block';
+                    }, 10);
+                });
+            }, 100);
+        });
+    </script>
+
+    <script>
+        $(document).ajaxError(function (event, jqxhr, settings, thrownError) {
+            if (jqxhr.status === 401) {
+                if (typeof showToast === 'function') {
+                    showToast('Session Expired', 'Your session has expired. Please log in again.', 'warning');
+                } else {
+                    alert('Your session has expired. Please log in again.');
+                }
+                setTimeout(function () {
+                    window.location.href = "{% url 'pages:login' %}";
+                }, 1500);
+            }
+        });
+    </script>
+    <!-- Global Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+
+    <script>
+        function showToast(title, message, type) {
+            let iconClass = 'mdi-check-circle-outline';
+            let typeClass = 'toast-success';
+            
+            if (type === 'danger' || type === 'error') {
+                iconClass = 'mdi-close-circle-outline';
+                typeClass = 'toast-error';
+            } else if (type === 'warning') {
+                iconClass = 'mdi-alert-circle-outline';
+                typeClass = 'toast-warning';
+            }
+            
+            var toastHtml = `
+                <div class="toast-custom ${typeClass} d-flex align-items-center position-relative p-3 mb-2">
+                    <span class="toast-icon"><i class="mdi ${iconClass}"></i></span>
+                    <div class="flex-grow-1">${message}</div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                    <div class="toast-progress"></div>
+                </div>
+            `;
+            $('.toast-container').empty();
+            $('.toast-container').append(toastHtml);
+            var $toast = $('.toast-custom').last();
+            setTimeout(function() {
+                $toast.find('.toast-progress').css('width', '0%');
+            }, 50);
+            setTimeout(function() {
+                $toast.fadeOut(300, function() { $(this).remove(); });
+            }, 3000);
+        }
+
+        const toast = {
+            success: (msg) => showToast('Success', msg, 'success'),
+            error: (msg) => showToast('Error', msg, 'danger'),
+            warning: (msg) => showToast('Warning', msg, 'warning')
+        };
+    </script>
+</body>
+
+</html>

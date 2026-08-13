@@ -1,0 +1,1169 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Requests - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #198754;
+        --primary-hover: #157347;
+        --primary-soft: rgba(25, 135, 84, 0.1);
+        --border: #e9ecef;
+        --text-dim: #6c757d;
+        --surface: #ffffff;
+        --surface-elevated: #f8f9fa;
+        --accent: #198754;
+        --accent-dim: rgba(25, 135, 84, 0.1);
+        --amber: #ffc107;
+        --red: #dc3545;
+        --green: #198754;
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    .page-header-info h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #343a40;
+        margin: 0 0 4px 0;
+    }
+    .page-header-info p {
+        color: var(--text-dim);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Cards */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        margin-bottom: 24px;
+    }
+
+    /* Table */
+    .requests-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .requests-table th {
+        background-color: var(--surface-elevated);
+        color: var(--text-dim);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 20px;
+        border-bottom: 2px solid var(--border);
+        text-align: left;
+    }
+    .requests-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        font-size: 14px;
+        color: #495057;
+    }
+    .requests-table tbody tr:hover {
+        background-color: rgba(25, 135, 84, 0.02);
+    }
+    .requests-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-primary {
+        background-color: var(--primary) !important;
+        color: #ffffff !important;
+        border: 1px solid var(--primary) !important;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+    }
+    .btn-secondary {
+        background-color: #ffffff !important;
+        color: #495057 !important;
+        border: 1px solid var(--border) !important;
+    }
+    .btn-secondary:hover {
+        background-color: var(--surface-elevated) !important;
+        border-color: #adb5bd !important;
+    }
+    .btn-ghost {
+        background-color: transparent !important;
+        color: var(--text-dim) !important;
+        border: 1px solid transparent !important;
+    }
+    .btn-ghost:hover {
+        background-color: var(--surface-elevated) !important;
+        color: #343a40 !important;
+    }
+    .btn-danger {
+        background-color: var(--red) !important;
+        color: #ffffff !important;
+        border: 1px solid var(--red) !important;
+    }
+    .btn-danger:hover {
+        background-color: #bd2130 !important;
+    }
+    .btn-sm {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background-color: #ffffff;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-icon:hover {
+        background-color: var(--surface-elevated);
+        color: #343a40;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 50px;
+        text-transform: capitalize;
+    }
+    .badge-approved {
+        background-color: rgba(25, 135, 84, 0.12);
+        color: #198754;
+    }
+    .badge-pending {
+        background-color: rgba(255, 193, 7, 0.12);
+        color: #ffc107;
+    }
+    .badge-rejected {
+        background-color: rgba(220, 53, 69, 0.12);
+        color: #dc3545;
+    }
+    .badge-escalated {
+        background-color: rgba(253, 126, 20, 0.12);
+        color: #fd7e14;
+    }
+    .badge-cancelled {
+        background-color: rgba(108, 117, 125, 0.12);
+        color: #6c757d;
+    }
+
+    /* Overlay / Modals */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .custom-modal {
+        background: var(--surface);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        padding: 24px;
+        animation: modalFadeIn 0.25s ease-out;
+    }
+    .modal-header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        color: #343a40;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        margin-top: 24px;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid & Layout helpers */
+    .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .flex-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .flex-1 {
+        flex: 1;
+    }
+    .gap-2 {
+        gap: 8px;
+    }
+    .gap-3 {
+        gap: 12px;
+    }
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .nav-logo-box {
+        background-color: var(--primary-soft);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    /* Form Fields */
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+    input, select, textarea {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        background-color: #ffffff;
+        color: #495057;
+        transition: all 0.2s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
+    }
+
+    /* Upload zone */
+    .file-upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 24px;
+        text-align: center;
+        background: var(--surface-elevated);
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .file-upload-zone:hover {
+        border-color: var(--primary);
+        background: rgba(25, 135, 84, 0.02);
+    }
+
+    /* Timeline / Activity feed */
+    .activity-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+        padding-left: 20px;
+    }
+    .activity-feed::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background-color: var(--border);
+    }
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        position: relative;
+        gap: 12px;
+    }
+    .activity-dot {
+        position: absolute;
+        left: -20px;
+        top: 6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #ffffff;
+        border: 2px solid var(--primary);
+        z-index: 1;
+    }
+    .activity-text {
+        font-size: 13px;
+        color: #495057;
+    }
+    .activity-time {
+        font-size: 11px;
+        color: var(--text-dim);
+    }
+
+    /* Skeletons */
+    .skeleton-page {
+        padding: 20px;
+    }
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeletonKeyframe 1.5s infinite;
+    }
+    .skeleton-header {
+        height: 48px;
+        width: 250px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+    }
+    @keyframes skeletonKeyframe {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Empty state */
+    .empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-dim);
+    }
+    .empty-icon {
+        margin-bottom: 12px;
+        color: #adb5bd;
+    }
+    .empty h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 6px;
+    }
+    .empty p {
+        font-size: 13px;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="requests-content" style="display: none;">
+    <div class="page-header">
+        <div class="page-header-info">
+            <h1>Requests</h1>
+            <p>Track and manage your approval requests.</p>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" onclick="openSubmitRequestModal()">
+                <i data-lucide="plus" style="width: 18px; height: 18px;"></i> New Request
+            </button>
+        </div>
+    </div>
+
+    <!-- Active approval banners -->
+    <div id="approval-banner" style="display: none; background: rgba(25,135,84,0.08); border: 1px solid rgba(25,135,84,0.3); border-radius: 10px; padding: 14px 20px; margin-bottom: 20px; align-items: center; gap: 12px;">
+        <i data-lucide="bell" style="color: var(--accent); flex-shrink: 0; width: 18px; height: 18px;"></i>
+        <div style="flex: 1; text-align: left;">
+            <span style="font-weight: 600; color: var(--accent);" id="banner-count-text">0 requests need your approval</span>
+            <span style="color: var(--text-dim); font-size: 13px; margin-left: 8px;" id="banner-items-list"></span>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="setFilter('pending')">View Pending</button>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center;">
+            <div style="position: relative; flex: 1;">
+                <i data-lucide="search" style="position: absolute; left: 12px; top: 11px; color: var(--text-dim); width: 16px; height: 16px;"></i>
+                <input id="search-input" placeholder="Search requests..." style="padding-left: 36px; height: 38px;" oninput="filterRequestsList()">
+            </div>
+            <div class="flex-center gap-2">
+                <span class="text-dim" style="font-size: 13px;">Status:</span>
+                <select id="filter-status" style="width: 140px; height: 38px;" onchange="onFilterStatusChange()">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="escalated">Escalated</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btn-my-queue" style="position: relative; display: none;" onclick="toggleMyQueueFilter()">
+                My Queue
+                <span id="queue-badge" style="position: absolute; top: -6px; right: -6px; background: var(--accent); color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;">0</span>
+            </button>
+        </div>
+
+        <table class="requests-table">
+            <thead>
+                <tr>
+                    <th>Request Details</th>
+                    <th>Workflow</th>
+                    <th>Stage</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th style="width: 60px;"></th>
+                </tr>
+            </thead>
+            <tbody id="requests-list-body">
+                <!-- Request items will be injected dynamically -->
+            </tbody>
+        </table>
+
+        <div class="empty" id="requests-empty-state" style="display: none;">
+            <i data-lucide="inbox" class="empty-icon" style="width: 48px; height: 48px;"></i>
+            <h3>No Requests Found</h3>
+            <p>Try adjusting your filters or create a new request.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Loading state -->
+<div class="skeleton-page" id="requests-loading">
+    <div class="skeleton skeleton-header"></div>
+    <div class="skeleton" style="height: 350px; border-radius: 12px;"></div>
+</div>
+
+<!-- Submit Request Modal -->
+<div class="overlay" id="submit-request-modal" style="display: none;">
+    <div class="custom-modal" style="max-height: 90vh; overflow-y: auto; width: 600px;">
+        <div class="flex-between modal-header">
+            <h2>Submit New Request</h2>
+            <button class="btn-icon" onclick="closeSubmitRequestModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+        </div>
+
+        <div class="form-group">
+            <label>Request Title</label>
+            <input id="req-title" placeholder="e.g., Marketing Budget Q3">
+        </div>
+
+        <div class="form-group">
+            <label>Description (optional)</label>
+            <input id="req-desc" placeholder="Brief description of this request">
+        </div>
+
+        <div class="form-group">
+            <label>Select Workflow</label>
+            <select id="req-workflow">
+                <option value="">Select a workflow...</option>
+                <!-- Workflow options will be injected dynamically -->
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label>Amount (optional)</label>
+                <input type="number" id="req-amount" placeholder="e.g., 5000">
+            </div>
+            <div class="form-group">
+                <label>Department (optional)</label>
+                <input id="req-dept" placeholder="e.g., Finance">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Request Type</label>
+                <select id="req-type">
+                    <option value="invoice">Invoice</option>
+                    <option value="contract">Contract</option>
+                    <option value="purchase_order">Purchase Order</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Document Type</label>
+                <input id="req-doc-type" placeholder="e.g., PDF, Scan, Doc">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Target Folder Path (optional)</label>
+            <input id="req-folder" placeholder="e.g., /invoices/2026/q2">
+        </div>
+
+        <div class="form-group">
+            <label>Metadata (JSON optional)</label>
+            <textarea id="req-metadata" placeholder='{"vendor_id": 123, "tax_id": "ABC-456"}' rows="2" style="font-family: monospace; font-size: 13px;"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Upload Document (Invoice, Contract, etc.)</label>
+            <div class="file-upload-zone" onclick="document.getElementById('req-file-input').click()">
+                <input type="file" id="req-file-input" style="display: none;" onchange="onFileSelected(this)">
+                <i data-lucide="file-plus" style="width: 24px; height: 24px; margin-bottom: 8px; color: var(--text-dim);"></i>
+                <p style="margin: 0; font-size: 13px;" id="file-label">Click to select document</p>
+                <p class="text-dim" style="font-size: 11px; margin-top: 4px;" id="file-selected-name"></p>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeSubmitRequestModal()">Cancel</button>
+            <button class="btn btn-primary" id="btn-submit-req" onclick="submitNewRequest()">Submit Request</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reuse Details Modal from Dashboard -->
+<div class="overlay" id="details-modal" style="display: none;">
+    <div class="custom-modal" style="width: 700px;">
+        <div class="flex-between modal-header">
+            <div>
+                <div class="badge" id="modal-status-badge" style="margin-bottom: 8px;">Pending</div>
+                <h2 id="modal-title">Request Title</h2>
+                <div class="text-dim" style="font-size: 13px; margin-top: 4px;">
+                    ID: <span id="modal-id"></span> · Workflow: <span id="modal-workflow"></span>
+                </div>
+            </div>
+            <button class="btn-icon" onclick="closeDetailsModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+        </div>
+
+        <div class="grid-2" style="margin-top: 24px;">
+            <div>
+                <div class="card" style="background: var(--surface-elevated); margin-bottom: 16px;">
+                    <div class="card-title">Document</div>
+                    <div id="modal-doc-box" class="flex-between">
+                        <div class="flex-center gap-2">
+                            <i data-lucide="file-text" class="text-accent" style="width: 18px; height: 18px;"></i>
+                            <span style="font-weight: 500; font-size: 14px;" id="modal-doc-name">Document.pdf</span>
+                        </div>
+                        <a href="#" target="_blank" class="btn btn-ghost btn-sm" style="gap: 6px;" id="modal-doc-link">
+                            View <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+                        </a>
+                    </div>
+                    <p class="text-dim" style="font-size: 13px; margin: 0;" id="modal-no-doc" style="display: none;">No document attached</p>
+                </div>
+
+                <div class="card" style="background: var(--surface-elevated); margin-bottom: 16px;">
+                    <div class="card-title">Workflow Stages</div>
+                    <div id="modal-workflow-stages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+
+                <div class="card" style="background: var(--surface-elevated);">
+                    <div class="card-title">Timeline</div>
+                    <div id="modal-timeline" class="activity-feed"></div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card" style="background: var(--surface-elevated); margin-bottom: 16px;">
+                    <div class="card-title">Current Status</div>
+                    <div class="flex-center gap-3" style="justify-content: flex-start;">
+                        <div class="nav-logo-box" style="width: 40px; height: 40px; border-radius: 10px;">
+                            <span style="font-weight: 800;" id="modal-stage-num">1</span>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;" id="modal-stage-name">Review Stage</div>
+                            <div class="text-dim" style="font-size: 12px;">Pending <span id="modal-stage-group">Group</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="background: var(--surface-elevated);" id="modal-action-card">
+                    <div class="card-title" style="display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="shield-check" style="width: 13px; height: 13px;" id="action-icon"></i>
+                        Take Action
+                    </div>
+                    <div class="form-group">
+                        <label>Decision Comment</label>
+                        <textarea id="action-comment" placeholder="Add a note for your decision..." style="min-height: 60px;"></textarea>
+                    </div>
+                    <div class="grid-2">
+                        <button class="btn btn-primary" style="justify-content: center;" id="btn-approve">
+                            <i data-lucide="check" style="width: 14px; height: 14px;"></i> Approve
+                        </button>
+                        <button class="btn btn-danger" style="justify-content: center;" id="btn-reject">
+                            <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i> Reject
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: var(--surface-elevated); border-style: dashed;" id="modal-no-action-card">
+                    <div class="flex-center gap-2 text-dim" style="padding: 10px 0;">
+                        <i data-lucide="clock" style="width: 16px; height: 16px;"></i>
+                        <span style="font-size: 13px;" id="no-action-reason">Awaiting other approvers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+
+
+    function getCurrentUser() {
+        return {
+            name: "{{ user_data.firstName|default:'Admin' }}",
+            role: "admin"
+        };
+    }
+
+    function formatDistanceToNow(dateString) {
+        if (!dateString) return 'some time ago';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${diffDays}d ago`;
+    }
+
+
+    let allRequests = [];
+    let myPendingIds = [];
+    let allWorkflows = [];
+    let selectedFile = null;
+    let activeRequest = null;
+    let isMyQueueOnly = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRequestsPage();
+    });
+
+    async function loadRequestsPage() {
+        try {
+            const user = getCurrentUser();
+            const isApprover = user?.role === 'approver' || user?.role === 'admin';
+            
+            const [requests, workflows, pendingIds] = await Promise.all([
+                api.getRequests(),
+                api.getWorkflows(),
+                isApprover ? api.myPending() : Promise.resolve([])
+            ]);
+
+            allRequests = requests || [];
+            allWorkflows = workflows || [];
+            myPendingIds = pendingIds || [];
+
+            const wfSelect = document.getElementById('req-workflow');
+            wfSelect.innerHTML = '<option value="">Select a workflow...</option>';
+            allWorkflows.forEach(w => {
+                wfSelect.innerHTML += `<option value="${w.id}">${escapeHtml(w.name)}</option>`;
+            });
+
+            if (isApprover) {
+                const btnQueue = document.getElementById('btn-my-queue');
+                const badgeQueue = document.getElementById('queue-badge');
+                btnQueue.style.display = 'inline-flex';
+                badgeQueue.innerText = myPendingIds.length;
+                
+                const needsAction = allRequests.filter(r => myPendingIds.includes(r.id));
+                if (needsAction.length > 0) {
+                    const banner = document.getElementById('approval-banner');
+                    banner.style.display = 'flex';
+                    document.getElementById('banner-count-text').innerText = `${needsAction.length} request${needsAction.length > 1 ? 's' : ''} need${needsAction.length === 1 ? 's' : ''} your approval`;
+                    document.getElementById('banner-items-list').innerText = needsAction.map(r => r.title).join(', ');
+                }
+            }
+
+            renderRequestsTable();
+
+            document.getElementById('requests-loading').style.display = 'none';
+            document.getElementById('requests-content').style.display = 'block';
+
+        } catch (err) {
+            toast.error("Failed to load requests data: " + err.message);
+        }
+    }
+
+    function renderRequestsTable() {
+        const tbody = document.getElementById('requests-list-body');
+        const emptyState = document.getElementById('requests-empty-state');
+        const statusFilter = document.getElementById('filter-status').value;
+
+        let filtered = allRequests;
+        if (isMyQueueOnly) {
+            filtered = filtered.filter(r => myPendingIds.includes(r.id));
+        } else if (statusFilter !== 'all') {
+            filtered = filtered.filter(r => r.status === statusFilter);
+        }
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        let html = '';
+        
+        filtered.forEach(r => {
+            const timeStr = formatDistanceToNow(r.submitted_at);
+            const isWaitingMe = myPendingIds.includes(r.id);
+            const rowBg = r.status === 'rejected' ? 'rgba(220,53,69,0.03)' : isWaitingMe ? 'rgba(25,135,84,0.03)' : '';
+            
+            html += `
+                <tr id="req-row-${r.id}" style="cursor: pointer; background: ${rowBg};" onclick="openRequestDetails(${r.id})">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="font-weight: 600;">${escapeHtml(r.title)}</div>
+                            ${isWaitingMe ? `<span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: var(--primary-soft); color: var(--primary); padding: 2px 6px; border-radius: 4px;">Action Needed</span>` : ''}
+                            ${r.status === 'rejected' ? `<span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: rgba(220,53,69,0.12); color: var(--red); padding: 2px 6px; border-radius: 4px;">Rejected</span>` : ''}
+                        </div>
+                        <div class="text-dim" style="font-size: 12px;">ID: ${r.id} · By ${escapeHtml(r.submitter_name || 'System')}</div>
+                    </td>
+                    <td>
+                        <div class="flex-center gap-2" style="justify-content: flex-start;">
+                            <i data-lucide="file-text" class="text-dim" style="width: 14px; height: 14px;"></i>
+                            <span>${escapeHtml(r.workflow_name)}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size: 13px; color: ${r.status === 'rejected' ? 'var(--red)' : ''}">
+                            Stage ${r.current_stage + 1} of ${r.total_stages}
+                            ${r.status === 'rejected' ? '<span style="font-size: 11px; margin-left: 4px; opacity: 0.7;">(rejected here)</span>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-${r.status}">${r.status}</span>
+                    </td>
+                    <td class="text-dim">
+                        ${timeStr}
+                    </td>
+                    <td>
+                        <i data-lucide="chevron-right" class="text-dim" style="width: 18px; height: 18px;"></i>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function filterRequestsList() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        allRequests.forEach(r => {
+            const row = document.getElementById(`req-row-${r.id}`);
+            if (row) {
+                const title = r.title.toLowerCase();
+                const submitter = (r.submitter_name || '').toLowerCase();
+                const wfName = (r.workflow_name || '').toLowerCase();
+                if (title.includes(query) || submitter.includes(query) || wfName.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    function onFilterStatusChange() {
+        isMyQueueOnly = false;
+        const btnQueue = document.getElementById('btn-my-queue');
+        if (btnQueue) {
+            btnQueue.className = 'btn btn-ghost btn-sm';
+        }
+        renderRequestsTable();
+    }
+
+    function toggleMyQueueFilter() {
+        isMyQueueOnly = !isMyQueueOnly;
+        const btnQueue = document.getElementById('btn-my-queue');
+        if (isMyQueueOnly) {
+            btnQueue.className = 'btn btn-primary btn-sm';
+            document.getElementById('filter-status').value = 'all';
+        } else {
+            btnQueue.className = 'btn btn-ghost btn-sm';
+        }
+        renderRequestsTable();
+    }
+
+    function setFilter(status) {
+        document.getElementById('filter-status').value = status;
+        onFilterStatusChange();
+    }
+
+    function openSubmitRequestModal() {
+        selectedFile = null;
+        document.getElementById('file-label').innerText = 'Click to select document';
+        document.getElementById('file-selected-name').innerText = '';
+        
+        document.getElementById('req-title').value = '';
+        document.getElementById('req-desc').value = '';
+        document.getElementById('req-workflow').value = '';
+        document.getElementById('req-amount').value = '';
+        document.getElementById('req-dept').value = '';
+        document.getElementById('req-type').value = 'invoice';
+        document.getElementById('req-doc-type').value = '';
+        document.getElementById('req-folder').value = '';
+        document.getElementById('req-metadata').value = '';
+
+        document.getElementById('submit-request-modal').style.display = 'flex';
+    }
+
+    function closeSubmitRequestModal() {
+        document.getElementById('submit-request-modal').style.display = 'none';
+    }
+
+    function onFileSelected(input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            document.getElementById('file-label').innerText = 'Document selected';
+            document.getElementById('file-selected-name').innerText = selectedFile.name;
+        }
+    }
+
+    async function submitNewRequest() {
+        const title = document.getElementById('req-title').value.trim();
+        const description = document.getElementById('req-desc').value.trim();
+        const workflowId = document.getElementById('req-workflow').value;
+        const amount = document.getElementById('req-amount').value;
+        const department = document.getElementById('req-dept').value.trim();
+        const requestType = document.getElementById('req-type').value;
+        const docType = document.getElementById('req-doc-type').value.trim();
+        const folder = document.getElementById('req-folder').value.trim();
+        const metadataVal = document.getElementById('req-metadata').value.trim();
+
+        if (!title || !workflowId) {
+            toast.error("Request Title and Workflow are required.");
+            return;
+        }
+
+        let metadata = null;
+        if (metadataVal) {
+            try {
+                metadata = JSON.parse(metadataVal);
+            } catch (e) {
+                toast.error("Invalid JSON format in Metadata.");
+                return;
+            }
+        }
+
+        const btnSubmit = document.getElementById('btn-submit-req');
+        btnSubmit.disabled = true;
+        btnSubmit.innerText = "Processing...";
+
+        try {
+            const payload = {
+                title,
+                description: description || undefined,
+                workflow_id: parseInt(workflowId),
+                amount: amount ? parseFloat(amount) : undefined,
+                department: department || undefined,
+                request_type: requestType,
+                document_type: docType || undefined,
+                folder_path: folder || undefined,
+                metadata
+            };
+
+            if (selectedFile) {
+                const uploadRes = await api.upload(selectedFile);
+                payload.document_name = uploadRes.document_name;
+                payload.document_url = uploadRes.document_url;
+            }
+
+            await api.submitRequest(payload);
+            toast.success("Request submitted successfully!");
+            closeSubmitRequestModal();
+            loadRequestsPage();
+        } catch (err) {
+            toast.error("Failed to submit request: " + err.message);
+        } finally {
+            btnSubmit.disabled = false;
+            btnSubmit.innerText = "Submit Request";
+        }
+    }
+
+    async function openRequestDetails(id) {
+        try {
+            const req = await api.getRequest(id);
+            activeRequest = req;
+
+            const user = getCurrentUser();
+            const isAdmin = user?.role === 'admin';
+            const isAwaitingMe = myPendingIds.includes(req.id);
+            const canApprove = req.status === 'pending' && (isAdmin || isAwaitingMe);
+
+            document.getElementById('modal-id').innerText = req.id;
+            document.getElementById('modal-title').innerText = req.title;
+            document.getElementById('modal-workflow').innerText = req.workflow_name;
+
+            const badge = document.getElementById('modal-status-badge');
+            badge.innerText = req.status;
+            badge.className = `badge badge-${req.status}`;
+
+            const docBox = document.getElementById('modal-doc-box');
+            const noDoc = document.getElementById('modal-no-doc');
+            if (req.document_url && req.document_url !== '#') {
+                document.getElementById('modal-doc-name').innerText = req.document_name || "Attachment";
+                document.getElementById('modal-doc-link').href = `/api${req.document_url}`;
+                docBox.style.display = 'flex';
+                noDoc.style.display = 'none';
+            } else if (req.document_name) {
+                document.getElementById('modal-doc-name').innerText = req.document_name;
+                document.getElementById('modal-doc-link').href = '#';
+                docBox.style.display = 'flex';
+                noDoc.style.display = 'none';
+            } else {
+                docBox.style.display = 'none';
+                noDoc.style.display = 'block';
+            }
+
+            const activeStage = req.stages?.find(s => s.stage_order === req.current_stage && s.status === 'pending') 
+                || req.stages?.find(s => s.status === 'pending') 
+                || null;
+
+            if (activeStage) {
+                document.getElementById('modal-stage-num').innerText = (req.current_stage + 1);
+                document.getElementById('modal-stage-name').innerText = activeStage.name;
+                document.getElementById('modal-stage-group').innerText = req.pending_group_name || 'Assigned Group';
+            } else {
+                document.getElementById('modal-stage-num').innerText = req.stages?.length || '-';
+                document.getElementById('modal-stage-name').innerText = 'Final Review';
+                document.getElementById('modal-stage-group').innerText = 'Completed';
+            }
+
+            const timeline = document.getElementById('modal-timeline');
+            let timeHtml = '';
+            if (req.history && req.history.length > 0) {
+                req.history.forEach(h => {
+                    const timeStr = formatDistanceToNow(h.created_at);
+                    let color = 'var(--primary)';
+                    if (h.action === 'approved') color = 'var(--green)';
+                    if (h.action === 'rejected') color = 'var(--red)';
+                    
+                    timeHtml += `
+                        <div class="activity-item">
+                            <div class="activity-dot" style="background: ${color}; border-color: ${color}"></div>
+                            <div class="flex-1">
+                                <div class="flex-between">
+                                    <div style="font-weight: 600; font-size: 13px;">${h.user_name}</div>
+                                    <div class="text-dim" style="font-size: 11px;">${timeStr}</div>
+                                </div>
+                                <div class="activity-text" style="font-size: 12px; margin-top: 2px;">
+                                    ${h.action} the request ${h.comment ? `· "${h.comment}"` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                timeHtml = '<p class="text-dim" style="font-size: 12px; padding: 10px 0;">No actions recorded yet.</p>';
+            }
+            timeline.innerHTML = timeHtml;
+
+            const stagesContainer = document.getElementById('modal-workflow-stages');
+            let stagesHtml = '';
+            if (req.stages && req.stages.length > 0) {
+                req.stages.forEach(s => {
+                    let icon = 'clock';
+                    let iconColor = 'var(--text-dim)';
+                    if (s.status === 'approved') { icon = 'check-circle'; iconColor = 'var(--green)'; }
+                    else if (s.status === 'rejected') { icon = 'x-circle'; iconColor = 'var(--red)'; }
+                    else if (s.status === 'pending' && s.stage_order === req.current_stage) { icon = 'play-circle'; iconColor = 'var(--accent)'; }
+                    
+                    stagesHtml += `
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: rgba(0,0,0,0.02);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 24px; height: 24px; border-radius: 50%; background: ${s.status === 'approved' ? 'rgba(25,135,84,0.1)' : 'var(--surface)'}; display: flex; align-items: center; justify-content: center;">
+                                    <span style="font-size: 11px; font-weight: 700;">${s.stage_order + 1}</span>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 13px;">${escapeHtml(s.stage_name)}</div>
+                                    <div class="text-dim" style="font-size: 11px;">${escapeHtml(s.group_name)} · ${escapeHtml(s.voting_rule)} Vote</div>
+                                </div>
+                            </div>
+                            <i data-lucide="${icon}" style="width: 16px; height: 16px; color: ${iconColor};"></i>
+                        </div>
+                    `;
+                });
+            } else {
+                stagesHtml = '<p class="text-dim" style="font-size: 12px; margin: 0;">No stages defined.</p>';
+            }
+            stagesContainer.innerHTML = stagesHtml;
+
+            const actionCard = document.getElementById('modal-action-card');
+            const noActionCard = document.getElementById('modal-no-action-card');
+            const commentInput = document.getElementById('action-comment');
+            commentInput.value = '';
+
+            if (canApprove) {
+                actionCard.style.display = 'block';
+                noActionCard.style.display = 'none';
+            } else {
+                actionCard.style.display = 'none';
+                noActionCard.style.display = 'block';
+                const reasonEl = document.getElementById('no-action-reason');
+                if (req.status !== 'pending') {
+                    reasonEl.innerText = `This request is already ${req.status}`;
+                } else if (!isAwaitingMe && !isAdmin) {
+                    reasonEl.innerText = "You are not an approver for this stage";
+                } else {
+                    reasonEl.innerText = "Awaiting other actions";
+                }
+            }
+
+            document.getElementById('btn-approve').onclick = () => takeAction('approve');
+            document.getElementById('btn-reject').onclick = () => takeAction('reject');
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            document.getElementById('details-modal').style.display = 'flex';
+        } catch (err) {
+            toast.error("Failed to load details: " + err.message);
+        }
+    }
+
+    function closeDetailsModal() {
+        document.getElementById('details-modal').style.display = 'none';
+        activeRequest = null;
+    }
+
+const API_BASE = '/api';
+const USER_ID = "{{ request.session.user_data.id|default:'1' }}";
+
+const api = {
+    upload: async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const resp = await fetch(`${API_BASE}/requests/upload?user_id=${USER_ID}`, {
+            method: 'POST',
+            body: formData
+        });
+        if (!resp.ok) throw new Error('Failed to upload file');
+        return await resp.json();
+    },
+    getRequests: async (filters = {}) => {
+        const params = new URLSearchParams();
+        if (filters.status) params.append('status', filters.status);
+        params.append('user_id', USER_ID);
+        const resp = await fetch(`${API_BASE}/requests?${params.toString()}`);
+        if (!resp.ok) throw new Error('Failed to fetch requests');
+        return await resp.json();
+    },
+    getWorkflows: async () => {
+        const resp = await fetch(`${API_BASE}/workflows?user_id=${USER_ID}`);
+        if (!resp.ok) throw new Error('Failed to fetch workflows');
+        return await resp.json();
+    },
+    myPending: async () => {
+        const resp = await fetch(`${API_BASE}/approvals/pending?user_id=${USER_ID}`);
+        if (!resp.ok) throw new Error('Failed to fetch my pending');
+        return await resp.json();
+    },
+    getRequest: async (id) => {
+        const resp = await fetch(`${API_BASE}/requests/${id}?user_id=${USER_ID}`);
+        if (!resp.ok) throw new Error('Failed to fetch request');
+        return await resp.json();
+    },
+    submitRequest: async (payload) => {
+        const resp = await fetch(`${API_BASE}/requests?user_id=${USER_ID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error('Failed to submit request');
+        return await resp.json();
+    },
+    approve: async (id, comment) => {
+        const resp = await fetch(`${API_BASE}/approvals/?user_id=${USER_ID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ request_id: id, decision: "approved", comment: comment })
+        });
+        if (!resp.ok) throw new Error('Failed to approve');
+        return await resp.json();
+    },
+    reject: async (id, comment) => {
+        const resp = await fetch(`${API_BASE}/approvals/?user_id=${USER_ID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ request_id: id, decision: "rejected", comment: comment })
+        });
+        if (!resp.ok) throw new Error('Failed to reject');
+        return await resp.json();
+    }
+};
+
+    async function takeAction(decision) {
+        if (!activeRequest) return;
+        const comment = document.getElementById('action-comment').value;
+        const btnApprove = document.getElementById('btn-approve');
+        const btnReject = document.getElementById('btn-reject');
+        btnApprove.disabled = true;
+        btnReject.disabled = true;
+
+        try {
+            if (decision === 'approve') {
+                await api.approve(activeRequest.id, comment);
+                toast.success("Request approved");
+            } else {
+                await api.reject(activeRequest.id, comment);
+                toast.error("Request rejected");
+            }
+            closeDetailsModal();
+            loadRequestsPage();
+        } catch (err) {
+            toast.error("Failed to submit action: " + err.message);
+            btnApprove.disabled = false;
+            btnReject.disabled = false;
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+</script>
+{% endblock %}

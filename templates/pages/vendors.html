@@ -1,0 +1,1892 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Vendors - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .card-header {
+        background-color: #198754 !important;
+        padding: 1rem;
+    }
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+    .table th {
+        color: #6c757d;
+    }
+    .action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    /* Permissions Modal Styles */
+    #vendorPermissionsModal .modal-header {
+        background: rgba(25, 135, 84, 0.1) !important;
+        border-bottom: 1px solid rgba(25, 135, 84, 0.1);
+    }
+    #vendorPermissionsModal .modal-title {
+        color: #495057;
+        font-weight: 600;
+    }
+    #vendorPermissionsModal .table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        padding: 12px;
+    }
+    .perm-check:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+    .select-all-row {
+        background-color: #fff9e6 !important;
+    }
+    #financialTermsSection .table-responsive {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    #financialTermsSection table {
+        margin-bottom: 0;
+    }
+    #financialTermsModal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+        max-width: 600px;
+    }
+    #requiredDocumentsModal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .password-requirements {
+        font-size: 0.875rem;
+    }
+    
+    .requirement-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+    
+    .requirement-item i {
+        margin-right: 0.5rem;
+        width: 16px;
+    }
+    
+    .requirement-item .text-success {
+        color: #198754 !important;
+    }
+    
+    .requirement-item .text-danger {
+        color: #dc3545 !important;
+    }
+   
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;">
+        <!-- Toasts will be dynamically added here -->
+    </div>
+    
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="fas fa-users me-2"></i>Vendors
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Vendors</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end page title -->
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-white mb-0">Vendor List</h4>
+                        <button type="button" class="btn btn-light" id="addVendorBtn">
+                            <i class="mdi mdi-plus me-1"></i> Add Vendor
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="vendorsTable" class="table table-striped table-bordered dt-responsive nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Phone Number</th>
+                                    <th>GST Number</th>
+                                    <th>PAN Number</th>
+                                    <th>Bank Account</th>
+                                    <th>COI Number</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vendor in vendors %}
+                                 <tr data-vendor-id="{{ vendor.userId }}" data-company-id="{{ vendor.companyId|default:vendor.userId }}">
+                                    <td>{{ vendor.email }}</td>
+                                    <td>{{ vendor.phoneNumber }}</td>
+                                    <td>{{ vendor.gstinNumber }}</td>
+                                    <td>{{ vendor.panNumber }}</td>
+                                    <td>{{ vendor.bankDetails.accountNumber }}</td>
+                                    <td>{{ vendor.coiDetails.cinNumber }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-primary btn-sm action-btn view-btn me-2" 
+                                                    data-vendor='{{ vendor.json|escapejs }}'
+                                                    title="View">
+                                                <i class="mdi mdi-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm action-btn delete-btn me-2" title="Delete">
+                                                <i class="mdi mdi-delete"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-warning btn-sm action-btn financial-terms-btn me-2" title="Financial Terms">
+                                                <i class="mdi mdi-currency-inr"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-info btn-sm action-btn permissions-btn" 
+                                                    data-vendor-id="{{ vendor.companyId|default:vendor.userId }}" 
+                                                    data-vendor-name="{{ vendor.companyName|default:vendor.email }}"
+                                                    title="Permissions">
+                                                <i class="mdi mdi-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No vendors found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vendor View Modal -->
+<div class="modal fade" id="viewVendorModal" tabindex="-1" aria-labelledby="viewVendorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewVendorModalLabel">Vendor Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Company Information</h6>
+                        <div class="table-responsive">
+                            <table class="table details-table">
+                                <tr>
+                                    <th>Name</th>
+                                    <td id="viewVendorName"></td>
+                                </tr>
+                                <tr>
+                                    <th>Email</th>
+                                    <td id="viewVendorEmail"></td>
+                                </tr>
+                                <tr>
+                                    <th>Phone</th>
+                                    <td id="viewVendorPhone"></td>
+                                </tr>
+                                <tr>
+                                    <th>GST Number</th>
+                                    <td id="viewVendorGST"></td>
+                                </tr>
+                                <tr>
+                                    <th>PAN Number</th>
+                                    <td id="viewVendorPAN"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Bank Details</h6>
+                        <div class="table-responsive">
+                            <table class="table details-table">
+                                <tr>
+                                    <th>Account Number</th>
+                                    <td id="viewVendorAccount"></td>
+                                </tr>
+                                <tr>
+                                    <th>IFSC Code</th>
+                                    <td id="viewVendorIFSC"></td>
+                                </tr>
+                                <tr>
+                                    <th>Bank Name</th>
+                                    <td id="viewVendorBank"></td>
+                                </tr>
+                                <tr>
+                                    <th>Branch</th>
+                                    <td id="viewVendorBranch"></td>
+                                </tr>
+                                <tr>
+                                    <th>COI Number</th>
+                                    <td id="viewVendorCOI"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 mt-4" id="financialTermsSection">
+                    <h6 class="mb-3">Financial Terms</h6>
+                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                        <table class="table table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Delivery Terms</th>
+                                    <th>Location</th>
+                                    <th>Currency</th>
+                                    <th>Delivery Days</th>
+                                    <th>Payment Terms</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="financialTermsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="button" class="btn btn-primary" id="editFinancialTermsVendorBtn">Edit Financial Terms</button>
+                        <button type="button" class="btn btn-success" id="catalogueBtn">Add Catalogue</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Required Documents Modal for Vendor -->
+<div class="modal fade" id="requiredDocumentsModal" tabindex="-1" aria-labelledby="requiredDocumentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requiredDocumentsModalLabel">Documents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title mb-4">Upload Documents</h5>
+                                <form id="documentsForm">
+                                    <div class="mb-3">
+                                        <label for="panCard" class="form-label">PAN Card *</label>
+                                        <input type="file" class="form-control" id="panCard" name="panCard" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="gstCertificate" class="form-label">GST Certificate *</label>
+                                        <input type="file" class="form-control" id="gstCertificate" name="gstCertificate" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="bankStatement" class="form-label">Bank Statement *</label>
+                                        <input type="file" class="form-control" id="bankStatement" name="bankStatement" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="coi" class="form-label">COI *</label>
+                                        <input type="file" class="form-control" id="coi" name="coi" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vendorEmail" class="form-label">Email *</label>
+                                        <input type="email" class="form-control" id="vendorEmail" name="email" placeholder="Enter email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vendorPhone" class="form-label">Phone Number *</label>
+                                        <input type="tel" class="form-control" id="vendorPhone" name="phoneNumber" placeholder="Enter phone number" pattern="[6-9][0-9]{9}" maxlength="10" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vendorPassword" class="form-label">Set Password *</label>
+                                        <div class="position-relative">
+                                            <input type="password" class="form-control pe-5" id="vendorPassword" name="password" placeholder="Enter password" required>
+                                            <button class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-decoration-none text-muted password-toggle" type="button" id="toggleVendorPassword" aria-label="Show password">
+                                                <i class="fas fa-eye" id="vendorPasswordIcon"></i>
+                                            </button>
+                                        </div>
+                                        <div class="password-requirements mt-2">
+                                            <div class="requirement-item" id="vendorLengthCheck">
+                                                <i class="fas fa-times text-danger"></i>
+                                                <span>At least 6 characters</span>
+                                            </div>
+                                            <div class="requirement-item" id="vendorAlphanumericCheck">
+                                                <i class="fas fa-times text-danger"></i>
+                                                <span>Contains alphanumeric characters</span>
+                                            </div>
+                                            <div class="requirement-item" id="vendorSpecialCheck">
+                                                <i class="fas fa-times text-danger"></i>
+                                                <span>Contains special character</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vendorConfirmPassword" class="form-label">Confirm Password *</label>
+                                        <div class="position-relative">
+                                            <input type="password" class="form-control pe-5" id="vendorConfirmPassword" name="confirmPassword" placeholder="Confirm password" required>
+                                            <button class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-decoration-none text-muted password-toggle" type="button" id="toggleVendorConfirmPassword" aria-label="Show password">
+                                                <i class="fas fa-eye" id="vendorConfirmPasswordIcon"></i>
+                                            </button>
+                                        </div>
+                                        <div class="requirement-item mt-2" id="vendorMatchCheck">
+                                            <i class="fas fa-times text-danger"></i>
+                                            <span>Passwords match</span>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-theme" id="submitDocumentsBtn" disabled>Submit Documents</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteVendorModal" tabindex="-1" aria-labelledby="deleteVendorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteVendorModalLabel">Confirm Deactivation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to deactivate this vendor? This will set their account as inactive and cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Deactivate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Business Card Upload Modal -->
+<div class="modal fade" id="uploadBusinessCardModal" tabindex="-1" aria-labelledby="uploadBusinessCardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadBusinessCardModalLabel">Upload Business Card</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="businessCardUploadForm">
+                    <div class="mb-3">
+                        <label for="businessCardFile" class="form-label">Business Card File</label>
+                        <input type="file" class="form-control" id="businessCardFile" name="businessCardFile" accept="image/*,application/pdf" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-theme" id="uploadBusinessCardBtn">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extracted Document Details Modal (Tabbed) for Vendor -->
+<div class="modal fade" id="extractedVendorDetailsModal" tabindex="-1" aria-labelledby="extractedVendorDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="extractedVendorDetailsModalLabel">Extracted Document Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="vendorDocTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="vendor-pan-tab" data-bs-toggle="tab" data-bs-target="#vendor-pan" type="button" role="tab" aria-controls="vendor-pan" aria-selected="true">PAN Card</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="vendor-coi-tab" data-bs-toggle="tab" data-bs-target="#vendor-coi" type="button" role="tab" aria-controls="vendor-coi" aria-selected="false">COI</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="vendor-gst-tab" data-bs-toggle="tab" data-bs-target="#vendor-gst" type="button" role="tab" aria-controls="vendor-gst" aria-selected="false">GST Certificate</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="vendor-bank-tab" data-bs-toggle="tab" data-bs-target="#vendor-bank" type="button" role="tab" aria-controls="vendor-bank" aria-selected="false">Bank Details</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="vendorDocTabsContent">
+                    <!-- PAN Card Tab -->
+                    <div class="tab-pane fade show active" id="vendor-pan" role="tabpanel" aria-labelledby="vendor-pan-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>PAN Card Details</h6>
+                                <table class="table details-table">
+                                    <tr><th>PAN Number</th><td id="extractedVendorPAN"></td></tr>
+                                    <tr><th>Name</th><td id="extractedVendorPANName"></td></tr>
+                                    <tr><th>Date of Birth/Incorporation</th><td id="extractedVendorPANDOB"></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- COI Tab -->
+                    <div class="tab-pane fade" id="vendor-coi" role="tabpanel" aria-labelledby="vendor-coi-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>COI Details</h6>
+                                <table class="table details-table">
+                                    <tr><th>COI Number</th><td id="extractedVendorCOI"></td></tr>
+                                    <tr><th>Company Name</th><td id="extractedVendorCOIName"></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- GST Certificate Tab -->
+                    <div class="tab-pane fade" id="vendor-gst" role="tabpanel" aria-labelledby="vendor-gst-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>GST Certificate Details</h6>
+                                <table class="table details-table">
+                                    <tr><th>GSTIN Number</th><td id="extractedVendorGST"></td></tr>
+                                    <tr><th>Legal Name</th><td id="extractedVendorGSTName"></td></tr>
+                                    <tr><th>Registration Type</th><td id="extractedVendorGSTType"></td></tr>
+                                    <tr><th>Registration Date</th><td id="extractedVendorGSTDate"></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Bank Statement Tab -->
+                    <div class="tab-pane fade" id="vendor-bank" role="tabpanel" aria-labelledby="vendor-bank-tab">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Bank Statement Details</h6>
+                                <table class="table details-table">
+                                    <tr><th>Account Number</th><td id="extractedVendorAccount"></td></tr>
+                                    <tr><th>IFSC Code</th><td id="extractedVendorIFSC"></td></tr>
+                                    <tr><th>Bank Name</th><td id="extractedVendorBank"></td></tr>
+                                    <tr><th>Branch</th><td id="extractedVendorBranch"></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-theme" id="confirmVendorSubmitBtn">Confirm & Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Catalogue Upload Modal -->
+<div class="modal fade" id="catalogueUploadModal" tabindex="-1" aria-labelledby="catalogueUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="catalogueUploadModalLabel">Upload Catalogue</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="catalogueUploadForm">
+                    <div class="mb-3">
+                        <label for="catalogueFile" class="form-label">Catalogue File *</label>
+                        <input type="file" class="form-control" id="catalogueFile" name="catalogueFile" accept=".pdf,.xlsx,.xls,.csv" required>
+                        <div class="form-text">Supported formats: PDF, Excel (.xlsx, .xls), CSV</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="uploadCatalogueBtn">Upload Catalogue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Terms Modal -->
+<div class="modal fade" id="financialTermsModal" tabindex="-1" aria-labelledby="financialTermsModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-financial-modal modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="financialTermsModalLabel">Financial Terms</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="financialTermsForm">
+                    <!-- <div class="mb-3">
+                        <label for="deliveryTerms" class="form-label">Delivery Terms</label>
+                        <select class="form-select" id="deliveryTerms" name="deliveryTerms" required>
+                            <option value="">Select Delivery Terms</option>
+                            <option value="FOB">FOB</option>
+                            <option value="CIF">CIF</option>
+                            <option value="EXW">EXW</option>
+                        </select>
+                    </div> -->
+                    <div class="mb-3">
+                        <label for="deliveryTerms" class="form-label">Delivery Terms (INCO1)</label>
+                        <select class="form-select" id="deliveryTerms" name="deliveryTerms" required>
+                            <option value="">Select Delivery Terms</option>
+                            <option value="FOB">FOB – Free on Board</option>
+                            <option value="CIF">CIF – Cost, Insurance, Freight</option>
+                            <option value="EXW">EXW – Ex Works</option>
+                            <option value="FCA">FCA – Free Carrier</option>
+                            <option value="CPT">CPT – Carriage Paid To</option>
+                            <option value="CIP">CIP – Carriage and Insurance Paid</option>
+                            <option value="DAP">DAP – Delivered At Place</option>
+                            <option value="DPU">DPU – Delivered at Place Unloaded</option>
+                            <option value="DDP">DDP – Delivered Duty Paid</option>
+                            <option value="FAS">FAS – Free Alongside Ship</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="deliveryLocation" class="form-label">Delivery Location (INCO2)</label>
+                        <input type="text" class="form-control" id="deliveryLocation" name="deliveryLocation" placeholder="e.g., Chennai Port" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="blockIndicator" class="form-label">Block Indicator</label>
+                        <select class="form-select" id="blockIndicator" name="blockIndicator" required>
+                            <option value="">Select Block Indicator</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="orderCurrency" class="form-label">Order Currency</label>
+                        <select class="form-select" id="orderCurrency" name="orderCurrency" required>
+                            <option value="">Select Currency</option>
+                            <option value="INR">INR - Indian Rupee</option>
+                            <option value="USD">USD - US Dollar</option>
+                            <option value="EUR">EUR - Euro</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="deliveryDays" class="form-label">Delivery Days</label>
+                        <select class="form-select" id="deliveryDays" name="deliveryDays" required>
+                            <option value="">Select Delivery Days</option>
+                            <option value="7">7 Days</option>
+                            <option value="15">15 Days</option>
+                            <option value="30">30 Days</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reconciliationAccount" class="form-label">Reconciliation Account</label>
+                        <select class="form-select" id="reconciliationAccount" name="reconciliationAccount" required>
+                            <option value="">Select Account</option>
+                            <option value="140000">140000 – Trade Payables Domestic</option>
+                            <option value="140100">140100 – Trade Payables Foreign</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="termsOfPayment" class="form-label">Terms of Payment</label>
+                        <select class="form-select" id="termsOfPayment" name="termsOfPayment" required>
+                            <option value="">Select Terms of Payment</option>
+                            <option value="ADV">ADV - Advance Payment</option>
+                            <option value="NET30">Net 30 - Payment in 30 Days</option>
+                            <option value="NET60">Net 60 - Payment in 60 Days</option>
+                        </select>
+                    </div>
+                    
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-theme" id="saveFinancialTermsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vendor Permissions Modal -->
+<div class="modal fade" id="vendorPermissionsModal" tabindex="-1" aria-labelledby="vendorPermissionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header py-3 px-4">
+                <h5 class="modal-title" id="vendorPermissionsModalLabel">
+                    <i class="fas fa-key me-2"></i>Permissions: <span id="permVendorName" class="text-success"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="modalPermissionsContainer">
+                    {% include "partials/vendor_permissions_table.html" %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-theme" id="modalSavePermissionsBtn">Save Permissions</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- DataTables JS (ensure loaded before custom script) -->
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+<!-- Add Django session variables to JS safely -->
+<script id="super-admin-id" type="application/json">{{ user_data.superAdminId|default:'null' }}</script>
+<script id="auth-token" type="application/json">"{{ request.session.auth_token|default:'' }}"</script>
+<script>
+    console.log('Vendor view JS loaded');
+    window.SUPER_ADMIN_ID = JSON.parse(document.getElementById('super-admin-id').textContent);
+    window.AUTH_TOKEN = JSON.parse(document.getElementById('auth-token').textContent);
+    
+    // Debug logging
+    console.log('Session Token:', window.AUTH_TOKEN);
+    console.log('Super Admin ID:', window.SUPER_ADMIN_ID);
+
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    window.CSRF_TOKEN = getCookie('csrftoken');
+    console.log('CSRF Token:', window.CSRF_TOKEN);
+
+    $(document).ready(function() {
+        // View vendor details
+        $(document).on('click', '.view-btn', function() {
+            let vendorDataStr = $(this).attr('data-vendor');
+            // Unescape unicode quotes
+            vendorDataStr = vendorDataStr.replace(/\\u0022/g, '"');
+            const parsedVendorData = JSON.parse(vendorDataStr);
+            selectedGstin = parsedVendorData.gstinNumber;
+            console.log('Parsed Vendor Data:', parsedVendorData); // Debug log
+            
+            // Get GSTIN from the row
+            const gstinNumber = parsedVendorData.gstinNumber;
+            console.log('GSTIN:', gstinNumber); // Debug log
+            
+            // First show basic vendor info
+            $('#viewVendorName').text(parsedVendorData.name || parsedVendorData.companyName || '-');
+            $('#viewVendorEmail').text(parsedVendorData.email || '-');
+            $('#viewVendorPhone').text(parsedVendorData.phoneNumber || '-');
+            $('#viewVendorGST').text(parsedVendorData.gstinNumber || '-');
+            $('#viewVendorPAN').text(parsedVendorData.panNumber || '-');
+            
+            // Bank details
+            const bank = parsedVendorData.bankDetails || {};
+            $('#viewVendorAccount').text(bank.accountNumber || '-');
+            $('#viewVendorIFSC').text(bank.ifscCode || '-');
+            $('#viewVendorBank').text(bank.bankName || '-');
+            $('#viewVendorBranch').text(bank.branchName || '-');
+            
+            // Show the modal immediately with basic info
+            $('#viewVendorModal').modal('show');
+            
+            // Then fetch financial terms data
+            $.ajax({
+                url: '{% url "pages:financial_terms_get" %}',
+                type: 'GET',
+                data: {
+                    gstinNumber: gstinNumber,
+                    authKey: 'vendor'
+                },
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN
+                },
+                success: function(response) {
+                    console.log('Financial Terms Response:', response); // Debug log
+                    
+                    if (response.status === '200') {
+                        const companyDetails = response.data.companyDetails;
+                        const financialTerms = response.data.financialTerms;
+                        
+                        // Update company details with fresh data
+                        $('#viewVendorName').text(companyDetails.companyName || '-');
+                        $('#viewVendorGST').text(companyDetails.gstinNumber || '-');
+                        $('#viewVendorPAN').text(companyDetails.panNumber || '-');
+                        
+                        // Update bank details
+                        const bank = companyDetails.bankDetails || {};
+                        $('#viewVendorAccount').text(bank.accountNumber || '-');
+                        $('#viewVendorIFSC').text(bank.ifsc || '-');
+                        $('#viewVendorBank').text(bank.bank || '-');
+                        $('#viewVendorBranch').text(bank.branch || '-');
+                        
+                        // Add financial terms section if not exists
+                        if (!$('#financialTermsSection').length) {
+                            const financialTermsHtml = `
+                                <div class="col-12 mt-4" id="financialTermsSection">
+                                    <h6 class="mb-3">Financial Terms</h6>
+                                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                        <table class="table table-bordered mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Delivery Terms</th>
+                                                    <th>Location</th>
+                                                    <th>Currency</th>
+                                                    <th>Delivery Days</th>
+                                                    <th>Payment Terms</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="financialTermsTableBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                            $('.modal-body .row').append(financialTermsHtml);
+                        }
+                        
+                        // Populate financial terms
+                        if (financialTerms && financialTerms.length > 0) {
+                            const termsHtml = financialTerms.map(term => `
+                                <tr>
+                                    <td>${term.deliveryTerms}</td>
+                                    <td>${term.deliveryLocation}</td>
+                                    <td>${term.orderCurrency}</td>
+                                    <td>${term.deliveryDays}</td>
+                                    <td>${term.termsOfPayment}</td>
+                                    <td><span class="badge ${term.isActive ? 'bg-success' : 'bg-danger'}">${term.isActive ? 'Active' : 'Inactive'}</span></td>
+                                </tr>
+                            `).join('');
+                            $('#financialTermsTableBody').html(termsHtml);
+                        } else {
+                            // Ensure the financial terms section/table exists
+                            if (!$('#financialTermsSection').length) {
+                                const financialTermsHtml = `
+                                    <div class="col-12 mt-4" id="financialTermsSection">
+                                        <h6 class="mb-3">Financial Terms</h6>
+                                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                            <table class="table table-bordered mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Delivery Terms</th>
+                                                        <th>Location</th>
+                                                        <th>Currency</th>
+                                                        <th>Delivery Days</th>
+                                                        <th>Payment Terms</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="financialTermsTableBody">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                `;
+                                $('.modal-body .row').append(financialTermsHtml);
+                            }
+                            // Show the message inside the table
+                            $('#financialTermsTableBody').html(
+                                `<tr><td colspan="6" class="text-start text-muted">No financial terms found.</td></tr>`
+                            );
+                        }
+                    } else {
+                        // Ensure the financial terms section/table exists
+                        if (!$('#financialTermsSection').length) {
+                            const financialTermsHtml = `
+                                <div class="col-12 mt-4" id="financialTermsSection">
+                                    <h6 class="mb-3">Financial Terms</h6>
+                                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                        <table class="table table-bordered mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Delivery Terms</th>
+                                                    <th>Location</th>
+                                                    <th>Currency</th>
+                                                    <th>Delivery Days</th>
+                                                    <th>Payment Terms</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="financialTermsTableBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                            $('.modal-body .row').append(financialTermsHtml);
+                        }
+                        // Show the message inside the table
+                        $('#financialTermsTableBody').html(
+                            `<tr><td colspan="6" class="text-start text-muted">No financial terms found.</td></tr>`
+                        );
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error fetching financial terms:', xhr); // Debug log
+                    // Show error toast
+                    const toastHtml = `<div class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                Failed to fetch financial terms: ${xhr.responseText || 'Unknown error'}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>`;
+                    const toastContainer = $('.toast-container');
+                    toastContainer.append(toastHtml);
+                    const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                    toast.show();
+                }
+            });
+        });
+
+        // Delete vendor
+        $(document).on('click', '.delete-vendor-btn', function() {
+            const vendorId = $(this).data('vendor-id');
+            if (confirm('Are you sure you want to delete this vendor?')) {
+                $.ajax({
+                    url: JAVA_API_URL + `/api/vendors/${vendorId}`,
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload(); // Reload the page to refresh the table
+                            alert('Vendor deleted successfully');
+                        } else {
+                            alert('Failed to delete vendor: ' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Error deleting vendor: ' + error);
+                    }
+                });
+            }
+        });
+
+        // Add Vendor Button Click
+        $('#addVendorBtn').on('click', function() {
+            $('#documentsForm')[0].reset();
+            $('#requiredDocumentsModal').modal('show');
+        });
+
+        // Enable Submit Documents button only if all files are selected
+        function checkDocumentsInputs() {
+            const pan = $('#panCard').val();
+            const gst = $('#gstCertificate').val();
+            const bank = $('#bankStatement').val();
+            const coi = $('#coi').val();
+            const email = $('#vendorEmail').val();
+            const phone = $('#vendorPhone').val();
+            const password = $('#vendorPassword').val();
+            const confirmPassword = $('#vendorConfirmPassword').val();
+            
+            // Password validation
+            const passwordValid = validatePassword(password);
+            const passwordsMatch = password === confirmPassword;
+            
+            let isValid = pan && gst && bank && coi && email && phone && password && confirmPassword && passwordValid && passwordsMatch;
+            $('#submitDocumentsBtn').prop('disabled', !isValid);
+        }
+        
+        // Password validation function
+        function validatePassword(password) {
+            if (!password) return false;
+            if (password.length < 6) return false;
+            
+            // Check for alphanumeric characters
+            const hasAlphanumeric = /[a-zA-Z0-9]/.test(password);
+            // Check for special characters
+            const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+            
+            return hasAlphanumeric && hasSpecialChar;
+        }
+        
+        // Password visibility toggle functions
+        function togglePasswordVisibility(inputId, iconId) {
+            const input = $(inputId);
+            const icon = $(iconId);
+            const button = input.siblings('button');
+            
+            if (input.attr('type') === 'password') {
+                input.attr('type', 'text');
+                icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                button.attr('aria-label', 'Hide password');
+            } else {
+                input.attr('type', 'password');
+                icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                button.attr('aria-label', 'Show password');
+            }
+        }
+        
+        // Real-time password validation for vendor
+        function updateVendorPasswordValidation() {
+            const password = $('#vendorPassword').val();
+            const confirmPassword = $('#vendorConfirmPassword').val();
+            
+            // Length check
+            const lengthValid = password && password.length >= 6;
+            $('#vendorLengthCheck i').removeClass('fa-times text-danger fa-check text-success')
+                .addClass(lengthValid ? 'fa-check text-success' : 'fa-times text-danger');
+            
+            // Alphanumeric check
+            const alphanumericValid = password && /[a-zA-Z0-9]/.test(password);
+            $('#vendorAlphanumericCheck i').removeClass('fa-times text-danger fa-check text-success')
+                .addClass(alphanumericValid ? 'fa-check text-success' : 'fa-times text-danger');
+            
+            // Special character check
+            const specialValid = password && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+            $('#vendorSpecialCheck i').removeClass('fa-times text-danger fa-check text-success')
+                .addClass(specialValid ? 'fa-check text-success' : 'fa-times text-danger');
+            
+            // Password match check
+            const matchValid = password && confirmPassword && password === confirmPassword;
+            $('#vendorMatchCheck i').removeClass('fa-times text-danger fa-check text-success')
+                .addClass(matchValid ? 'fa-check text-success' : 'fa-times text-danger');
+        }
+        
+        $('#panCard, #gstCertificate, #bankStatement, #coi').on('change', checkDocumentsInputs);
+        $('#vendorEmail, #vendorPhone, #vendorPassword, #vendorConfirmPassword').on('input', checkDocumentsInputs);
+        
+        // Password visibility toggle event listeners
+        $('#toggleVendorPassword').on('click', function() {
+            togglePasswordVisibility('#vendorPassword', '#vendorPasswordIcon');
+        });
+        
+        $('#toggleVendorConfirmPassword').on('click', function() {
+            togglePasswordVisibility('#vendorConfirmPassword', '#vendorConfirmPasswordIcon');
+        });
+        
+        // Real-time password validation
+        $('#vendorPassword, #vendorConfirmPassword').on('input', function() {
+            updateVendorPasswordValidation();
+            checkDocumentsInputs(); // Also update form validation
+        });
+
+        // Submit Documents button click handler
+        $('#submitDocumentsBtn').on('click', function() {
+            // Collect files and contact details
+            const formData = new FormData();
+            formData.append('panFile', $('#panCard')[0].files[0]);
+            formData.append('gstFile', $('#gstCertificate')[0].files[0]);
+            formData.append('chequeFile', $('#bankStatement')[0].files[0]);
+            formData.append('coiFile', $('#coi')[0].files[0]);
+            formData.append('email', $('#vendorEmail').val());
+            formData.append('phoneNumber', $('#vendorPhone').val());
+            // Add authKey for vendor
+            formData.append('authKey', 'vendor');
+
+            // Show loading state
+            const submitBtn = $(this);
+            submitBtn.prop('disabled', true);
+            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+
+            // Make API call to Django proxy endpoint
+            $.ajax({
+                url: '{% url "pages:extract_documents" %}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.status === '200') {
+                        // Hide documents modal
+                        $('#requiredDocumentsModal').modal('hide');
+                        // Update extracted details in the modal
+                        const extractedData = response.data.extractedData;
+                        // PAN
+                        $('#extractedVendorPAN').text(extractedData.pan['PAN Number'] || '-');
+                        $('#extractedVendorPANName').text(extractedData.pan['Name'] || '-');
+                        $('#extractedVendorPANDOB').text(extractedData.pan['Date of Birth/Incorporation'] || '-');
+                        // COI
+                        $('#extractedVendorCOI').text(extractedData.coi['cinNumber'] || '-');
+                        $('#extractedVendorCOIName').text(extractedData.pan['Name'] || '-');
+                        // GST
+                        $('#extractedVendorGST').text(extractedData.gst['GSTIN Number'] || '-');
+                        $('#extractedVendorGSTName').text(extractedData.gst['Legal Trade Name'] || extractedData.gst['Legal Name'] || '-');
+                        $('#extractedVendorGSTType').text(extractedData.gst['Registration Type'] || '-');
+                        $('#extractedVendorGSTDate').text(extractedData.gst['Registration Date'] || '-');
+                        // Bank
+                        $('#extractedVendorAccount').text(extractedData.cheque['Account Number'] || '-');
+                        $('#extractedVendorIFSC').text(extractedData.cheque['IFSC Code'] || '-');
+                        $('#extractedVendorBank').text(extractedData.cheque['Bank Name'] || '-');
+                        $('#extractedVendorBranch').text(extractedData.cheque['Branch'] || '-');
+                        // Store for confirm
+                        $('#extractedVendorDetailsModal').data('extractedData', extractedData);
+                        $('#extractedVendorDetailsModal').data('fileNames', extractedData.fileNames);
+                        // Show the modal
+                        $('#extractedVendorDetailsModal').modal('show');
+                    } else {
+                        const toastHtml = `<div class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    ${response.statusMsg || 'Failed to extract data'}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>`;
+                        const toastContainer = $('.toast-container');
+                        toastContainer.append(toastHtml);
+                        const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                        toast.show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Failed to submit documents. Please try again.');
+                },
+                complete: function() {
+                    submitBtn.prop('disabled', false);
+                    submitBtn.html('Submit Documents');
+                }
+            });
+        });
+
+        // Edit Vendor Button Click
+        $('.edit-btn').on('click', function() {
+            $('#vendorModalLabel').text('Edit Vendor');
+            // Populate the form with vendor data here in a real implementation
+            $('#vendorModal').modal('show');
+        });
+
+        // Delete Vendor Button Click
+        $('.delete-btn').on('click', function() {
+            const row = $(this).closest('tr');
+            const vendorId = row.data('vendor-id');
+            // Store vendor ID in modal for later use
+            $('#deleteVendorModal').data('vendor-id', vendorId);
+            $('#deleteVendorModal').modal('show');
+        });
+
+        // Save Vendor Button Click
+        $('#saveVendorBtn').on('click', function() {
+            // Validate and save vendor data here in a real implementation
+            $('#vendorModal').modal('hide');
+            
+            // Show success toast
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="mdi mdi-check-circle me-2"></i>
+                            Vendor saved successfully!
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            const toastContainer = $('.toast-container');
+            toastContainer.append(toastHtml);
+            const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+            toast.show();
+        });
+
+        // Confirm Delete Button Click
+        $('#confirmDeleteBtn').on('click', function() {
+            const vendorId = $('#deleteVendorModal').data('vendor-id');
+            if (!vendorId) {
+                alert('Error: Vendor ID not found');
+                return;
+            }
+            
+            // Show loading state
+            const deleteBtn = $(this);
+            const originalText = deleteBtn.html();
+            deleteBtn.prop('disabled', true);
+            deleteBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Deleting...');
+            
+            // Make DELETE API call through Django proxy
+            $.ajax({
+                url: `{% url "pages:user_deactivate_proxy" user_id=0 %}`.replace('0', vendorId),
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN,
+                    'Content-Type': 'application/json'
+                },
+                success: function(response) {
+                    $('#deleteVendorModal').modal('hide');
+                    
+                    // Show success toast
+                    const toastHtml = `
+                        <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="mdi mdi-check-circle me-2"></i>
+                                    Vendor deactivated successfully!
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const toastContainer = $('.toast-container');
+                    toastContainer.append(toastHtml);
+                    const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                    toast.show();
+                    
+                    // Remove the vendor row from the table
+                    $(`tr[data-vendor-id="${vendorId}"]`).fadeOut(500, function() {
+                        $(this).remove();
+                    });
+                    
+                    // Reset button
+                    deleteBtn.prop('disabled', false);
+                    deleteBtn.html(originalText);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Delete vendor error:', xhr.responseText);
+                    
+                    let errorMessage = 'Failed to deactivate vendor';
+                    if (xhr.responseJSON && xhr.responseJSON.statusMsg) {
+                        errorMessage = xhr.responseJSON.statusMsg;
+                    } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.status === 401) {
+                        errorMessage = 'Authentication failed. Please login again.';
+                    } else if (xhr.status === 404) {
+                        errorMessage = 'Vendor not found';
+                    } else if (xhr.status === 403) {
+                        errorMessage = 'You do not have permission to deactivate this vendor';
+                    }
+                    
+                    // Show error toast
+                    const toastHtml = `
+                        <div class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="mdi mdi-alert-circle me-2"></i>
+                                    ${errorMessage}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const toastContainer = $('.toast-container');
+                    toastContainer.append(toastHtml);
+                    const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                    toast.show();
+                    
+                    // Reset button
+                    deleteBtn.prop('disabled', false);
+                    deleteBtn.html(originalText);
+                }
+            });
+        });
+
+        // Show Business Card Upload Modal
+        $('.upload-bc-btn').on('click', function() {
+            $('#businessCardUploadForm')[0].reset();
+            $('#uploadBusinessCardModal').modal('show');
+        });
+        // Handle Business Card Upload (stub, to be implemented)
+        $('#uploadBusinessCardBtn').on('click', function() {
+            var fileInput = $('#businessCardFile')[0];
+            if (!fileInput.files.length) {
+                alert('Please select a file.');
+                return;
+            }
+            // TODO: Implement AJAX upload logic here
+            $('#uploadBusinessCardModal').modal('hide');
+            // Show a toast or success message
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="mdi mdi-check-circle me-2"></i>
+                            Business Card uploaded successfully!
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            const toastContainer = $('.toast-container');
+            toastContainer.append(toastHtml);
+            const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+            toast.show();
+        });
+
+        // Confirm & Submit button handler for vendor
+        $('#confirmVendorSubmitBtn').on('click', function() {
+            const extractedData = $('#extractedVendorDetailsModal').data('extractedData');
+            const fileNames = $('#extractedVendorDetailsModal').data('fileNames');
+            const email = $('#vendorEmail').val();
+            const phone = $('#vendorPhone').val();
+            const password = $('#vendorPassword').val();
+            // Prepare the payload
+            const payload = {
+                superAdminId: window.SUPER_ADMIN_ID,
+                email: email,
+                phoneNumber: phone,
+                password: password,
+                authKey: "vendor",
+                gstinNumber: extractedData.gst['GSTIN Number'] || '',
+                legalTradeName: extractedData.gst['Legal Trade Name'] || extractedData.gst['Legal Name'] || '',
+                dateOfRegistration: extractedData.gst['Registration Date'] || '',
+                panTinCst: extractedData.pan['PAN Number'] || '',
+                typeOfRegistration: extractedData.gst['Registration Type'] || '',
+                panNumber: extractedData.pan['PAN Number'] || '',
+                name: extractedData.pan['Name'] || '',
+                dateOfBirthIncorporation: extractedData.pan['Date of Birth/Incorporation'] || '',
+                accountNumber: extractedData.cheque['Account Number'] || '',
+                ifsc: extractedData.cheque['IFSC Code'] || '',
+                branch: extractedData.cheque['Branch'] || '',
+                bank: extractedData.cheque['Bank Name'] || '',
+                code: extractedData.cheque['Bank Code'] || '',
+                cinNumber: extractedData.coi['cinNumber'] || '',
+                gstFileName: fileNames.gstFileName || '',
+                panFileName: fileNames.panFileName || '',
+                chequeFileName: fileNames.chequeFileName || '',
+                coiFileName: fileNames.coiFileName || ''
+            };
+            // Show loading state
+            const confirmBtn = $(this);
+            confirmBtn.prop('disabled', true);
+            confirmBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...');
+            // Make API call to registration complete endpoint through Django proxy
+            $.ajax({
+                url: '{% url "pages:registration_complete" %}',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN,
+                    'Authorization': 'Bearer ' + window.AUTH_TOKEN
+                },
+                beforeSend: function(xhr) {
+                    console.log('Sending request with headers:', {
+                        'X-CSRFToken': window.CSRF_TOKEN,
+                        'Authorization': 'Bearer ' + window.AUTH_TOKEN
+                    });
+                },
+                data: JSON.stringify(payload),
+                success: function(response) {
+                    console.log('Success response:', response);
+                    if (response.status === '200') {
+                        const toastHtml = `<div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <i class="mdi mdi-check-circle me-2"></i>
+                                    Vendor registration completed successfully!
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>`;
+                        const toastContainer = $('.toast-container');
+                        toastContainer.append(toastHtml);
+                        const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                        toast.show();
+                        $('#extractedVendorDetailsModal').modal('hide');
+                        location.reload();
+                    } else {
+                        let msg = 'Failed to complete registration. Please try again.';
+                        try {
+                            const resp = JSON.parse(response.responseText);
+                            msg = resp.statusMsg || resp.error || msg;
+                        } catch {}
+                        const toastHtml = `<div class="toast align-items-center text-white bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+                        const toastContainer = $('.toast-container');
+                        toastContainer.append(toastHtml);
+                        const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                        toast.show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error details:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    if (xhr.status === 302) {
+                        console.log('Session expired, redirecting to login...');
+                        window.location.href = '{% url "pages:login" %}?next=' + encodeURIComponent(window.location.pathname);
+                    } else {
+                        msg = 'Failed to complete registration. Please try again.';
+                        try {
+                            const resp = JSON.parse(xhr.responseText);
+                            msg = resp.statusMsg || resp.error || msg;
+                        } catch {}
+                        const toastHtml = `<div class="toast align-items-center text-white bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+                        const toastContainer = $('.toast-container');
+                        toastContainer.append(toastHtml);
+                        const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                        toast.show();
+                    }
+                },
+                complete: function() {
+                    confirmBtn.prop('disabled', false);
+                    confirmBtn.html('Confirm & Submit');
+                }
+            });
+        });
+
+        // Financial Terms Button Click
+        let selectedGstin = null;
+        let selectedVendorId = null;
+        $(document).on('click', '.financial-terms-btn', function() {
+            // Find the GSTIN from the row
+            const row = $(this).closest('tr');
+            selectedGstin = row.find('td:nth-child(3)').text().trim();
+            $('#financialTermsModal').modal('show');
+        });
+
+        // Catalogue Button Click
+        $(document).on('click', '#catalogueBtn', function() {
+            // Get vendor ID from the current view modal data
+            const vendorDataStr = $('.view-btn').attr('data-vendor');
+            if (vendorDataStr) {
+                const parsedVendorData = JSON.parse(vendorDataStr.replace(/\\u0022/g, '"'));
+                selectedVendorId = parsedVendorData.userId;
+                
+                // Hide the vendor details modal first
+                $('#viewVendorModal').modal('hide');
+                
+                // Wait for modal to be hidden, then check catalogue
+                $('#viewVendorModal').on('hidden.bs.modal', function() {
+                    checkCatalogueExists(selectedVendorId);
+                    $(this).off('hidden.bs.modal'); // Remove the event listener
+                });
+            } else {
+                alert('Vendor information not found');
+            }
+        });
+
+        // Check if catalogue exists for vendor
+        function checkCatalogueExists(vendorId) {
+            $.ajax({
+                url: '{% url "pages:vendor_catalogue_check" %}',
+                type: 'GET',
+                data: {
+                    vendorId: vendorId
+                },
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN
+                },
+                success: function(response) {
+                    if (response.status === '200' && response.data && response.data.catalogueExists) {
+                        // Show preview catalogue modal
+                        $('#catalogueBtn').text('Preview Catalogue');
+                        showCataloguePreview(response.data.catalogueInfo);
+                    } else {
+                        // Show upload catalogue modal
+                        $('#catalogueBtn').text('Add Catalogue');
+                        
+                        // Reset modal title and button text for new upload
+                        $('#catalogueUploadModalLabel').text('Upload Catalogue');
+                        $('#uploadCatalogueBtn').text('Upload Catalogue');
+                        window.isReplacingCatalogue = false;
+                        
+                        $('#catalogueUploadModal').modal('show');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error checking catalogue:', xhr);
+                    // Default to upload modal
+                    $('#catalogueBtn').text('Add Catalogue');
+                    $('#catalogueUploadModalLabel').text('Upload Catalogue');
+                    $('#uploadCatalogueBtn').text('Upload Catalogue');
+                    window.isReplacingCatalogue = false;
+                    $('#catalogueUploadModal').modal('show');
+                }
+            });
+        }
+
+        // Show catalogue preview
+        function showCataloguePreview(catalogueInfo) {
+            // Create preview modal content
+            const previewHtml = `
+                <div class="modal fade" id="cataloguePreviewModal" tabindex="-1" aria-labelledby="cataloguePreviewModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cataloguePreviewModalLabel">Catalogue Preview</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Catalogue Information</h6>
+                                        <table class="table details-table">
+                                            <tr><th>File Name</th><td>${catalogueInfo.fileName || '-'}</td></tr>
+                                            <tr><th>Upload Date</th><td>${catalogueInfo.uploadDate || '-'}</td></tr>
+                                            <tr><th>File Size</th><td>${catalogueInfo.fileSize || '-'}</td></tr>
+                                            <tr><th>Status</th><td><span class="badge bg-success">Active</span></td></tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Actions</h6>
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-primary" onclick="downloadCatalogue('${catalogueInfo.fileName}')">
+                                                <i class="mdi mdi-download me-1"></i>Download Catalogue
+                                            </button>
+                                            <button type="button" class="btn btn-warning" onclick="replaceCatalogue()">
+                                                <i class="mdi mdi-upload me-1"></i>Replace Catalogue
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing preview modal if any
+            $('#cataloguePreviewModal').remove();
+            
+            // Add preview modal to body
+            $('body').append(previewHtml);
+            
+            // Show the modal after a short delay to ensure proper rendering
+            setTimeout(function() {
+                $('#cataloguePreviewModal').modal('show');
+            }, 100);
+        }
+
+        // Upload Catalogue Button Click
+        $('#uploadCatalogueBtn').on('click', function() {
+            const fileInput = $('#catalogueFile')[0];
+            if (!fileInput.files.length) {
+                alert('Please select a catalogue file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('catalogueFile', fileInput.files[0]);
+            formData.append('vendorId', selectedVendorId);
+
+            // Show loading state
+            const uploadBtn = $(this);
+            uploadBtn.prop('disabled', true);
+            uploadBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...');
+
+            // Determine if this is a replacement or new upload
+            const isReplacement = window.isReplacingCatalogue || false;
+            const apiUrl = isReplacement ? '{% url "pages:vendor_catalogue_replace" %}' : '{% url "pages:vendor_catalogue_upload" %}';
+            const successMessage = isReplacement ? 'Catalogue replaced successfully!' : 'Catalogue uploaded successfully!';
+
+            $.ajax({
+                url: apiUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN
+                },
+                success: function(response) {
+                    $('#catalogueUploadModal').modal('hide');
+                    
+                    if (response.status === '200') {
+                        // Show success toast
+                        const toastHtml = `
+                            <div class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <i class="mdi mdi-check-circle me-2"></i>
+                                        ${successMessage}
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        const toastContainer = $('.toast-container');
+                        toastContainer.append(toastHtml);
+                        const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                        toast.show();
+                        
+                        // Update button text to Preview Catalogue
+                        $('#catalogueBtn').text('Preview Catalogue');
+                        
+                        // Reset replacement flag
+                        window.isReplacingCatalogue = false;
+                    } else {
+                        alert('Failed to upload catalogue: ' + (response.statusMsg || 'Unknown error'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Upload error:', xhr);
+                    alert('Failed to upload catalogue. Please try again.');
+                },
+                complete: function() {
+                    uploadBtn.prop('disabled', false);
+                    uploadBtn.html('Upload Catalogue');
+                }
+            });
+        });
+
+        // Global functions for catalogue actions
+        window.downloadCatalogue = function(fileName) {
+            // Use the new download API with vendorId
+            const downloadUrl = `{% url "pages:vendor_catalogue_download" %}?vendorId=${selectedVendorId}`;
+            window.open(downloadUrl, '_blank');
+        };
+
+        window.replaceCatalogue = function() {
+            // Set replacement flag
+            window.isReplacingCatalogue = true;
+            
+            // Update modal title and button text for replacement
+            $('#catalogueUploadModalLabel').text('Replace Catalogue');
+            $('#uploadCatalogueBtn').text('Replace Catalogue');
+            
+            $('#cataloguePreviewModal').modal('hide');
+            $('#cataloguePreviewModal').on('hidden.bs.modal', function() {
+                $('#catalogueUploadModal').modal('show');
+                $(this).off('hidden.bs.modal'); // Remove the event listener
+            });
+        };
+
+        // Save Financial Terms Button Click
+        let isEditingFinancialTerms = false;
+        $(document).on('click', '#editFinancialTermsVendorBtn', function() {
+            // Fetch the full financial terms from backend
+            if (!selectedGstin) {
+                alert('GSTIN not found for this vendor.');
+                return;
+            }
+            $.ajax({
+                url: '{% url "pages:financial_terms_get" %}',
+                type: 'GET',
+                data: {
+                    gstinNumber: selectedGstin,
+                    authKey: 'vendor'
+                },
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN
+                },
+                success: function(response) {
+                    if (response.status === '200' && response.data && response.data.financialTerms && response.data.financialTerms.length > 0) {
+                        const term = response.data.financialTerms[0];
+                        $('#deliveryTerms').val(term.deliveryTerms || '');
+                        $('#deliveryLocation').val(term.deliveryLocation || '');
+                        $('#blockIndicator').val(term.blockIndicator || '');
+                        $('#orderCurrency').val(term.orderCurrency || '');
+                        $('#deliveryDays').val(term.deliveryDays || '');
+                        $('#reconciliationAccount').val(term.reconciliationAccount || '');
+                        $('#termsOfPayment').val(term.termsOfPayment || '');
+                        window._editFinancialTermsIsActive = term.isActive;
+                        isEditingFinancialTerms = true;
+                        // Hide the view modal first, then show the edit modal after hidden
+                        $('#viewVendorModal').modal('hide');
+                        $('#viewVendorModal').on('hidden.bs.modal', function() {
+                            $('#financialTermsModal').modal('show');
+                            $(this).off('hidden.bs.modal');
+                        });
+                    } else {
+                        alert('No financial terms found to edit.');
+                    }
+                },
+                error: function(xhr) {
+                    alert('Failed to fetch financial terms for editing.');
+                }
+            });
+        });
+        $('#saveFinancialTermsBtn').on('click', function() {
+            // Collect form data
+            const data = {
+                gstinNumber: selectedGstin,
+                authKey: 'vendor',
+                deliveryTerms: $('#deliveryTerms').val(),
+                deliveryLocation: $('#deliveryLocation').val(),
+                blockIndicator: $('#blockIndicator').val(),
+                orderCurrency: $('#orderCurrency').val(),
+                deliveryDays: $('#deliveryDays').val(),
+                reconciliationAccount: $('#reconciliationAccount').val(),
+                termsOfPayment: $('#termsOfPayment').val(),
+                isActive: typeof window._editFinancialTermsIsActive !== 'undefined' ? window._editFinancialTermsIsActive : true
+            };
+            // Validate required fields
+            for (const key in data) {
+                if (data[key] === '' || data[key] === undefined || data[key] === null) {
+                    alert('Please fill all fields.');
+                    return;
+                }
+            }
+            // Show loading state
+            const btn = $(this);
+            btn.prop('disabled', true).text('Saving...');
+            // Determine endpoint
+            const endpoint = isEditingFinancialTerms ? '{% url "pages:financial_terms_update" %}' : '{% url "pages:financial_terms_save" %}';
+            // Make API call to Django proxy endpoint
+            $.ajax({
+                url: endpoint,
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': window.CSRF_TOKEN
+                },
+                data: JSON.stringify(data),
+                success: function(response) {
+                    $('#financialTermsModal').modal('hide');
+                    const toastHtml = `<div class="toast align-items-center text-white ${response.status === '200' ? 'bg-success' : 'bg-warning'} border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${response.statusMsg || (response.status === '200' ? (isEditingFinancialTerms ? 'Financial terms updated successfully!' : 'Financial terms saved successfully!') : (isEditingFinancialTerms ? 'Failed to update financial terms' : 'Failed to save financial terms'))}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+                    const toastContainer = $('.toast-container');
+                    toastContainer.append(toastHtml);
+                    const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                    toast.show();
+                },
+                error: function(xhr) {
+                    $('#financialTermsModal').modal('hide');
+                    let msg = 'Unknown error';
+                    try {
+                        const resp = JSON.parse(xhr.responseText);
+                        msg = resp.statusMsg || resp.error || msg;
+                    } catch {}
+                    const toastHtml = `<div class="toast align-items-center text-white bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true"><div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div>`;
+                    const toastContainer = $('.toast-container');
+                    toastContainer.append(toastHtml);
+                    const toast = new bootstrap.Toast(toastContainer.find('.toast').last()[0]);
+                    toast.show();
+                },
+                complete: function() {
+                    btn.prop('disabled', false).text('Save');
+                    isEditingFinancialTerms = false;
+                    window._editFinancialTermsIsActive = undefined;
+                }
+            });
+        });
+
+        // --- VENDOR PERMISSIONS POPUP LOGIC ---
+        $(document).on('click', '.permissions-btn', function() {
+            const vendorId = $(this).data('vendor-id');
+            const vendorName = $(this).data('vendor-name');
+            
+            $('#permVendorName').text(vendorName);
+            $('#modalSavePermissionsBtn').data('vendor-id', vendorId);
+            
+            const tbody = $('#vendorPermissionsModal .permissions-body');
+            tbody.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><div class="mt-2 text-muted">Fetching permission tree...</div></td></tr>');
+            
+            $('#vendorPermissionsModal').modal('show');
+
+            $.ajax({
+                url: `/api/vendor-permissions/${vendorId}/`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.status === "200") {
+                        tbody.empty();
+                        renderPermissionTree(response.data.result.permissions, tbody);
+                        updateModalSelectAllStates();
+                    } else {
+                        tbody.html(`<tr><td colspan="5" class="text-center text-danger py-4">Error: ${response.statusMsg}</td></tr>`);
+                    }
+                },
+                error: function(xhr) {
+                    let msg = "Failed to fetch permissions from server.";
+                    try {
+                        const err = JSON.parse(xhr.responseText);
+                        if (err.statusMsg) msg = err.statusMsg;
+                    } catch(e) {}
+                    tbody.html(`<tr><td colspan="5" class="text-center text-danger py-4"><i class="ri-error-warning-line me-2"></i>${msg}</td></tr>`);
+                }
+            });
+        });
+
+        function renderPermissionTree(permissions, container, level = 0, parentCode = '') {
+            permissions.forEach(p => {
+                const isBlock = p.permissionType === 'BLOCK';
+                const padding = level * 24;
+                const hasChildren = p.children && p.children.length;
+                
+                const tr = $(`
+                    <tr class="${isBlock ? 'block-row' : 'module-row'} ${parentCode ? 'child-of-' + parentCode : ''}" 
+                        data-code="${p.permissionCode}" 
+                        data-type="${p.permissionType}"
+                        data-parent="${parentCode}">
+                        <td>
+                            <div class="d-flex align-items-center" style="padding-left: ${padding}px;">
+                                ${hasChildren ? '<button class="btn btn-link btn-sm p-0 me-2 toggle-tree-node" type="button"><i class="ri-arrow-down-s-line transition-rotate fs-16"></i></button>' : (isBlock ? '<i class="ri-subtract-line text-muted me-2" style="font-size: 12px;"></i>' : '<div style="width: 26px;"></div>')}
+                                <div class="permission-name ${level === 0 ? 'fw-bold text-primary' : (isBlock ? 'text-muted small' : 'fw-bold')}">${p.permissionName}</div>
+                            </div>
+                        </td>
+                        <td class="text-center"><div class="form-check d-inline-block"><input class="form-check-input perm-check view-check" type="checkbox" ${p.view ? 'checked' : ''}></div></td>
+                        <td class="text-center"><div class="form-check d-inline-block"><input class="form-check-input perm-check create-check" type="checkbox" ${p.create ? 'checked' : ''} ${!p.view ? 'disabled' : ''}></div></td>
+                        <td class="text-center"><div class="form-check d-inline-block"><input class="form-check-input perm-check edit-check" type="checkbox" ${p.edit ? 'checked' : ''} ${!p.view ? 'disabled' : ''}></div></td>
+                        <td class="text-center"><div class="form-check d-inline-block"><input class="form-check-input perm-check delete-check" type="checkbox" ${p.delete ? 'checked' : ''} ${!p.view ? 'disabled' : ''}></div></td>
+                    </tr>
+                `);
+                container.append(tr);
+                
+                if (hasChildren) {
+                    renderPermissionTree(p.children, container, level + 1, p.permissionCode);
+                }
+            });
+        }
+
+        // View Check Logic
+        $(document).on('change', '#vendorPermissionsModal .view-check', function() {
+            const row = $(this).closest('tr');
+            const code = row.data('code');
+            const otherChecks = row.find('.perm-check').not('.view-check');
+            
+            if (this.checked) {
+                otherChecks.prop('disabled', false);
+            } else {
+                otherChecks.prop('checked', false).prop('disabled', true);
+                // Also uncheck children
+                $(`.child-of-${code} .perm-check`).prop('checked', false).prop('disabled', true);
+            }
+            updateModalSelectAllStates();
+        });
+
+        // Toggle Tree Node
+        $(document).on('click', '.toggle-tree-node', function(e) {
+            e.stopPropagation();
+            const row = $(this).closest('tr');
+            const code = row.data('code');
+            const children = $(`.child-of-${code}`);
+            const icon = $(this).find('i');
+            
+            if (children.hasClass('d-none')) {
+                children.removeClass('d-none');
+                icon.css('transform', 'rotate(0deg)');
+            } else {
+                // Recursively hide all descendants
+                hideDescendants(code);
+                icon.css('transform', 'rotate(-90deg)');
+            }
+        });
+
+        function hideDescendants(parentCode) {
+            $(`.child-of-${parentCode}`).each(function() {
+                $(this).addClass('d-none');
+                const childCode = $(this).data('code');
+                $(this).find('.toggle-tree-node i').css('transform', 'rotate(-90deg)');
+                hideDescendants(childCode);
+            });
+        }
+
+        // Column Select All
+        $(document).on('change', '#vendorPermissionsModal .col-select-all', function() {
+            const type = $(this).data('col');
+            const checked = this.checked;
+            const modalTable = $('#vendorPermissionsModal .perm-table');
+            
+            if (type === 'view') {
+                modalTable.find('.view-check').prop('checked', checked).trigger('change');
+            } else {
+                modalTable.find(`.${type}-check`).each(function() {
+                    if (!$(this).is(':disabled') && !$(this).hasClass('block-perm-check')) {
+                        $(this).prop('checked', checked);
+                    }
+                });
+            }
+            updateModalSelectAllStates();
+        });
+
+        function updateModalSelectAllStates() {
+            const modalTable = $('#vendorPermissionsModal .perm-table');
+            ['view', 'create', 'edit', 'delete'].forEach(type => {
+                const checks = modalTable.find(`.${type}-check`);
+                const allChecked = checks.length > 0 && checks.filter(':checked').length === checks.length;
+                modalTable.find(`.col-select-all[data-col="${type}"]`).prop('checked', allChecked);
+            });
+        }
+
+        // Save Permissions
+        $('#modalSavePermissionsBtn').on('click', function() {
+            const vendorId = $(this).data('vendor-id');
+            const permissions = [];
+            
+            $('#vendorPermissionsModal .permissions-body tr').each(function() {
+                const row = $(this);
+                permissions.push({
+                    permissionCode: row.data('code'),
+                    view: row.find('.view-check').is(':checked'),
+                    create: row.find('.create-check').is(':checked'),
+                    edit: row.find('.edit-check').is(':checked'),
+                    delete: row.find('.delete-check').is(':checked')
+                });
+            });
+            
+            const btn = $(this);
+            const originalHtml = btn.html();
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+            
+            $.ajax({
+                url: '/api/vendor-permissions/save',
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    vendorId: vendorId,
+                    permissions: permissions
+                }),
+                success: function(response) {
+                    btn.prop('disabled', false).html(originalHtml);
+                    if (response.status === "200") {
+                        $('#vendorPermissionsModal').modal('hide');
+                        // Show success toast
+                        showToast('Success', 'Permissions saved successfully', 'success');
+                    } else {
+                        showToast('Error', response.statusMsg || 'Failed to save permissions', 'danger');
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).html(originalHtml);
+                    showToast('Error', 'Network error or server error occurred', 'danger');
+                }
+            });
+        });
+
+        function showToast(title, message, type) {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}:</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>`;
+            const toastContainer = $('.toast-container');
+            toastContainer.append(toastHtml);
+            const toastElement = toastContainer.find('.toast').last()[0];
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+
+        $(document).on('change', '#vendorPermissionsModal .perm-check', function() {
+            updateModalSelectAllStates();
+        });
+    });
+</script>
+{% endblock %} 

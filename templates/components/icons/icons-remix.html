@@ -1,0 +1,30 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %} Remix Icons {% endblock title %} 
+
+
+{% block content %}
+
+    {% block pagetitle %}
+        {% include "partials/page-title.html" with pagetitle="Icons" title="Remix" %}
+    {% endblock pagetitle %}
+
+
+                    <div class="row">
+
+                    </div><!-- end row -->
+
+                    <div class="row">
+                        <div class="col-12" id="icons"></div> <!-- end col-->
+                    </div><!-- end row -->
+
+{% endblock content %}
+
+{% block extra_js %}          
+
+    <!-- materialdesign icon js-->
+    <script src="{% static 'js/pages/remix-icons-listing.js' %}"></script>
+
+{% endblock extra_js %}
+                        
+

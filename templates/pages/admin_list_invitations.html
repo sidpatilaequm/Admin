@@ -1,0 +1,113 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Manage Supplier Invitations | aequm{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h3 class="mb-1 text-success fw-bold"><i class="fas fa-list me-2"></i>Manage Supplier Invitations</h3>
+            <p class="text-muted mb-0">Monitor status, copy invite URLs, and track registrations for all invited suppliers.</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'pages:admin_create_invitation' %}" class="btn btn-success">
+                <i class="fas fa-plus me-1"></i> Create Invitation
+            </a>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-muted">
+                        <tr>
+                            <th scope="col">Supplier Email</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Invitation Token / Link</th>
+                            <th scope="col">Expiry Date</th>
+                            <th scope="col">Date Created</th>
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invite in invitations %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-success-subtle rounded-circle p-2 me-3 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-envelope text-success fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold">{{ invite.supplier_email }}</h6>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if invite.status == 'INVITED' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">Invited</span>
+                                {% elif invite.status == 'USED' %}
+                                <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-1 rounded-pill fw-semibold">Used</span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill fw-semibold">Expired</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <code class="text-muted text-truncate" style="max-width: 150px;" id="token-{{ invite.id }}">{{ invite.token }}</code>
+                                    <button class="btn btn-sm btn-ghost-success py-1 px-2 border-0" 
+                                            data-url="{{ invite.invite_url }}" 
+                                            id="btn-copy-{{ invite.id }}">
+                                        <i class="far fa-copy"></i>
+                                    </button>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted fw-semibold">{{ invite.expiry_date|date:"Y-m-d H:i" }}</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ invite.created_at|date:"Y-m-d H:i" }}</span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'pages:register' %}?token={{ invite.token }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-external-link-alt me-1"></i> Open Link
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3 text-success-light opacity-50"></i>
+                                <h5 class="fw-semibold mb-1">No invitations found</h5>
+                                <p class="mb-0">Generate a new supplier invitation to start the onboarding process.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to copy buttons
+    const copyButtons = document.querySelectorAll('button[id^="btn-copy-"]');
+    copyButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            navigator.clipboard.writeText(url);
+            
+            const originalIcon = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check text-success"></i>';
+            setTimeout(() => {
+                this.innerHTML = originalIcon;
+            }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,653 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Customer Required Documents - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-card {
+        border: none;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .upload-card .card-header {
+        background-color: #198754;
+        padding: 1rem;
+    }
+    .upload-card .card-body {
+        padding: 2rem;
+    }
+    .file-upload-container {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+    .file-upload-container:hover {
+        border-color: #198754;
+        background-color: #f0f9f4;
+    }
+    .upload-icon {
+        font-size: 2.5rem;
+        color: #198754;
+        margin-bottom: 1rem;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    .form-text {
+        color: #6c757d;
+    }
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+    .view-doc-btn {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+        display: inline-block;
+        margin-top: 10px;
+        padding: 5px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        opacity: 1;
+        visibility: visible;
+    }
+    .view-doc-btn:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+    .view-doc-btn i {
+        margin-right: 5px;
+    }
+    .upload-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .view-btn {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    
+    .details-list p {
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+    
+    .details-list p:last-child {
+        border-bottom: none;
+    }
+    
+    .card-header {
+        background-color: #198754 !important;
+    }
+
+    .document-preview {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .document-preview img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #198754;
+        border-bottom: 2px solid #198754;
+    }
+
+    .table th {
+        width: 40%;
+        color: #6c757d;
+    }
+
+    .card {
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        border: none;
+    }
+
+    .modal-header {
+        border-bottom: none;
+    }
+    .modal-footer {
+        border-top: none;
+    }
+    .nav-tabs .nav-link {
+        padding: 1rem;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+        color: #198754;
+        border-bottom: 2px solid #198754;
+    }
+    .tab-content {
+        background-color: #fff;
+    }
+    .form-label {
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+    .h6 {
+        color: #344767;
+        margin-bottom: 0;
+    }
+    .modal-lg {
+        max-width: 800px;
+    }
+    .details-table {
+        margin-bottom: 0;
+    }
+    .details-table th {
+        font-weight: 500;
+        vertical-align: middle;
+        padding: 12px 8px;
+    }
+    .details-table td {
+        vertical-align: middle;
+        padding: 12px 8px;
+    }
+    .details-table tr {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .details-table tr:last-child {
+        border-bottom: none;
+    }
+
+    /* Add these new styles */
+    .document-preview-modal .modal-body {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+
+    .document-preview-modal .preview-content {
+        max-height: 80vh;
+        overflow: auto;
+    }
+
+    .document-preview-modal img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .document-preview-modal iframe {
+        width: 100%;
+        height: 80vh;
+        border: none;
+    }
+
+    .toast-custom {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        min-width: 320px;
+        max-width: 400px;
+        background: #e6f9ed;
+        color: #198754;
+        border: 1px solid #b6e2c6;
+        font-size: 1rem;
+        position: relative;
+    }
+    .toast-custom.toast-warning {
+        background: #fffbe6;
+        color: #b8860b;
+        border: 1px solid #ffe58f;
+    }
+    .toast-custom .toast-icon {
+        background: #198754;
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 12px;
+    }
+    .toast-custom.toast-warning .toast-icon {
+        background: #ffc107;
+        color: #fff;
+    }
+    .toast-custom .toast-close {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 1.2rem;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+    }
+    .toast-custom .toast-progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 4px;
+        background: #198754;
+        width: 100%;
+        border-radius: 0 0 10px 10px;
+        transition: width 2s linear;
+    }
+    .toast-custom.toast-warning .toast-progress {
+        background: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1060;"></div>
+    <!-- Page Title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-upload me-2"></i>Customer Required Documents
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Customer Documents</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Document Upload Form -->
+    <div class="row justify-content-center">
+        <div class="col-xl-10">
+            <div class="card upload-card">
+                <div class="card-header">
+                    <h4 class="card-title text-white mb-0">Required Documents</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <form id="documentUploadForm" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <!-- GST Certificate Upload -->
+                            <div class="col-md-6 mb-4">
+                                <div class="file-upload-container">
+                                    <label for="gst_file" class="form-label d-flex align-items-center">
+                                        <i class="fas fa-file-pdf me-2 text-danger"></i>GST Certificate
+                                    </label>
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="gst_file" name="gstFile" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <button type="button" class="btn btn-sm btn-outline-primary view-doc-btn" style="display: none;" data-file-input="gst_file">
+                                        <i class="fas fa-eye"></i> View Document
+                                    </button>
+                                    <div class="form-text mt-2">Upload your GST certificate (PDF, JPG, PNG)</div>
+                                </div>
+                            </div>
+                            <!-- PAN Card Upload -->
+                            <div class="col-md-6 mb-4">
+                                <div class="file-upload-container">
+                                    <label for="pan_file" class="form-label d-flex align-items-center">
+                                        <i class="fas fa-id-card me-2 text-info"></i>PAN Card
+                                    </label>
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="pan_file" name="PANFile" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <button type="button" class="btn btn-sm btn-outline-primary view-doc-btn" style="display: none;" data-file-input="pan_file">
+                                        <i class="fas fa-eye"></i> View Document
+                                    </button>
+                                    <div class="form-text mt-2">Upload your PAN card (PDF, JPG, PNG)</div>
+                                </div>
+                            </div>
+                            <!-- Cancelled Cheque Upload -->
+                            <div class="col-md-6 mb-4">
+                                <div class="file-upload-container">
+                                    <label for="cheque_file" class="form-label d-flex align-items-center">
+                                        <i class="fas fa-money-check me-2 text-success"></i>Cancelled Cheque
+                                    </label>
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="cheque_file" name="ChequeFile" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <button type="button" class="btn btn-sm btn-outline-primary view-doc-btn" style="display: none;" data-file-input="cheque_file">
+                                        <i class="fas fa-eye"></i> View Document
+                                    </button>
+                                    <div class="form-text mt-2">Upload your cancelled cheque (PDF, JPG, PNG)</div>
+                                </div>
+                            </div>
+                            <!-- COI Upload -->
+                            <div class="col-md-6 mb-4">
+                                <div class="file-upload-container">
+                                    <label for="coi_file" class="form-label d-flex align-items-center">
+                                        <i class="fas fa-certificate me-2 text-warning"></i>Certificate of Incorporation
+                                    </label>
+                                    <div class="upload-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <input type="file" class="form-control" id="coi_file" name="coiFile" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <button type="button" class="btn btn-sm btn-outline-primary view-doc-btn" style="display: none;" data-file-input="coi_file">
+                                        <i class="fas fa-eye"></i> View Document
+                                    </button>
+                                    <div class="form-text mt-2">Upload your COI (PDF, JPG, PNG)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitDocuments">
+                                <i class="fas fa-upload me-2"></i>Submit Documents
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Details Modal -->
+<div class="modal fade" id="documentDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-alt me-2"></i>Extracted Document Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-4 pb-5">
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs nav-justified" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#gstDetails">
+                            <i class="fas fa-file-invoice me-2"></i>GST Details
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#panDetails">
+                            <i class="fas fa-id-card me-2"></i>PAN Details
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#bankDetails">
+                            <i class="fas fa-university me-2"></i>Bank Details
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#coiDetails">
+                            <i class="fas fa-certificate me-2"></i>COI Details
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content p-4">
+                    <!-- GST Details Tab -->
+                    <div class="tab-pane active" id="gstDetails">
+                        <table class="table table-borderless details-table">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted" width="40%">GSTIN Number</th>
+                                    <td class="h6" id="gstinNumber">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Legal Name</th>
+                                    <td class="h6" id="legalName">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Registration Type</th>
+                                    <td class="h6" id="registrationType">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Registration Date</th>
+                                    <td class="h6" id="registrationDate">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PAN Details Tab -->
+                    <div class="tab-pane fade" id="panDetails">
+                        <table class="table table-borderless details-table">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted" width="40%">PAN Number</th>
+                                    <td class="h6" id="panNumber">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Name</th>
+                                    <td class="h6" id="panName">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Date of Birth/Incorporation</th>
+                                    <td class="h6" id="dateOfBirth">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Bank Details Tab -->
+                    <div class="tab-pane fade" id="bankDetails">
+                        <table class="table table-borderless details-table">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted" width="40%">Account Number</th>
+                                    <td class="h6" id="accountNumber">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">IFSC Code</th>
+                                    <td class="h6" id="ifscCode">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Bank Name</th>
+                                    <td class="h6" id="bankName">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Branch</th>
+                                    <td class="h6" id="branchName">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- COI Details Tab -->
+                    <div class="tab-pane fade" id="coiDetails">
+                        <table class="table table-borderless details-table">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted" width="40%">CIN Number</th>
+                                    <td class="h6" id="cinNumber">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Close
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmAndSubmit">
+                    <i class="fas fa-check me-2"></i>Confirm & Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Preview Modal -->
+<div class="modal fade document-preview-modal" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                <h5 class="modal-title">Document Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-4 pb-5">
+                <div class="preview-content"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Get customer data from sessionStorage
+    var customerData = JSON.parse(sessionStorage.getItem('newCustomerData') || '{}');
+    
+    // If no customer data, redirect back to customers page
+    if (!customerData.email) {
+        window.location.href = "{% url 'pages:customers' %}";
+        return;
+    }
+
+    // Show customer summary
+    var summaryHtml = `
+        <div class="alert alert-info mb-4">
+            <h5 class="alert-heading">Customer Information</h5>
+            <p class="mb-0">
+                <strong>Name:</strong> ${customerData.firstName} ${customerData.lastName}<br>
+                <strong>Email:</strong> ${customerData.email}<br>
+                <strong>Phone:</strong> ${customerData.phoneNumber}
+            </p>
+        </div>
+    `;
+    $('.card-body').prepend(summaryHtml);
+
+    // Handle document upload
+    $('#documentUploadForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Create FormData object
+        var formData = new FormData(this);
+        
+        // Add customer data to formData
+        formData.append('customerData', JSON.stringify(customerData));
+
+        // Send AJAX request
+        $.ajax({
+            url: '/api/customer/documents',  // Update this URL to match your backend endpoint
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                // Show success message
+                showToast('Success', 'Documents uploaded successfully!', 'success');
+                // Clear session storage
+                sessionStorage.removeItem('newCustomerData');
+                // Redirect to customers page
+                setTimeout(function() {
+                    window.location.href = "{% url 'pages:customers' %}";
+                }, 2000);
+            },
+            error: function(xhr) {
+                // Show error message
+                var errorMsg = xhr.responseJSON?.message || 'An error occurred while uploading documents.';
+                showToast('Error', errorMsg, 'error');
+            }
+        });
+    });
+
+    // Toast notification function
+    function showToast(title, message, type) {
+        var isSuccess = type === 'success';
+        var iconHtml = isSuccess
+            ? '<span class="toast-icon"><i class="mdi mdi-check-circle-outline"></i></span>'
+            : '<span class="toast-icon"><i class="mdi mdi-alert-circle-outline"></i></span>';
+        var toastClass = isSuccess ? '' : 'toast-warning';
+        var toast = `
+            <div class="toast-custom d-flex align-items-center position-relative p-3 mb-2 ${toastClass}">
+                ${iconHtml}
+                <div class="flex-grow-1">${message}</div>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+                <div class="toast-progress"></div>
+            </div>
+        `;
+        $('.toast-container').empty();
+        $('.toast-container').append(toast);
+        var $toast = $('.toast-custom').last();
+        setTimeout(function() {
+            $toast.find('.toast-progress').css('width', '0%');
+        }, 50);
+        setTimeout(function() {
+            $toast.fadeOut(300, function() { $(this).remove(); });
+        }, 2000);
+    }
+
+    // Show "View Document" button when a file is selected
+    $('input[type="file"]').on('change', function() {
+        var inputId = $(this).attr('id');
+        var btn = $('.view-doc-btn[data-file-input="' + inputId + '"]');
+        if (this.files && this.files[0]) {
+            btn.show();
+        } else {
+            btn.hide();
+        }
+    });
+
+    // Preview document in modal
+    $('.view-doc-btn').on('click', function() {
+        var inputId = $(this).data('file-input');
+        var fileInput = $('#' + inputId)[0];
+        var file = fileInput.files[0];
+        var previewContent = $('.preview-content');
+        previewContent.html('');
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var ext = file.name.split('.').pop().toLowerCase();
+                if (['jpg', 'jpeg', 'png'].includes(ext)) {
+                    previewContent.html('<img src="' + e.target.result + '" class="img-fluid" />');
+                } else if (ext === 'pdf') {
+                    previewContent.html('<iframe src="' + e.target.result + '" style="width:100%;height:80vh;"></iframe>');
+                } else {
+                    previewContent.html('<p>Preview not available for this file type.</p>');
+                }
+                $('#previewModal').modal('show');
+            };
+            if (['pdf'].includes(file.name.split('.').pop().toLowerCase())) {
+                reader.readAsDataURL(file);
+            } else {
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

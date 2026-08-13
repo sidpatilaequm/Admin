@@ -1,0 +1,28 @@
+{% extends "account/account_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}{% trans "Verify Your E-mail Address" %}{% endblock %}
+
+{% block content %}
+            <div class="col-lg-6">
+                <div class="p-lg-5 p-4">
+                    <div class="text-center">
+                        <h5 class="mb-0">{% trans "Verify Your E-mail Address" %} !</h5>
+                    </div>
+                    <div class="mt-4">
+                        {% for message in messages %}
+                        <div class="alert {{ message.tags }} mb-4" role="alert">
+                            <strong>{{ message }}</strong>
+                        </div>
+                        {% endfor %} 
+                        <p class="text-muted mx-5">{% blocktrans %}We have sent an e-mail to you for verification. Follow the link provided to finalize the signup process. Please contact us if you do not receive it within a few minutes.{% endblocktrans %}</p>
+                        <div class="mt-5">
+                            <a href="{% url 'dashboard' %}" class="btn btn-primary w-100">Back to Dashboard</a>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+{% endblock content %}

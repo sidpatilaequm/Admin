@@ -1,0 +1,78 @@
+{% extends 'account/account_base.html' %}
+{% load static %}
+{% load i18n %}
+{% load account %}
+{% load crispy_forms_tags %}
+
+{% block title %}Sign Up{% endblock title %}
+    
+{% block content %}
+
+    <div class="col-lg-6">
+        <div class="p-lg-5 p-4">
+            <div class="text-center">
+                <h5 class="mb-0">Create your free account</h5>
+                <p class="text-muted mt-2">Get your free Invoika account now.</p>
+            </div>
+        
+            <div class="mt-4">
+                <form class="needs-validation auth-input" novalidate method="POST" action="{% url 'account_signup' %}">
+                    {% for message in messages %}
+                    <div class="alert {{ message.tags }} mb-4" role="alert">
+                        <strong>{{ message }}</strong>
+                    </div>
+                    {% endfor %} 
+                    {% if field.help_text %}
+                        <div class="alert alert-danger mb-4" role="alert">
+                            <strong>{{ field.help_text }}</strong>
+                        </div>
+                    {% endif %}
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.email|as_crispy_field }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.username|as_crispy_field }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.password1|as_crispy_field }}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.password2|as_crispy_field }}
+                    </div>
+
+                    <div class="form-check form-check-primary fs-16 py-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="remember-check">
+                            <label class="form-check-label" for="remember-check">
+                                I agree to the <a href="#" class="text-primary text-decoration-underline">Terms and conditions</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mt-2">
+                        <button class="btn btn-primary w-100" type="submit">Sign Up</button>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <p class="mb-0">Already have an account ? <a href="{{ login_url }}" class="fw-medium text-primary text-decoration-underline"> Sign in </a> </p>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+                    
+                                               
+{% endblock content %}
+
+{% block extra_js %}
+
+    <!-- password-addon init -->
+    <script src="{% static 'js/pages/password-addon.init.js' %}"></script>
+
+{% endblock extra_js %}
+                                            

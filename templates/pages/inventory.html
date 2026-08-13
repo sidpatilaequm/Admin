@@ -1,0 +1,802 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Inventory - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-header {
+        background-color: #198754 !important;
+        padding: 1rem;
+    }
+    .btn-theme {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .btn-theme:hover {
+        background-color: #146c43;
+        border-color: #146c43;
+        color: #fff;
+    }
+    .table th {
+        color: #6c757d;
+    }
+    .action-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    .fixed-img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
+    .img-cell {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100px;
+        height: 100px;
+    }
+    /* Toast theme override to match app */
+    .toast.bg-success { background-color: #198754 !important; }
+    .toast.bg-warning { background-color: #ffc107 !important; color: #212529 !important; }
+    .toast.bg-danger { background-color: #dc3545 !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="las la-cube me-2"></i>Inventory
+                </h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'pages:vendor_dashboard' %}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Inventory</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="card-title text-white mb-0">Inventory List</h4>
+                        <!-- <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light" id="bulkUploadBtn">
+                                <i class="mdi mdi-upload me-1"></i> Bulk Update Stock
+                            </button>
+                        </div> -->
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Location Filter -->
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.INV_HEADER.view %}
+                    <div class="row mb-3" id="block-header-information">
+                        <div class="col-md-4">
+                            <label for="locationFilter" class="form-label">Filter by Location</label>
+                            <select class="form-control" id="locationFilter">
+                                <option value="">Loading locations...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchInput" class="form-label">Search Inventory</label>
+                            <div class="search-box">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search materials...">
+                                <i class="las la-search search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="button" class="btn btn-outline-secondary" id="refreshBtn">
+                                <i class="las la-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if not request.session.vendor_permissions or request.session.vendor_permissions.INV_STOCK.view %}
+                    <div class="table-responsive" id="block-stock-details">
+                        <table id="inventoryTable" class="table table-striped table-bordered dt-responsive nowrap">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th style="min-width: 150px;">Material Name</th>
+                                    <th>SKU</th>
+                                    <th>Image</th>
+                                    <th>Stock</th>
+                                    <th>Price</th>
+                                    <th>Location</th>
+                                    <!-- <th>Actions</th> -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Table rows will be injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Stock Modal -->
+<div class="modal fade" id="editStockModal" tabindex="-1" aria-labelledby="editStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                <h5 class="modal-title" id="editStockModalLabel">Edit Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <form id="editStockForm">
+                    <input type="hidden" id="editMaterialId" name="materialId">
+                    <input type="hidden" id="editLocationName" name="locationName">
+                    <div class="mb-3">
+                        <label for="editStockQuantity" class="form-label">Stock Quantity</label>
+                        <input type="number" step="0.01" class="form-control" id="editStockQuantity" name="stockQuantity" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPrice" class="form-label">Price</label>
+                        <input type="number" step="0.01" class="form-control" id="editPrice" name="price" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveStockBtn">
+                    <i class="mdi mdi-content-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Upload Modal -->
+<div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header py-3 px-4" style="background: rgba(25, 135, 84, 0.1);">
+                <h5 class="modal-title" id="bulkUploadModalLabel">Bulk Update Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-4 pb-5">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="mdi mdi-information me-2"></i>
+                            <strong>Instructions:</strong> Upload a CSV or Excel file with stock update data. Required columns: SKU, Location, Stock, Price (optional: Variant Code)
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-12 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Download Template</h6>
+                            <small class="text-muted">Template includes the columns shown in the table. Edit only Stock and Price.</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-outline-primary" id="downloadInventoryTemplate">
+                                <i class="mdi mdi-download me-1"></i> Template
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label for="bulkUploadFile" class="form-label">Select File</label>
+                        <input type="file" class="form-control" id="bulkUploadFile" accept=".csv,.xlsx,.xls">
+                        <div class="form-text">Supported formats: CSV, Excel (.xlsx, .xls)</div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="row mb-3" id="uploadProgressRow" style="display: none;">
+                    <div class="col-12">
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="uploadProgressBar"></div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small id="uploadProgressText">Processing...</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Preview Table -->
+                <div class="row mb-3" id="csvPreviewRow" style="display: none;">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Preview</h6>
+                            <button type="button" class="btn btn-theme" id="applyBulkUpdateBtn" disabled>
+                                <i class="mdi mdi-check-all me-1"></i> Apply Updates
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm" id="csvPreviewTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>SKU</th>
+                                        <th>Variant Code</th>
+                                        <th>Location</th>
+                                        <th>Stock</th>
+                                        <th>Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="csvPreviewBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Showing first <span id="csvRowCount">0</span> rows of the parsed data.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Results -->
+                <div class="row" id="uploadResults" style="display: none;">
+                    <div class="col-12">
+                        <div class="alert alert-success">
+                            <h6><i class="mdi mdi-check-circle me-2"></i>Update Completed</h6>
+                            <div id="uploadResultsContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-theme" id="uploadInventoryFileBtn" disabled>
+                    <i class="mdi mdi-upload me-1"></i> Upload File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showToast(title, message, type) {
+        try {
+            const bgColor = type === 'success' ? 'success' : type === 'danger' ? 'danger' : 'warning';
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${bgColor} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong>${title}:</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Get or create toast container
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+            
+            // Create toast element
+            const toastWrapper = document.createElement('div');
+            toastWrapper.innerHTML = toastHtml;
+            const toastElement = toastWrapper.firstElementChild;
+            toastContainer.appendChild(toastElement);
+            
+            // Initialize and show toast
+            if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+                const toast = new bootstrap.Toast(toastElement, { autohide: true, delay: 3000 });
+                toast.show();
+                
+                // Remove element after toast is hidden
+                toastElement.addEventListener('hidden.bs.toast', function() {
+                    toastElement.remove();
+                });
+            } else {
+                // Fallback if Bootstrap Toast is not available
+                console.error('Bootstrap Toast not available');
+                alert(`${title}: ${message}`);
+            }
+        } catch (error) {
+            console.error('Error showing toast:', error);
+            // Fallback to alert
+            alert(`${title}: ${message}`);
+        }
+    }
+
+    $(document).ready(function() {
+        let inventoryTable;
+        let locations = [];
+        
+        // Initialize DataTable
+        inventoryTable = $('#inventoryTable').DataTable({
+            "ordering": true,
+            "searching": false,
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            "columnDefs": [
+                { "orderable": false, "targets": [3] } // Image column
+            ]
+        });
+
+        // Load locations
+        function loadLocations() {
+            $.ajax({
+                url: '{% url "pages:locations_list_proxy" %}',
+                type: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    const $select = $('#locationFilter');
+                    $select.empty();
+                    
+                    // Handle different response formats
+                    let locationList = [];
+                    if (response && Array.isArray(response)) {
+                        locationList = response.filter(loc => loc.isActive !== false);
+                    } else if (response.data && Array.isArray(response.data)) {
+                        locationList = response.data.filter(loc => loc.isActive !== false);
+                    } else if (response.status === 'SUCCESS' && response.data) {
+                        locationList = response.data.filter(loc => loc.isActive !== false);
+                    }
+                    
+                    locations = locationList;
+                    
+                    if (locationList.length > 0) {
+                        // Add location options (no "All Locations" option)
+                        locationList.forEach(function(location) {
+                            $select.append(`<option value="${location.locationName}">${location.locationName}</option>`);
+                        });
+                        
+                        // Auto-select first location and load its inventory
+                        if (locationList.length > 0) {
+                            const firstLocation = locationList[0];
+                            $select.val(firstLocation.locationName);
+                            loadInventory(firstLocation.locationName);
+                        }
+                    } else {
+                        $select.append('<option value="">No locations found</option>');
+                    }
+                },
+                error: function() {
+                    const $select = $('#locationFilter');
+                    $select.empty();
+                    $select.append('<option value="">Error loading locations</option>');
+                    showToast('Error', 'Failed to load locations', 'danger');
+                }
+            });
+        }
+
+        // Load inventory
+        function loadInventory(locationFilter) {
+            if (!locationFilter) {
+                return; // Don't load if no location selected
+            }
+            
+            const url = '{% url "pages:inventory_list_proxy" %}';
+            const params = `?location=${encodeURIComponent(locationFilter)}`;
+            
+            $.ajax({
+                url: url + params,
+                type: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    inventoryTable.clear();
+                    
+                    if (response.status === '200' && response.data && response.data.inventory) {
+                        const inventory = response.data.inventory;
+                        
+                        inventory.forEach(function(item, index) {
+                            // Material images may not be in inventory response, so show placeholder
+                            // If available, use it, otherwise fetch or show default
+                            let materialImagesHtml = '';
+                            if (item.materialImages && item.materialImages.length > 0) {
+                                materialImagesHtml = `<div class="img-cell">
+                                    <img src="${getMaterialImageSrc(item.materialImages[0])}" alt="Material" class="fixed-img" />
+                                </div>`;
+                            } else {
+                                // Try to fetch material image by materialId
+                                materialImagesHtml = `<div class="text-center">
+                                    <img src="/static/images/default.png" alt="No Image" class="fixed-img" data-material-id="${item.materialId}" />
+                                </div>`;
+                                // Optionally fetch material details for image
+                                if (item.materialId) {
+                                    fetchMaterialImage(item.materialId, index);
+                                }
+                            }
+                            
+                            const editBtn = `<button class='btn btn-sm btn-primary edit-stock-btn' 
+                                data-material-id='${item.materialId}' 
+                                data-location='${item.locationName || ''}'
+                                data-stock='${item.stockQuantity || 0}'
+                                data-price='${item.price || 0}'>
+                                <i class='mdi mdi-pencil'></i> Edit Stock
+                            </button>`;
+                            
+                            inventoryTable.row.add([
+                                index + 1,
+                                item.materialName || 'N/A',
+                                item.sku || 'N/A',
+                                materialImagesHtml,
+                                item.stockQuantity || 0,
+                                item.price ? parseFloat(item.price).toFixed(2) : '0.00',
+                                item.locationName || 'N/A'
+                                // editBtn
+                            ]);
+                        });
+                    } else {
+                        inventoryTable.row.add([
+                            '1', 'No data available', 'N/A', 'N/A', '0', '0.00', 'N/A', ''
+                        ]);
+                    }
+                    
+                    inventoryTable.draw();
+                },
+                error: function(xhr) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        showToast('Error', response.statusMsg || 'Failed to load inventory', 'danger');
+                    } catch (e) {
+                        showToast('Error', 'Failed to load inventory', 'danger');
+                    }
+                    inventoryTable.clear().draw();
+                }
+            });
+        }
+
+        function getMaterialImageSrc(image) {
+            if (image && image.imageType && image.imageData && image.imageData.length > 50) {
+                return `data:${image.imageType};base64,${image.imageData}`;
+            } else {
+                return '/static/images/default.png';
+            }
+        }
+
+        // Fetch material image separately if not in inventory response
+        function fetchMaterialImage(materialId, rowIndex) {
+            $.ajax({
+                url: `{% url "pages:material_detail_proxy" material_id=0 %}`.replace('0', materialId),
+                type: 'GET',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    if (response.status === '200' && response.data && response.data.material && response.data.material.materialImages && response.data.material.materialImages.length > 0) {
+                        const imgSrc = getMaterialImageSrc(response.data.material.materialImages[0]);
+                        // Update the image in the table
+                        const $img = $(`img[data-material-id="${materialId}"]`);
+                        if ($img.length) {
+                            $img.attr('src', imgSrc);
+                        }
+                    }
+                },
+                error: function() {
+                    // Silently fail - keep default image
+                }
+            });
+        }
+
+        // Location filter change
+        $('#locationFilter').on('change', function() {
+            const location = $(this).val();
+            if (location) {
+                loadInventory(location);
+            }
+        });
+
+        // Search functionality
+        $('#searchInput').on('keyup', function() {
+            inventoryTable.search($(this).val()).draw();
+        });
+
+        // Refresh button
+        $('#refreshBtn').on('click', function() {
+            const location = $('#locationFilter').val();
+            if (location) {
+                loadInventory(location);
+            } else {
+                showToast('Warning', 'Please select a location first', 'warning');
+            }
+        });
+
+        // Edit stock button
+        $(document).on('click', '.edit-stock-btn', function() {
+            const materialId = $(this).data('material-id');
+            const location = $(this).data('location');
+            const stock = $(this).data('stock');
+            const price = $(this).data('price');
+            
+            $('#editMaterialId').val(materialId);
+            $('#editLocationName').val(location);
+            $('#editStockQuantity').val(stock);
+            $('#editPrice').val(price);
+            
+            $('#editStockModal').modal('show');
+        });
+
+        // Save stock
+        $('#saveStockBtn').on('click', function() {
+            const materialId = $('#editMaterialId').val();
+            const location = $('#editLocationName').val();
+            const stockQuantity = parseFloat($('#editStockQuantity').val());
+            const price = parseFloat($('#editPrice').val());
+            
+            if (!materialId || !location) {
+                showToast('Error', 'Missing required information', 'danger');
+                return;
+            }
+            
+                            $.ajax({
+                url: `{% url "pages:inventory_update_stock_proxy" material_id=0 %}`.replace('0', materialId),
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                },
+                data: JSON.stringify({
+                    stockQuantity: stockQuantity,
+                    price: price,
+                    location: location
+                }),
+                success: function(response) {
+                    console.log('Stock update response:', response);
+                    // Check for status 200 (string or number)
+                    if (response.status === '200' || response.status === 200 || response.statusMsg === 'Stock updated successfully') {
+                        showToast('Success', response.statusMsg || 'Stock updated successfully', 'success');
+                        $('#editStockModal').modal('hide');
+                        const locationFilter = $('#locationFilter').val();
+                        if (locationFilter) {
+                            loadInventory(locationFilter);
+                        }
+                    } else {
+                        showToast('Error', response.statusMsg || 'Failed to update stock', 'danger');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Stock update error:', xhr);
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        showToast('Error', response.statusMsg || 'Failed to update stock', 'danger');
+                    } catch (e) {
+                        showToast('Error', 'Failed to update stock', 'danger');
+                    }
+                }
+            });
+        });
+
+        // Bulk upload button
+        $('#bulkUploadBtn').on('click', function() {
+            $('#bulkUploadModal').modal('show');
+            $('#bulkUploadFile').val('');
+            $('#uploadInventoryFileBtn').prop('disabled', true);
+            $('#uploadProgressRow').hide();
+            $('#uploadResults').hide();
+            $('#csvPreviewRow').hide();
+            $('#applyBulkUpdateBtn').prop('disabled', true);
+        });
+
+        // Download inventory template
+        $('#downloadInventoryTemplate').on('click', function() {
+            const location = $('#locationFilter').val();
+            if (!location) {
+                showToast('Warning', 'Please select a location first', 'warning');
+                return;
+            }
+            const url = '{% url "pages:inventory_template_download" %}' + `?location=${encodeURIComponent(location)}`;
+            window.open(url, '_blank');
+        });
+
+        // File selection (delegated for safety)
+        $(document).on('change', '#bulkUploadFile', function() {
+            const file = this.files[0];
+            $('#uploadInventoryFileBtn').prop('disabled', !file);
+        });
+
+        let latestPreviewData = null;
+
+        // Upload file -> server parses -> show preview
+        // Delegated click handler to avoid binding issues
+        $(document).on('click', '#uploadInventoryFileBtn', function() {
+            console.log('Upload Inventory File clicked');
+            const fileInput = $('#bulkUploadFile')[0];
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('Error', 'Please select a file', 'danger');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            $('#uploadProgressRow').show();
+            $('#uploadProgressBar').css('width', '30%');
+            $('#uploadProgressText').text('Uploading file for preview...');
+            $('#uploadInventoryFileBtn').prop('disabled', true);
+
+            // Upload and parse the file on server
+            $.ajax({
+                url: '{% url "pages:inventory_bulk_upload" %}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                success: function(response) {
+                    if (response.success && Array.isArray(response.data)) {
+                        latestPreviewData = response.data;
+                        $('#uploadProgressBar').css('width', '100%');
+                        $('#uploadProgressText').text('Preview ready');
+
+                        const $tbody = $('#csvPreviewBody');
+                        $tbody.empty();
+                        const maxRows = Math.min(latestPreviewData.length, 200);
+                        for (let i = 0; i < maxRows; i++) {
+                            const item = latestPreviewData[i] || {};
+                            $tbody.append(`<tr>
+                                <td>${i + 1}</td>
+                                <td>${item.sku || ''}</td>
+                                <td>${item.variantCode || ''}</td>
+                                <td>${item.location || ''}</td>
+                                <td>${item.stockQuantity != null ? item.stockQuantity : ''}</td>
+                                <td>${item.price != null ? item.price : ''}</td>
+                            </tr>`);
+                        }
+                        $('#csvRowCount').text(latestPreviewData.length);
+                        $('#csvPreviewRow').show();
+                        $('#applyBulkUpdateBtn').prop('disabled', latestPreviewData.length === 0);
+                        showToast('Success', 'Preview generated. Click Apply Updates to proceed.', 'success');
+                    } else {
+                        $('#uploadProgressRow').hide();
+                        showToast('Error', response.error || 'No valid data found in file', 'danger');
+                        $('#uploadInventoryFileBtn').prop('disabled', false);
+                    }
+                },
+                error: function(xhr) {
+                    // Some browsers may report parsererror even when response is 200.
+                    try {
+                        if (xhr.status === 200 && xhr.responseText) {
+                            const parsed = JSON.parse(xhr.responseText);
+                            if (parsed && parsed.success && Array.isArray(parsed.data)) {
+                                // Treat as success path
+                                latestPreviewData = parsed.data;
+                                $('#uploadProgressBar').css('width', '100%');
+                                $('#uploadProgressText').text('Preview ready');
+                                const $tbody = $('#csvPreviewBody');
+                                $tbody.empty();
+                                const maxRows = Math.min(latestPreviewData.length, 200);
+                                for (let i = 0; i < maxRows; i++) {
+                                    const item = latestPreviewData[i] || {};
+                                    $tbody.append(`<tr>
+                                        <td>${i + 1}</td>
+                                        <td>${item.sku || ''}</td>
+                                        <td>${item.variantCode || ''}</td>
+                                        <td>${item.location || ''}</td>
+                                        <td>${item.stockQuantity != null ? item.stockQuantity : ''}</td>
+                                        <td>${item.price != null ? item.price : ''}</td>
+                                    </tr>`);
+                                }
+                                $('#csvRowCount').text(latestPreviewData.length);
+                                $('#csvPreviewRow').show();
+                                $('#applyBulkUpdateBtn').prop('disabled', latestPreviewData.length === 0);
+                                showToast('Success', 'Preview generated. Click Apply Updates to proceed.', 'success');
+                                return;
+                            }
+                        }
+                    } catch (e) { /* fallthrough to error toast */ }
+
+                    $('#uploadProgressRow').hide();
+                    let errorMsg = 'Upload failed.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    }
+                    showToast('Error', errorMsg, 'danger');
+                    $('#uploadInventoryFileBtn').prop('disabled', false);
+                }
+            });
+        });
+
+        // Apply updates using preview data -> call Java API via proxy
+        $('#applyBulkUpdateBtn').on('click', function() {
+            if (!latestPreviewData || latestPreviewData.length === 0) {
+                showToast('Warning', 'No parsed rows to update. Please upload a file.', 'warning');
+                return;
+            }
+
+            $('#uploadProgressRow').show();
+            $('#uploadProgressBar').css('width', '60%');
+            $('#uploadProgressText').text('Applying updates...');
+            $('#applyBulkUpdateBtn').prop('disabled', true);
+
+            $.ajax({
+                url: '{% url "pages:inventory_bulk_update_stock_proxy" %}',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json'
+                },
+                data: JSON.stringify(latestPreviewData),
+                success: function(bulkResponse) {
+                    $('#uploadProgressRow').hide();
+                    $('#uploadResults').show();
+
+                    let resultsHtml = '';
+                    if ((bulkResponse.status === '200' || bulkResponse.status === 200) && bulkResponse.data && bulkResponse.data.bulkUpdateResult) {
+                        const result = bulkResponse.data.bulkUpdateResult;
+                        resultsHtml = `
+                            <div class="row">
+                                <div class="col-md-4"><div class="text-center"><h4 class="text-success">${result.successCount || 0}</h4><small>Successfully Updated</small></div></div>
+                                <div class="col-md-4"><div class="text-center"><h4 class="text-warning">${result.failureCount || 0}</h4><small>Failed</small></div></div>
+                                <div class="col-md-4"><div class="text-center"><h4 class="text-info">${result.totalProcessed || 0}</h4><small>Total Processed</small></div></div>
+                            </div>`;
+                        showToast('Success', bulkResponse.statusMsg || 'Bulk update completed', 'success');
+                    } else {
+                        resultsHtml = '<p class="text-danger">Update completed with errors.</p>';
+                        showToast('Warning', bulkResponse.statusMsg || 'Bulk update completed with errors', 'warning');
+                    }
+                    $('#uploadResultsContent').html(resultsHtml);
+
+                    // Refresh inventory
+                    const locationFilter = $('#locationFilter').val();
+                    if (locationFilter) {
+                        loadInventory(locationFilter);
+                    }
+                },
+                error: function(xhr) {
+                    $('#uploadProgressRow').hide();
+                    $('#uploadResults').show();
+                    let errorMsg = 'Bulk update failed.';
+                    if (xhr.responseJSON && xhr.responseJSON.statusMsg) {
+                        errorMsg = xhr.responseJSON.statusMsg;
+                    }
+                    $('#uploadResultsContent').html(`<p class="text-danger">${errorMsg}</p>`);
+                    showToast('Error', errorMsg, 'danger');
+                },
+                complete: function() {
+                    $('#applyBulkUpdateBtn').prop('disabled', false);
+                }
+            });
+        });
+
+        // Initialize
+        loadLocations();
+    });
+</script>
+
+{% endblock %}

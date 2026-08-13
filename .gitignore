@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual Environments
+venv/
+env/
+
+# Environment Files
+.env
+.env.*
+
+# Database
+db.sqlite3
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Django
+media/
+staticfiles/
+
+# OS
+.DS_Store
+
+
+# Test files
+test_*.py
+
+# Local sample files
+dummy_payment.xlsx
+
+# Debug/Temp scripts
+debug_*.py
+fix_*.py
+temp_*/
+*temp_*.txt
+*.txt
+!requirements.txt

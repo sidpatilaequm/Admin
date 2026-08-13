@@ -1,0 +1,1044 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Verify Vendor Documents - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8fafc;
+    }
+    .step-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #ffffff;
+        position: relative;
+        overflow: hidden;
+        min-height: 380px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .step-card.disabled-card {
+        opacity: 0.5;
+        background-color: #f1f5f9;
+        border-color: #e2e8f0;
+        filter: grayscale(40%);
+    }
+    .step-card.disabled-card * {
+        pointer-events: none;
+    }
+    .step-card.active-card {
+        border-color: #10b981;
+        box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.08), 0 8px 15px -6px rgba(16, 185, 129, 0.08);
+        transform: translateY(-2px);
+    }
+    .step-card.completed-card {
+        border-color: #a7f3d0;
+        background-color: #f0fdf4;
+    }
+    .step-card.failed-card {
+        border-color: #fca5a5;
+        background-color: #fef2f2;
+    }
+    .step-icon-container {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+    .active-card .step-icon-container {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        animation: pulse-icon 2s infinite;
+    }
+    .disabled-card .step-icon-container {
+        background-color: #e2e8f0;
+        color: #94a3b8;
+    }
+    .completed-card .step-icon-container {
+        background-color: #d1fae5;
+        color: #059669;
+    }
+    .failed-card .step-icon-container {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+    @keyframes pulse-icon {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+        100% { transform: scale(1); }
+    }
+    .step-badge {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+    }
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    .custom-file-btn {
+        border: 1px dashed #cbd5e1;
+        background-color: #f8fafc;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        width: 100%;
+        cursor: pointer;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    .active-card .custom-file-btn:hover {
+        border-color: #10b981;
+        background-color: rgba(16, 185, 129, 0.02);
+        color: #10b981;
+    }
+    .completed-card .custom-file-btn {
+        border-style: solid;
+        border-color: #a7f3d0;
+        background-color: #ffffff;
+        color: #059669;
+    }
+    .failed-card .custom-file-btn {
+        border-style: dashed;
+        border-color: #fca5a5;
+        background-color: #ffffff;
+        color: #dc2626;
+    }
+    .progress-bar-container {
+        height: 10px;
+        background-color: #e2e8f0;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background-color: #10b981;
+        width: 0%;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast-container {
+        z-index: 1080;
+    }
+    .loader-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+    }
+    .modal-detail-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .modal-detail-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        word-break: break-all;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4 mb-5">
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h3 class="mb-1 text-success fw-bold"><i class="fas fa-shield-halved me-2"></i>Vendor Onboarding Verification</h3>
+            <p class="text-muted mb-0">Please upload and verify the following 6 documents sequentially to activate your vendor profile.</p>
+        </div>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold text-dark">Onboarding Completion Progress</span>
+                <span class="fw-bold text-success" id="progressText">0% Completed</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards Row -->
+    <div class="row g-4">
+        <!-- 1. GST Verification -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card step-card active-card p-4" id="card-gst">
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle step-badge" id="badge-gst">Step 1</span>
+                <div>
+                    <div class="step-icon-container" id="icon-gst">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">GST Verification</h5>
+                    <p class="text-muted small mb-3">Verify Goods & Services Tax (GSTIN) registration certificate.</p>
+                </div>
+                
+                <div class="w-100">
+                    <div class="file-input-wrapper">
+                        <div class="custom-file-btn" id="label-gst">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Choose GST Document
+                        </div>
+                        <input type="file" id="input-gst" data-type="gst" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <div class="mt-2 text-truncate small text-muted text-center" id="filename-gst">&nbsp;</div>
+                </div>
+
+                <!-- Loader overlay -->
+                <div class="loader-overlay d-none" id="loader-gst">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <span class="fw-semibold text-success small">AI Verifying GST...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PAN Verification -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card step-card disabled-card p-4" id="card-pan">
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary step-badge" id="badge-pan">Step 2</span>
+                <div>
+                    <div class="step-icon-container" id="icon-pan">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">PAN Verification</h5>
+                    <p class="text-muted small mb-3">Verify Permanent Account Number (PAN) card details.</p>
+                </div>
+                
+                <div class="w-100">
+                    <div class="file-input-wrapper">
+                        <div class="custom-file-btn" id="label-pan">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Choose PAN Document
+                        </div>
+                        <input type="file" id="input-pan" data-type="pan" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <div class="mt-2 text-truncate small text-muted text-center" id="filename-pan">&nbsp;</div>
+                </div>
+
+                <!-- Loader overlay -->
+                <div class="loader-overlay d-none" id="loader-pan">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <span class="fw-semibold text-success small">AI Verifying PAN...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MSME Verification -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card step-card disabled-card p-4" id="card-msme">
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary step-badge" id="badge-msme">Step 3</span>
+                <div>
+                    <div class="step-icon-container" id="icon-msme">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">MSME Verification</h5>
+                    <p class="text-muted small mb-2">Verify Micro, Small & Medium Enterprises registration registry.</p>
+                </div>
+                
+                <div class="w-100">
+                    <div class="mb-3">
+                        <input type="text" id="input-msme-udyam" class="form-control" placeholder="Enter Udyam Number">
+                    </div>
+                    <button class="btn btn-success w-100 fw-semibold" id="btn-verify-msme">Verify MSME</button>
+                    <div class="mt-2 small text-muted text-center" id="filename-msme">&nbsp;</div>
+                </div>
+
+                <!-- Loader overlay -->
+                <div class="loader-overlay d-none" id="loader-msme">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <span class="fw-semibold text-success small">Querying MSME Registry...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Cancelled Cheque Verification -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card step-card disabled-card p-4" id="card-cheque">
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary step-badge" id="badge-cheque">Step 4</span>
+                <div>
+                    <div class="step-icon-container" id="icon-cheque">
+                        <i class="fas fa-money-check-dollar"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Cancelled Cheque Verification</h5>
+                    <p class="text-muted small mb-3">Verify bank account details and IFSC code structure.</p>
+                </div>
+                
+                <div class="w-100">
+                    <div class="file-input-wrapper">
+                        <div class="custom-file-btn" id="label-cheque">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Choose Cheque Document
+                        </div>
+                        <input type="file" id="input-cheque" data-type="cheque" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    <div class="mt-2 text-truncate small text-muted text-center" id="filename-cheque">&nbsp;</div>
+                </div>
+
+                <!-- Loader overlay -->
+                <div class="loader-overlay d-none" id="loader-cheque">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <span class="fw-semibold text-success small">AI Verifying Cheque...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. ITR Verification -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card step-card disabled-card p-4" id="card-itr">
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary step-badge" id="badge-itr">Step 5</span>
+                <div>
+                    <div class="step-icon-container" id="icon-itr">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">ITR Verification</h5>
+                    <p class="text-muted small mb-2">Verify compliance and turnover metrics.</p>
+                </div>
+                
+                <div class="w-100">
+                    <div class="mb-2">
+                        <input type="text" id="input-itr-pan" class="form-control form-control-sm mb-2" placeholder="PAN Number">
+                        <input type="text" id="input-itr-date" class="form-control form-control-sm mb-2" placeholder="DOB/Inc Date (DD/MM/YYYY)">
+                        <input type="text" id="input-itr-name" class="form-control form-control-sm" placeholder="Taxpayer Name">
+                    </div>
+                    <button class="btn btn-success w-100 fw-semibold" id="btn-verify-itr">Verify ITR</button>
+                    <div class="mt-2 small text-muted text-center" id="filename-itr">&nbsp;</div>
+                </div>
+
+                <!-- Loader overlay -->
+                <div class="loader-overlay d-none" id="loader-itr">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <span class="fw-semibold text-success small">Querying ITR Registry...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Certificate of Incorporation Verification -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card step-card disabled-card p-4" id="card-company">
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary step-badge" id="badge-company">Step 6</span>
+                <div>
+                    <div class="step-icon-container" id="icon-company">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Incorporation Certificate</h5>
+                    <p class="text-muted small mb-2">Verify Corporate Identification Number (CIN) with ROC.</p>
+                </div>
+                
+                <div class="w-100">
+                    <div class="mb-3">
+                        <input type="text" id="input-company-reg" class="form-control" placeholder="Enter CIN / LLPIN / FCRN">
+                    </div>
+                    <button class="btn btn-success w-100 fw-semibold" id="btn-verify-company">Verify COI</button>
+                    <div class="mt-2 small text-muted text-center" id="filename-company">&nbsp;</div>
+                </div>
+
+                <!-- Loader overlay -->
+                <div class="loader-overlay d-none" id="loader-company">
+                    <div class="spinner-border text-success mb-2" role="status"></div>
+                    <span class="fw-semibold text-success small">Querying ROC Registry...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Dashboard Redirection -->
+    <div class="text-center mt-5 d-none" id="dashboardRedirectSection">
+        <div class="card border-0 shadow-sm p-4 bg-success-subtle border-success border d-inline-block px-5">
+            <h4 class="fw-bold text-success mb-2"><i class="fas fa-circle-check me-2"></i>All Documents Verified & Saved Successfully!</h4>
+            <p class="text-muted mb-3">Your vendor onboarding is complete. Redirecting you to the dashboard in <span id="countdownText" class="fw-bold text-success">3</span> seconds...</p>
+            <a href="/vendor/dashboard/" class="btn btn-success px-4 shadow-sm fw-semibold">
+                Go to Dashboard Now <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Reusable Audit Verification Modal -->
+<div class="modal fade" id="detailsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title fw-bold" id="detailsModalLabel"><i class="fas fa-circle-check me-2"></i>Confirm AI-Extracted Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Please review the details below before submitting them to your company profile.</p>
+                <div class="row g-3" id="modalDetailsBody">
+                    <!-- Dynamic details will go here -->
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4 fw-semibold" id="btnSubmitVerification">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="submitBtnSpinner"></span>
+                    Confirm & Save Details
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div class="toast-container"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // State model for the 6 verification steps
+    const fileStates = {
+        gst: { inputId: 'input-gst', cardId: 'card-gst', labelId: 'label-gst', filenameId: 'filename-gst', badgeId: 'badge-gst', iconId: 'icon-gst', loaderId: 'loader-gst', nextKey: 'pan', isVerified: false, isInputBased: false },
+        pan: { inputId: 'input-pan', cardId: 'card-pan', labelId: 'label-pan', filenameId: 'filename-pan', badgeId: 'badge-pan', iconId: 'icon-pan', loaderId: 'loader-pan', nextKey: 'msme', isVerified: false, isInputBased: false },
+        msme: { inputId: 'input-msme-udyam', btnId: 'btn-verify-msme', cardId: 'card-msme', filenameId: 'filename-msme', badgeId: 'badge-msme', iconId: 'icon-msme', loaderId: 'loader-msme', nextKey: 'cheque', isVerified: false, isInputBased: true },
+        cheque: { inputId: 'input-cheque', cardId: 'card-cheque', labelId: 'label-cheque', filenameId: 'filename-cheque', badgeId: 'badge-cheque', iconId: 'icon-cheque', loaderId: 'loader-cheque', nextKey: 'itr', isVerified: false, isInputBased: false },
+        itr: { inputId: 'input-itr-pan', btnId: 'btn-verify-itr', cardId: 'card-itr', filenameId: 'filename-itr', badgeId: 'badge-itr', iconId: 'icon-itr', loaderId: 'loader-itr', nextKey: 'company', isVerified: false, isInputBased: true },
+        company: { inputId: 'input-company-reg', btnId: 'btn-verify-company', cardId: 'card-company', filenameId: 'filename-company', badgeId: 'badge-company', iconId: 'icon-company', loaderId: 'loader-company', nextKey: null, isVerified: false, isInputBased: true }
+    };
+
+    let currentVerifyingKey = null;
+    let currentExtractedData = null;
+    let detailsModalInstance = new bootstrap.Modal(document.getElementById('detailsModal'));
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function convertDate(dateStr) {
+        if (!dateStr) return dateStr;
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return dateStr;
+    }
+
+    function hasValidDetailsData(details) {
+        if (!details) return false;
+        return Object.values(details).some(val => val !== null && val !== undefined && String(val).trim() !== '');
+    }
+
+    // Refresh disabled/enabled states for the UI card chain
+    function refreshCardUI() {
+        const keys = Object.keys(fileStates);
+        
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            const state = fileStates[key];
+            const card = document.getElementById(state.cardId);
+            
+            // First step is active by default. Subsequent steps are unlocked only if the prior one is verified.
+            let isAllowed = i === 0;
+            if (i > 0) {
+                const prevKey = keys[i - 1];
+                isAllowed = fileStates[prevKey].isVerified;
+            }
+
+            if (state.isVerified) {
+                card.className = 'card step-card completed-card p-4';
+                // Replace badge
+                const badge = document.getElementById(state.badgeId);
+                badge.className = 'badge bg-success-subtle text-success border border-success-subtle step-badge';
+                badge.textContent = 'Verified';
+
+                // Change icon
+                const icon = document.getElementById(state.iconId);
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+
+                // Disable inputs
+                disableInputsForStep(state, true);
+
+                // Display verified details
+                const filenameEl = document.getElementById(state.filenameId);
+                if (filenameEl && state.verifiedDetails) {
+                    const details = state.verifiedDetails;
+                    let displayStr = '';
+                    if (key === 'gst') displayStr = details.legalTradeName || details.companyName || details.gstinNumber || '';
+                    else if (key === 'pan') displayStr = details.name || details.panNumber || '';
+                    else if (key === 'msme') displayStr = details.entityName || details.udyamNumber || '';
+                    else if (key === 'cheque') displayStr = (details.bankName ? details.bankName + ': ' : '') + (details.accountNumber || '');
+                    else if (key === 'itr') displayStr = details.name || details.pan || '';
+                    else if (key === 'company') displayStr = details.businessName || details.cinNumber || details.registrationNumber || '';
+                    
+                    if (displayStr) {
+                        filenameEl.innerHTML = `<span class="badge bg-success-subtle text-success"><i class="fas fa-id-card me-1"></i> ${displayStr}</span>`;
+                    }
+                }
+            } else if (isAllowed) {
+                card.className = 'card step-card active-card p-4';
+                const badge = document.getElementById(state.badgeId);
+                badge.className = 'badge bg-warning-subtle text-warning border border-warning-subtle step-badge';
+                badge.textContent = `Step ${i + 1}`;
+                disableInputsForStep(state, false);
+            } else {
+                card.className = 'card step-card disabled-card p-4';
+                const badge = document.getElementById(state.badgeId);
+                badge.className = 'badge bg-secondary-subtle text-secondary border border-secondary step-badge';
+                badge.textContent = `Step ${i + 1}`;
+                disableInputsForStep(state, true);
+            }
+        }
+        updateProgress();
+    }
+
+    function disableInputsForStep(state, isDisabled) {
+        if (state.isInputBased) {
+            const inputs = document.getElementById(state.cardId).querySelectorAll('input, button');
+            inputs.forEach(el => el.disabled = isDisabled);
+        } else {
+            const fileInput = document.getElementById(state.inputId);
+            fileInput.disabled = isDisabled;
+            const labelBtn = document.getElementById(state.labelId);
+            if (isDisabled) {
+                labelBtn.classList.add('pointer-events-none');
+            } else {
+                labelBtn.classList.remove('pointer-events-none');
+            }
+        }
+    }
+
+    function updateProgress() {
+        const keys = Object.keys(fileStates);
+        const verifiedCount = keys.filter(k => fileStates[k].isVerified).length;
+        const percentage = Math.round((verifiedCount / keys.length) * 100);
+        
+        document.getElementById('progressBar').style.width = percentage + '%';
+        document.getElementById('progressText').textContent = percentage + '% Completed';
+
+        if (verifiedCount === keys.length) {
+            const redirectSec = document.getElementById('dashboardRedirectSection');
+            redirectSec.classList.remove('d-none');
+            
+            // Redirect after 3s
+            if (!window.onboardingRedirectTimer) {
+                let seconds = 3;
+                window.onboardingRedirectTimer = setInterval(function() {
+                    seconds--;
+                    document.getElementById('countdownText').textContent = seconds;
+                    if (seconds <= 0) {
+                        clearInterval(window.onboardingRedirectTimer);
+                        window.location.href = '/vendor/dashboard/';
+                    }
+                }, 1000);
+            }
+        }
+    }
+
+    // Attach File input events
+    ['gst', 'pan', 'cheque'].forEach(key => {
+        const state = fileStates[key];
+        const input = document.getElementById(state.inputId);
+
+        input.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                document.getElementById(state.filenameId).textContent = file.name;
+                verifyFileDocument(key, file);
+            }
+        });
+    });
+
+    // Attach text inputs verify button events
+    document.getElementById('btn-verify-msme').addEventListener('click', function() {
+        const udyamVal = document.getElementById('input-msme-udyam').value.trim();
+        if (!udyamVal) {
+            showToast('Input Required', 'Please enter a valid Udyam Registration Number.', 'warning');
+            return;
+        }
+        verifyQueryBasedDocument('msme', `udyamNumber=${encodeURIComponent(udyamVal)}`);
+    });
+
+    document.getElementById('btn-verify-itr').addEventListener('click', function() {
+        const panVal = document.getElementById('input-itr-pan').value.trim();
+        const dateVal = document.getElementById('input-itr-date').value.trim();
+        const nameVal = document.getElementById('input-itr-name').value.trim();
+
+        if (!panVal || !dateVal || !nameVal) {
+            showToast('Fields Required', 'Please fill out PAN, DOB/Inc Date, and Taxpayer Name.', 'warning');
+            return;
+        }
+        verifyQueryBasedDocument('itr', `pan=${encodeURIComponent(panVal)}&birthOrIncorporatedDate=${encodeURIComponent(dateVal)}&name=${encodeURIComponent(nameVal)}`);
+    });
+
+    document.getElementById('btn-verify-company').addEventListener('click', function() {
+        const regVal = document.getElementById('input-company-reg').value.trim();
+        if (!regVal) {
+            showToast('Input Required', 'Please enter a valid CIN / LLPIN / FCRN.', 'warning');
+            return;
+        }
+        verifyQueryBasedDocument('company', `reg=${encodeURIComponent(regVal)}`);
+    });
+
+    // Verify multipart file uploads
+    function verifyFileDocument(key, file) {
+        currentVerifyingKey = key;
+        const state = fileStates[key];
+        const loader = document.getElementById(state.loaderId);
+        loader.classList.remove('d-none');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch(`/api/verification/${key}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Verification failed. HTTP Status: ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (data.errorCode === '0' || data.status === 'success' || data.success === true) {
+                // Extract inner details object based on document type
+                let details = null;
+                if (key === 'gst') details = data.data.gstDetails;
+                else if (key === 'pan') details = data.data.panDetails;
+                else if (key === 'cheque') details = data.data.chequeDetails;
+
+                if (details) {
+                    currentExtractedData = details;
+                    showAuditModal(key, details);
+                } else {
+                    throw new Error("No details extracted from document.");
+                }
+            } else {
+                throw new Error(data.errorMessage || "AI extraction failed.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Verification Failed', err.message || 'Error occurred during AI verification', 'danger');
+            markStepFailed(key);
+        })
+        .finally(() => {
+            loader.classList.add('d-none');
+        });
+    }
+
+    // Verify query-param text input details
+    function verifyQueryBasedDocument(key, queryParams) {
+        currentVerifyingKey = key;
+        const state = fileStates[key];
+        const loader = document.getElementById(state.loaderId);
+        loader.classList.remove('d-none');
+
+        fetch(`/api/verification/${key}?${queryParams}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Verification failed. HTTP Status: ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (data.errorCode === '0' || data.status === 'success' || data.success === true) {
+                let details = null;
+                if (key === 'msme') details = data.data.msmeDetails;
+                else if (key === 'itr') details = data.data.itrDetails;
+                else if (key === 'company') details = data.data.companyRegistration;
+
+                if (details) {
+                    // Cache input parameter to send on submit
+                    if (key === 'company') {
+                        const regInput = document.getElementById('input-company-reg').value.trim();
+                        details.reg = regInput;
+                    }
+                    currentExtractedData = details;
+                    showAuditModal(key, details);
+                } else {
+                    throw new Error("No registry details found matching the request.");
+                }
+            } else {
+                throw new Error(data.errorMessage || "Registry check failed.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Verification Failed', err.message || 'Error during registry lookup', 'danger');
+            markStepFailed(key);
+        })
+        .finally(() => {
+            loader.classList.add('d-none');
+        });
+    }
+
+    // Populate and show the confirmation modal
+    function showAuditModal(key, details) {
+        const body = document.getElementById('modalDetailsBody');
+        body.innerHTML = '';
+        
+        let labelMap = {};
+        if (key === 'gst') {
+            labelMap = {
+                gstinNumber: 'GSTIN Number',
+                legalTradeName: 'Legal Trade Name',
+                companyName: 'Company Name',
+                typeOfRegistration: 'Registration Type',
+                dateOfRegistration: 'Registration Date',
+                registeredAddress: 'Registered Address'
+            };
+        } else if (key === 'pan') {
+            labelMap = {
+                panNumber: 'PAN Number',
+                name: 'Name on Card',
+                dateOfBirthIncorporation: 'DOB / Incorporation Date',
+                category: 'Category',
+                fathersName: "Father's Name"
+            };
+        } else if (key === 'msme') {
+            labelMap = {
+                udyamNumber: 'Udyam Number',
+                entityName: 'Entity Name',
+                type: 'Enterprise Type',
+                majorActivity: 'Major Activity',
+                gender: 'Gender',
+                socialCategory: 'Social Category',
+                registeredDate: 'Registration Date',
+                incorporatedDate: 'Incorporation Date',
+                commencedDate: 'Commencement Date'
+            };
+        } else if (key === 'cheque') {
+            labelMap = {
+                accountNumber: 'Account Number',
+                ifscCode: 'IFSC Code',
+                bankName: 'Bank Name',
+                branch: 'Branch Location',
+                signatory: 'Authorized Signatory',
+                issuedTo: 'Issued To',
+                issued: 'Issued Date',
+                code: 'Cheque Code'
+            };
+        } else if (key === 'itr') {
+            labelMap = {
+                pan: 'PAN Number',
+                name: 'Taxpayer Name',
+                birthOrIncorporatedDate: 'DOB / Incorporation Date',
+                fy: 'Financial Year',
+                itrFiled: 'ITR Filed Status',
+                itrType: 'ITR Filing Type',
+                grossTurnoverFormatted: 'Gross Turnover',
+                exportTurnoverFormatted: 'Export Turnover',
+                panStatus: 'PAN Match Status'
+            };
+        } else if (key === 'company') {
+            labelMap = {
+                cinNumber: 'CIN Number',
+                businessName: 'Business Name',
+                rocCode: 'ROC Code',
+                registrationNumber: 'Registration Number',
+                category: 'Company Category',
+                subCategory: 'Company Subcategory',
+                companyClass: 'Company Class',
+                authorizedCapital: 'Authorized Capital (₹)',
+                paidCapital: 'Paid Capital (₹)',
+                incorporatedDate: 'Incorporation Date',
+                email: 'Registered Email',
+                status: 'ROC Status'
+            };
+        }
+
+        Object.keys(labelMap).forEach(fieldKey => {
+            let val = details[fieldKey];
+            if (val === undefined || val === null) val = 'Not Available';
+            if (typeof val === 'boolean') val = val ? 'Yes' : 'No';
+
+            const col = document.createElement('div');
+            col.className = 'col-md-6 mb-2';
+            col.innerHTML = `
+                <div class="p-3 bg-light rounded border border-light-subtle">
+                    <span class="modal-detail-label d-block mb-1">${labelMap[fieldKey]}</span>
+                    <span class="modal-detail-value">${val}</span>
+                </div>
+            `;
+            body.appendChild(col);
+        });
+
+        document.getElementById('detailsModalLabel').innerHTML = `<i class="fas fa-file-shield me-2 text-success"></i>Confirm ${key.toUpperCase()} Verification Details`;
+        detailsModalInstance.show();
+    }
+
+    // Submit details endpoint triggers
+    document.getElementById('btnSubmitVerification').addEventListener('click', function() {
+        const spinner = document.getElementById('submitBtnSpinner');
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+
+        let payload = {};
+        if (currentVerifyingKey === 'gst') {
+            payload = {
+                gstinNumber: currentExtractedData.gstinNumber,
+                legalTradeName: currentExtractedData.legalTradeName,
+                companyName: currentExtractedData.companyName,
+                registeredAddress: currentExtractedData.registeredAddress,
+                typeOfRegistration: currentExtractedData.typeOfRegistration,
+                dateOfRegistration: convertDate(currentExtractedData.dateOfRegistration)
+            };
+        } else if (currentVerifyingKey === 'pan') {
+            payload = {
+                panNumber: currentExtractedData.panNumber,
+                name: currentExtractedData.name,
+                dateOfBirthIncorporation: currentExtractedData.dateOfBirthIncorporation,
+                category: currentExtractedData.category,
+                fathersName: currentExtractedData.fathersName || "Not Available"
+            };
+        } else if (currentVerifyingKey === 'msme') {
+            payload = {
+                udyamNumber: currentExtractedData.udyamNumber,
+                entityName: currentExtractedData.entityName,
+                type: currentExtractedData.type,
+                majorActivity: currentExtractedData.majorActivity,
+                gender: currentExtractedData.gender,
+                socialCategory: currentExtractedData.socialCategory,
+                registeredDate: currentExtractedData.registeredDate,
+                incorporatedDate: currentExtractedData.incorporatedDate,
+                commencedDate: currentExtractedData.commencedDate
+            };
+        } else if (currentVerifyingKey === 'cheque') {
+            payload = {
+                accountNumber: currentExtractedData.accountNumber,
+                ifscCode: currentExtractedData.ifscCode,
+                bankName: currentExtractedData.bankName,
+                branch: currentExtractedData.branch,
+                signatory: currentExtractedData.signatory,
+                issuedTo: currentExtractedData.issuedTo,
+                issued: currentExtractedData.issued,
+                code: currentExtractedData.code
+            };
+        } else if (currentVerifyingKey === 'itr') {
+            payload = {
+                pan: currentExtractedData.pan,
+                birthOrIncorporatedDate: currentExtractedData.birthOrIncorporatedDate,
+                name: currentExtractedData.name,
+                fy: currentExtractedData.fy,
+                itrFiled: currentExtractedData.itrFiled,
+                itrType: currentExtractedData.itrType,
+                grossTurnover: currentExtractedData.grossTurnover,
+                grossTurnoverFormatted: currentExtractedData.grossTurnoverFormatted,
+                exportTurnover: currentExtractedData.exportTurnover,
+                exportTurnoverFormatted: currentExtractedData.exportTurnoverFormatted,
+                panStatus: currentExtractedData.panStatus
+            };
+        } else if (currentVerifyingKey === 'company') {
+            payload = {
+                reg: currentExtractedData.reg,
+                businessName: currentExtractedData.businessName,
+                rocCode: currentExtractedData.rocCode,
+                registrationNumber: currentExtractedData.registrationNumber,
+                category: currentExtractedData.category,
+                subCategory: currentExtractedData.subCategory,
+                companyClass: currentExtractedData.companyClass,
+                authorizedCapital: currentExtractedData.authorizedCapital,
+                paidCapital: currentExtractedData.paidCapital,
+                incorporatedDate: currentExtractedData.incorporatedDate,
+                email: currentExtractedData.email,
+                listed: currentExtractedData.listed,
+                active: currentExtractedData.active,
+                status: currentExtractedData.status
+            };
+        }
+
+        fetch(`/api/verification/${currentVerifyingKey}/submit`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Failed to save details. HTTP Status: ' + res.status);
+            return res.json();
+        })
+        .then(data => {
+            if (data.errorCode === '0' || data.status === 'success' || data.success === true || data.status === '200') {
+                showToast('Details Saved', data.statusMsg || `Document verification finalized for ${currentVerifyingKey.toUpperCase()}`, 'success');
+                detailsModalInstance.hide();
+                
+                // Call GET API to verify data exists and unlock next step
+                const checkKey = currentVerifyingKey;
+                fetch(`/api/verification/${checkKey}`, {
+                    method: 'GET',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(getRes => {
+                    if (!getRes.ok) throw new Error('GET verification check failed');
+                    return getRes.json();
+                })
+                .then(getData => {
+                    let details = null;
+                    if (checkKey === 'gst') details = getData.data?.gstDetails;
+                    else if (checkKey === 'pan') details = getData.data?.panDetails;
+                    else if (checkKey === 'msme') details = getData.data?.msmeDetails;
+                    else if (checkKey === 'cheque') details = getData.data?.chequeDetails;
+                    else if (checkKey === 'itr') details = getData.data?.itrDetails;
+                    else if (checkKey === 'company') details = getData.data?.companyRegistration;
+
+                    let hasData = hasValidDetailsData(details);
+
+                    if (hasData) {
+                        fileStates[checkKey].isVerified = true;
+                        fileStates[checkKey].verifiedDetails = details;
+                        showToast('Step Unlocked', `Successfully verified and unlocked the next step for ${checkKey.toUpperCase()}!`, 'success');
+                    } else {
+                        fileStates[checkKey].isVerified = false;
+                        showToast('Verification Failed', `The server has no active data stored for ${checkKey.toUpperCase()}.`, 'danger');
+                    }
+                    refreshCardUI();
+                })
+                .catch(getErr => {
+                    console.error('GET check error:', getErr);
+                    // Fallback to local success if GET fails but POST succeeded
+                    fileStates[checkKey].isVerified = true;
+                    refreshCardUI();
+                });
+            } else {
+                throw new Error(data.errorMessage || data.statusMsg || "Database write failed.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('Save Failed', err.message || 'Error occurred during final submission', 'danger');
+        })
+        .finally(() => {
+            spinner.classList.add('d-none');
+            this.disabled = false;
+        });
+    });
+
+    function markStepFailed(key) {
+        const state = fileStates[key];
+        const card = document.getElementById(state.cardId);
+        card.classList.remove('active-card');
+        card.classList.add('failed-card');
+
+        const badge = document.getElementById(state.badgeId);
+        badge.className = 'badge bg-danger-subtle text-danger border border-danger-subtle step-badge';
+        badge.textContent = 'Failed';
+
+        const icon = document.getElementById(state.iconId);
+        icon.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+
+        if (!state.isInputBased) {
+            const label = document.getElementById(state.labelId);
+            label.innerHTML = '<i class="fas fa-arrow-rotate-right me-1"></i> Retry Upload';
+            label.className = 'custom-file-btn btn-danger';
+        }
+    }
+
+    function showToast(title, message, type) {
+        const toastHtml = `
+            <div class="toast align-items-center text-white bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>${title}:</strong> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>`;
+        const toastContainer = document.querySelector('.toast-container');
+        if (toastContainer) {
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+            const toastElement = toastContainer.lastElementChild;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    }
+
+    async function checkOnboardingStatus() {
+        const keys = ['gst', 'pan', 'msme', 'cheque', 'itr', 'company'];
+        
+        for (const key of keys) {
+            try {
+                const res = await fetch(`/api/verification/${key}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.errorCode === '0' || data.status === '200' || data.status === 'success') {
+                        let details = null;
+                        if (key === 'gst') details = data.data?.gstDetails;
+                        else if (key === 'pan') details = data.data?.panDetails;
+                        else if (key === 'msme') details = data.data?.msmeDetails;
+                        else if (key === 'cheque') details = data.data?.chequeDetails;
+                        else if (key === 'itr') details = data.data?.itrDetails;
+                        else if (key === 'company') details = data.data?.companyRegistration;
+                        
+                        if (details) {
+                            let hasData = hasValidDetailsData(details);
+                            if (hasData) {
+                                fileStates[key].isVerified = true;
+                                fileStates[key].verifiedDetails = details;
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error(`Error checking status for ${key}:`, err);
+            }
+        }
+        refreshCardUI();
+    }
+
+    // Initialize UI on load
+    checkOnboardingStatus();
+});
+</script>
+{% endblock %}

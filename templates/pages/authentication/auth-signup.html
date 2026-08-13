@@ -1,0 +1,183 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<head>
+    <meta charset="utf-8" />
+    <title>Sign Up | Invoika - Admin & Dashboard Template</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
+    <meta content="Themesbrand" name="author" />
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- Layout config Js -->
+    <script src="{% static 'js/layout.js' %}"></script>
+    <!-- Bootstrap Css -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- App Css-->
+    <link href="{% static 'css/app.min.css' %}" rel="stylesheet" type="text/css" />
+
+
+</head>
+
+
+    <body class="auth-bg 100-vh">
+        <div class="bg-overlay bg-light"></div>
+    
+        <div class="account-pages">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <div class="text-center mb-4">
+                            <a href="{% url 'pages:login' %}" class="d-inline-block auth-logo">
+                                <img src="{% static 'images/logo-dark.png' %}" alt="" height="22">
+                            </a>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body p-4">
+                                <div class="text-center mt-2">
+                                    <h5 class="text-primary">Create New Account</h5>
+                                    <p class="text-muted">Get your free Aequm account now</p>
+                                </div>
+                                <div class="p-2 mt-4">
+                                    <form id="registerForm" class="auth-input">
+                                        <div class="mb-3">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="firstName" class="form-label">First Name</label>
+                                            <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter first name" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="lastName" class="form-label">Last Name</label>
+                                            <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter last name" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="phoneNumber" class="form-label">Phone Number</label>
+                                            <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Enter phone number"  pattern="[6-9][0-9]{9}"
+                                            maxlength="10" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="password" class="form-label">Password</label>
+                                            <div class="position-relative auth-pass-inputgroup">
+                                                <input type="password" class="form-control pe-5" id="password" name="password" placeholder="Enter password" required>
+                                                <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button">
+                                                    <i class="las la-eye align-middle fs-18"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="role" class="form-label">Select Role</label>
+                                            <select class="form-control" id="role" name="role" required>
+                                                <option value="" selected disabled>Choose your role</option>
+                                                <option value="customer">Customer</option>
+                                                <option value="vendor">Vendor</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <p class="mb-0 fs-12 text-muted fst-italic">By registering you agree to the Aequm 
+                                                <a href="#" class="text-primary text-decoration-underline fst-normal fw-medium">Terms of Use</a>
+                                            </p>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <button class="btn btn-primary w-100" type="submit">Sign Up</button>
+                                        </div>
+
+                                        <div class="mt-4 text-center">
+                                            <p class="mb-0">Already have an account? <a href="{% url 'pages:login' %}" class="fw-medium text-primary text-decoration-underline">Sign In</a></p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <p class="mb-0 text-muted">© <script>document.write(new Date().getFullYear())</script> Aequm.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'libs/simplebar/simplebar.min.js' %}"></script>
+    <script src="{% static 'libs/node-waves/waves.min.js' %}"></script>
+    <script src="{% static 'libs/feather-icons/feather.min.js' %}"></script>
+    <script src="{% static 'js/plugins.js' %}"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registerForm');
+            const passwordToggle = document.querySelector('.password-addon');
+            const passwordInput = document.getElementById('password');
+
+            // Toggle password visibility
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('la-eye');
+                this.querySelector('i').classList.toggle('la-eye-slash');
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const role = document.getElementById('role').value;
+                if (!role) {
+                    alert('Please select a role');
+                    return;
+                }
+
+                const formData = {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value,
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    phoneNumber: document.getElementById('phoneNumber').value,
+                    authKey: role
+                };
+
+                try {
+                    const response = await fetch('/register/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.status === 'success') {
+                        alert('Registration successful! Redirecting to login...');
+                        setTimeout(() => {
+                            window.location.href = data.redirect_url;
+                        }, 1500);
+                    } else {
+                        alert(data.error || 'Registration failed. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>

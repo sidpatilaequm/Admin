@@ -1,0 +1,169 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Invoices - Invoika{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-flex align-items-center justify-content-between">
+                <h4 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>Invoices
+                </h4>
+
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Invoices</a></li>
+                        <li class="breadcrumb-item active">List</li>
+                    </ol>
+                            </div>
+                           </div>
+                        </div>
+                    </div>
+    <!-- end page title -->
+
+                    <div class="row">
+        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-sm-4">
+                            <div class="search-box me-2 mb-2 d-inline-block">
+                                <div class="position-relative">
+                                    <input type="text" class="form-control" placeholder="Search invoices...">
+                                    <i class="fas fa-search search-icon"></i>
+                                        </div>
+                                        </div>
+                                    </div>
+                        <div class="col-sm-8">
+                            <div class="text-sm-end">
+                                <a href="{% url 'pages:invoice_add' %}" class="btn btn-success btn-rounded waves-effect waves-light mb-2 me-2">
+                                    <i class="fas fa-plus me-1"></i> Add New Invoice
+                                </a>
+                                <button type="button" class="btn btn-primary btn-rounded waves-effect waves-light mb-2 me-2">
+                                    <i class="fas fa-download me-1"></i> Export
+                                </button>
+                                <button type="button" class="btn btn-info btn-rounded waves-effect waves-light mb-2">
+                                    <i class="fas fa-print me-1"></i> Print
+                                </button>
+                                        </div>
+                                    </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle table-nowrap table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                                    <th scope="col">Invoice ID</th>
+                                                    <th scope="col">Date</th>
+                                    <th scope="col">Billing Name</th>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                        <a href="javascript:void(0);" class="text-body fw-bold">#INV-0001</a>
+                                                    </td>
+                                    <td>2024-03-20</td>
+                                    <td>John Doe</td>
+                                    <td>$1,200.00</td>
+                                    <td>
+                                        <span class="badge bg-success">Paid</span>
+                                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0);" class="text-primary" data-bs-toggle="tooltip" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="javascript:void(0);" class="text-success" data-bs-toggle="tooltip" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="javascript:void(0);" class="text-danger" data-bs-toggle="tooltip" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                        <a href="javascript:void(0);" class="text-body fw-bold">#INV-0002</a>
+                                                    </td>
+                                    <td>2024-03-19</td>
+                                    <td>Jane Smith</td>
+                                    <td>$850.00</td>
+                                    <td>
+                                        <span class="badge bg-warning">Pending</span>
+                                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="javascript:void(0);" class="text-primary" data-bs-toggle="tooltip" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="javascript:void(0);" class="text-success" data-bs-toggle="tooltip" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="javascript:void(0);" class="text-danger" data-bs-toggle="tooltip" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-sm-12 col-md-5">
+                            <div class="dataTables_info" role="status" aria-live="polite">
+                                Showing 1 to 2 of 2 entries
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-7">
+                            <div class="dataTables_paginate paging_simple_numbers">
+                                <ul class="pagination justify-content-end">
+                                    <li class="paginate_button page-item previous disabled">
+                                        <a href="#" class="page-link"><i class="fas fa-chevron-left"></i></a>
+                                  </li>
+                                    <li class="paginate_button page-item active">
+                                        <a href="#" class="page-link">1</a>
+                                  </li>
+                                    <li class="paginate_button page-item next disabled">
+                                        <a href="#" class="page-link"><i class="fas fa-chevron-right"></i></a>
+                                  </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Search functionality
+    document.querySelector('.search-box input').addEventListener('keyup', function(e) {
+        var searchText = e.target.value.toLowerCase();
+        var tableRows = document.querySelectorAll('tbody tr');
+        
+        tableRows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchText) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}
+   

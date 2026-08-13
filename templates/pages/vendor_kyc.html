@@ -1,0 +1,241 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Complete KYC - Onboarding | Invoika{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-lg-10 col-xl-8">
+        
+        <!-- Wizard Progress Bar -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0 text-success fw-bold"><i class="fas fa-file-invoice me-2"></i>Vendor Onboarding Steps</h5>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">Step 2 of 3: KYC Submission</span>
+                </div>
+                
+                <div class="row g-2 text-center text-xs fw-semibold">
+                    <div class="col-4">
+                        <div class="py-2 border-bottom border-success border-3 text-success">
+                            <i class="fas fa-check-circle me-1"></i> Account Setup
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="py-2 border-bottom border-success border-3 text-success">
+                            <i class="fas fa-dot-circle me-1"></i> Document Upload (KYC)
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="py-2 border-bottom border-light border-3 text-muted">
+                            <i class="far fa-circle me-1"></i> Verify & Activate
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KYC Upload Form Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white p-4">
+                <h4 class="mb-1"><i class="fas fa-shield-alt me-2"></i>KYC & Document Verification</h4>
+                <p class="mb-0 text-white-50 small">Please upload authentic documents and input correct numbers. Inaccurate data will delay vendor activation.</p>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+                <div id="alert-container"></div>
+                
+                <form id="kycForm" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Section 1: Business Identifiers -->
+                    <h5 class="text-success border-bottom pb-2 mb-4"><i class="fas fa-briefcase me-2"></i>1. Business Registrations</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="gstin" class="form-label fw-medium">GSTIN (GST Number) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="gstin" name="gstin" placeholder="e.g. 22AAAAA0000A1Z5" required maxlength="15" minlength="15">
+                            <div class="form-text text-muted">15-digit Goods and Services Tax Identification Number.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="pan" class="form-label fw-medium">PAN Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-uppercase" id="pan" name="pan" placeholder="e.g. ABCDE1234F" required maxlength="10" minlength="10">
+                            <div class="form-text text-muted">10-character Permanent Account Number.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="msme" class="form-label fw-medium">MSME / Udyam Number <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control" id="msme" name="msme" placeholder="e.g. UDYAM-XX-00-1234567">
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="cin" class="form-label fw-medium">CIN Number <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control text-uppercase" id="cin" name="cin" placeholder="e.g. L01500MH1995PLC089838" maxlength="21" minlength="21">
+                        </div>
+                    </div>
+                    
+                    <!-- Section 2: Bank Details -->
+                    <h5 class="text-success border-bottom pb-2 mb-4 mt-2"><i class="fas fa-university me-2"></i>2. Bank Details (For Payments)</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="account_number" class="form-label fw-medium">Bank Account Number <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="account_number" name="account_number" placeholder="Enter bank account number" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="account_number_confirm" class="form-label fw-medium">Confirm Account Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="account_number_confirm" placeholder="Re-enter bank account number" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="ifsc_code" class="form-label fw-medium">IFSC Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control text-uppercase" id="ifsc_code" name="ifsc_code" placeholder="e.g. SBIN0001234" required maxlength="11" minlength="11">
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="bank_name" class="form-label fw-medium">Bank Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="bank_name" name="bank_name" placeholder="e.g. State Bank of India" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Section 3: Document Attachments -->
+                    <h5 class="text-success border-bottom pb-2 mb-4 mt-2"><i class="fas fa-file-upload me-2"></i>3. Upload Official Documents</h5>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="p-3 border rounded bg-light-subtle">
+                                <label for="gstFile" class="form-label fw-semibold">GST Registration Certificate <span class="text-danger">*</span></label>
+                                <input class="form-control" type="file" id="gstFile" name="gstFile" accept=".pdf,.png,.jpg,.jpeg" required>
+                                <div class="form-text text-muted small">Max 5MB. PDF, PNG, JPG accepted.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="p-3 border rounded bg-light-subtle">
+                                <label for="panFile" class="form-label fw-semibold">PAN Card Copy <span class="text-danger">*</span></label>
+                                <input class="form-control" type="file" id="panFile" name="panFile" accept=".pdf,.png,.jpg,.jpeg" required>
+                                <div class="form-text text-muted small">Max 5MB. PDF, PNG, JPG accepted.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="p-3 border rounded bg-light-subtle">
+                                <label for="msmeFile" class="form-label fw-semibold">MSME Certificate <span class="text-muted">(Optional)</span></label>
+                                <input class="form-control" type="file" id="msmeFile" name="msmeFile" accept=".pdf,.png,.jpg,.jpeg">
+                                <div class="form-text text-muted small">Max 5MB. PDF, PNG, JPG accepted.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="p-3 border rounded bg-light-subtle">
+                                <label for="chequeFile" class="form-label fw-semibold">Cancelled Cheque or Bank Proof <span class="text-danger">*</span></label>
+                                <input class="form-control" type="file" id="chequeFile" name="chequeFile" accept=".pdf,.png,.jpg,.jpeg" required>
+                                <div class="form-text text-muted small">Max 5MB. PDF, PNG, JPG accepted.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="p-3 border rounded bg-light-subtle">
+                            <label for="coiFile" class="form-label fw-semibold">Certificate of Incorporation (COI) <span class="text-muted">(Optional)</span></label>
+                            <input class="form-control" type="file" id="coiFile" name="coiFile" accept=".pdf,.png,.jpg,.jpeg">
+                            <div class="form-text text-muted small">Max 5MB. PDF, PNG, JPG accepted.</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Form Submit -->
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small"><i class="fas fa-lock me-1"></i> Secured document processing</span>
+                        <button type="submit" class="btn btn-success px-4 py-2 fw-semibold" id="submitBtn">
+                            <i class="fas fa-paper-plane me-2"></i>Submit KYC Documents
+                        </button>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('kycForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const alertContainer = document.getElementById('alert-container');
+        alertContainer.innerHTML = '';
+        
+        const accountNum = document.getElementById('account_number').value;
+        const accountNumConfirm = document.getElementById('account_number_confirm').value;
+        
+        if (accountNum !== accountNumConfirm) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Bank account numbers do not match!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading documents...';
+        
+        // Use FormData to send file uploads
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.status === 'success') {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i> KYC Documents uploaded successfully! Status updated to DOCUMENT_SUBMITTED. Redirecting to dashboard...
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1500);
+            } else {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i> ${data.error || 'Failed to upload documents.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit KYC Documents';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (err) {
+            console.error(err);
+            alertContainer.innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i> A connection error occurred during upload. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit KYC Documents';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+</script>
+{% endblock %}

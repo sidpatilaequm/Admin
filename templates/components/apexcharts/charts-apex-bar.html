@@ -1,0 +1,165 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% block title %}Apex Bar Charts {% endblock title %} 
+
+
+{% block content %}
+
+    {% block pagetitle %}
+        {% include "partials/page-title.html" with pagetitle="Apexcharts" title="Bar Charts" %}
+    {% endblock pagetitle %}
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Basic Bar Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="bar_chart" data-colors='["--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Custom DataLabels Bar</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="custom_datalabels_bar" data-colors='["--in-primary", "--in-secondary", "--in-success", "--in-info", "--in-warning", "--in-danger", "--in-dark", "--in-primary", "--in-success", "--in-secondary"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Stacked Bar Charts</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="stacked_bar" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-danger", "--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Stacked Bars 100</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="stacked_bar_100" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-danger", "--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Bar with Negative Values</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="negative_bars" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Bar with Markers</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="bar_markers" data-colors='["--in-success", "--in-primary"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Reversed Bar Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="reversed_bars" data-colors='["--in-info"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Patterned Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="patterned_bars" data-colors='["--in-primary", "--in-success", "--in-warning", "--in-danger"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+
+                    <div class="row">
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Grouped Bar Chart</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div id="grouped_bar" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-xl-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title mb-0">Bar with Images</h4>
+                                </div><!-- end card header -->
+
+                                <div class="card-body">
+                                    <div class="live-preview">
+                                        <div id="bar_images" class="apex-charts" dir="ltr"></div>
+                                    </div>
+                                </div><!-- end card-body -->
+                            </div><!-- end card -->
+                        </div>
+                        <!-- end col -->
+                    </div>
+                    <!-- end row -->
+{% endblock content %}
+
+{% block extra_js %}          
+
+    <!-- apexcharts -->
+    <script src="{% static 'libs/apexcharts/apexcharts.min.js' %}"></script>
+
+    <!-- barcharts init -->
+    <script src="{% static 'js/pages/apexcharts-bar.init.js' %}"></script>
+
+{% endblock extra_js %}
+                                        
+

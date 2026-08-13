@@ -1,0 +1,166 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Subcontracting Purchase Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div>
+                <h4 class="fw-bold text-uppercase mb-1">Subcontracting Purchase Orders</h4>
+                <p class="text-muted mb-0">Manage and track your subcontracted work orders</p>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Hidden Upload Form -->
+                <form id="uploadExcelForm" method="POST" action="{% url 'pages:upload_subcon_po_excel' %}" enctype="multipart/form-data" style="display: none;">
+                    {% csrf_token %}
+                    <input type="file" id="excelFile" name="excel_file" accept=".xlsx, .xls" onchange="submitExcelForm()">
+                </form>
+                
+                <button type="button" class="btn btn-success" onclick="document.getElementById('excelFile').click();">
+                    <i class="ri-file-excel-2-line me-1"></i> Upload Excel
+                </button>
+
+                <a href="{% url 'pages:download_subcon_po_template' %}" class="btn btn-outline-success me-1">
+                    <i class="ri-download-2-line me-1"></i> Download Template
+                </a>
+
+                {% if has_custom_data %}
+                <a href="{% url 'pages:reset_subcon_po_data' %}" class="btn btn-outline-danger me-1">
+                    <i class="ri-refresh-line me-1"></i> Reset Data
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0">All Subcontracting POs</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for po in subcon_pos %}
+                        <!-- PO Item -->
+                        <a href="{% url 'pages:subcontracting_purchase_order_detail' po.subcon_po_number %}" class="list-group-item list-group-item-action p-4 po-item cursor-pointer text-decoration-none">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <h5 class="fs-16 fw-bold text-info mb-0 me-3">SUB-{{ po.subcon_po_number }}</h5>
+                                        <span class="badge bg-soft-{{ po.status_badge }} text-{{ po.status_badge }} text-uppercase">{{ po.po_status }}</span>
+                                    </div>
+                                    <p class="text-muted mb-1">{{ po.fg_material_number }} - {{ po.company_name }}</p>
+                                    <div class="d-flex align-items-center text-muted fs-13">
+                                        <span class="me-3"><i class="ri-user-line me-1"></i> {{ po.vendor_name }}</span>
+                                        <span><i class="ri-calendar-line me-1"></i> {{ po.po_date_formatted }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <h5 class="fw-bold mb-0">₹ {{ po.total_value_formatted }}</h5>
+                                    <small class="text-muted">Processing Value</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item p-5 text-center text-muted">
+                            <i class="ri-file-excel-line fs-24 mb-2 d-block"></i>
+                            <h6>No data</h6>
+                            <p class="fs-12 mb-0">Please upload a file.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1) !important; }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1) !important; }
+    .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1) !important; }
+
+    .cursor-pointer { cursor: pointer; }
+    .po-item { transition: all 0.2s; }
+    .po-item:hover { 
+        background-color: rgba(13, 202, 240, 0.05);
+        border-left: 4px solid #0dcaf0 !important;
+        transform: translateX(5px);
+    }
+</style>
+
+<script>
+    function submitExcelForm() {
+        const fileInput = document.getElementById('excelFile');
+        if (!fileInput.files || fileInput.files.length === 0) return;
+
+        const form = document.getElementById('uploadExcelForm');
+        const formData = new FormData(form);
+        
+        const btn = document.querySelector('button[onclick*="excelFile"]');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Uploading...';
+        btn.disabled = true;
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Excel file uploaded and Subcon PO data populated successfully.',
+                        icon: 'success',
+                        confirmButtonColor: '#0dcaf0'
+                    }).then(() => window.location.reload());
+                } else {
+                    alert('Excel file uploaded and Subcon PO data populated successfully.');
+                    window.location.reload();
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Upload Failed',
+                        text: data.message || 'Error occurred while processing Excel file.',
+                        icon: 'error',
+                        confirmButtonColor: '#0dcaf0'
+                    });
+                } else {
+                    alert(data.message || 'Error occurred while processing Excel file.');
+                }
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                fileInput.value = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An unexpected error occurred during upload.',
+                    icon: 'error',
+                    confirmButtonColor: '#0dcaf0'
+                });
+            } else {
+                alert('An unexpected error occurred during upload.');
+            }
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+            fileInput.value = '';
+        });
+    }
+</script>
+{% endblock %}

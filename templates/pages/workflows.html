@@ -1,0 +1,986 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Workflows - Invoika{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #198754;
+        --primary-hover: #157347;
+        --primary-soft: rgba(25, 135, 84, 0.1);
+        --border: #e9ecef;
+        --text-dim: #6c757d;
+        --surface: #ffffff;
+        --surface-elevated: #f8f9fa;
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    .page-header-info h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #343a40;
+        margin: 0 0 4px 0;
+    }
+    .page-header-info p {
+        color: var(--text-dim);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* Cards */
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        margin-bottom: 24px;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+    }
+    .btn-primary {
+        background-color: var(--primary) !important;
+        color: #ffffff !important;
+        border: 1px solid var(--primary) !important;
+    }
+    .btn-primary:hover {
+        background-color: var(--primary-hover) !important;
+        border-color: var(--primary-hover) !important;
+    }
+    .btn-secondary {
+        background-color: #ffffff !important;
+        color: #495057 !important;
+        border: 1px solid var(--border) !important;
+    }
+    .btn-secondary:hover {
+        background-color: var(--surface-elevated) !important;
+        border-color: #adb5bd !important;
+    }
+    .btn-ghost {
+        background-color: transparent !important;
+        color: var(--text-dim) !important;
+        border: 1px solid transparent !important;
+    }
+    .btn-ghost:hover {
+        background-color: var(--surface-elevated) !important;
+        color: #343a40 !important;
+    }
+    .btn-sm {
+        padding: 5px 12px;
+        font-size: 12px;
+    }
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background-color: #ffffff;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-icon:hover {
+        background-color: var(--surface-elevated);
+        color: #343a40;
+    }
+    .btn-icon.text-danger:hover {
+        background-color: #fce8e6;
+        color: #d93025;
+        border-color: #fad2cf;
+    }
+
+    /* Table */
+    .workflows-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .workflows-table th {
+        background-color: var(--surface-elevated);
+        color: var(--text-dim);
+        font-weight: 700;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 12px 20px;
+        border-bottom: 2px solid var(--border);
+        text-align: left;
+    }
+    .workflows-table td {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+        font-size: 14px;
+        color: #495057;
+    }
+    .workflows-table tbody tr:hover {
+        background-color: rgba(25, 135, 84, 0.02);
+    }
+    .workflows-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 50px;
+    }
+    .badge-approved {
+        background-color: rgba(25, 135, 84, 0.12);
+        color: #198754;
+    }
+    .badge-pending {
+        background-color: rgba(255, 193, 7, 0.12);
+        color: #ffc107;
+    }
+
+    /* Overlay / Modals */
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    .custom-modal {
+        background: var(--surface);
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        padding: 24px;
+        animation: modalFadeIn 0.25s ease-out;
+    }
+    .modal-header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 14px;
+        margin-bottom: 20px;
+    }
+    .modal-header h2 {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+        color: #343a40;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        margin-top: 24px;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Grid & Layout helpers */
+    .flex-between {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .flex-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .flex-1 {
+        flex: 1;
+    }
+    .gap-2 {
+        gap: 8px;
+    }
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    .mt-4 {
+        margin-top: 16px;
+    }
+
+    /* Form Fields */
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    .form-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
+    }
+    input, select, textarea {
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        background-color: #ffffff;
+        color: #495057;
+        transition: all 0.2s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.15);
+    }
+
+    /* Stage card inside modal */
+    .stage-card {
+        transition: all 0.2s;
+    }
+    .stage-card:hover {
+        box-shadow: 0 4px 15px rgba(0,0,0,0.06) !important;
+        border-color: var(--primary) !important;
+    }
+    .stage-index {
+        background-color: var(--primary-soft);
+        color: var(--primary);
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+    }
+
+    /* Skeletons */
+    .skeleton-page {
+        padding: 20px;
+    }
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeletonKeyframe 1.5s infinite;
+    }
+    .skeleton-header {
+        height: 48px;
+        width: 250px;
+        border-radius: 6px;
+        margin-bottom: 24px;
+    }
+    @keyframes skeletonKeyframe {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Empty state */
+    .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-dim);
+    }
+    .empty-icon {
+        margin-bottom: 16px;
+        color: #adb5bd;
+    }
+    .empty h3 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    .empty p {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+    /* Custom Toast styling (matching material theme) */
+    .toast-custom {
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        min-width: 320px;
+        max-width: 400px;
+        font-size: 1rem;
+        position: relative;
+        border: 1px solid transparent;
+    }
+    .toast-custom.toast-success {
+        background: #e6f9ed;
+        color: #198754;
+        border-color: #b6e2c6;
+    }
+    .toast-custom.toast-error {
+        background: #fde8e8;
+        color: #e53e3e;
+        border-color: #f8b4b4;
+    }
+    .toast-custom.toast-warning {
+        background: #fef3c7;
+        color: #d97706;
+        border-color: #fde68a;
+    }
+    
+    .toast-custom .toast-icon {
+        color: #fff;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .toast-custom.toast-success .toast-icon {
+        background: #198754;
+    }
+    .toast-custom.toast-error .toast-icon {
+        background: #e53e3e;
+    }
+    .toast-custom.toast-warning .toast-icon {
+        background: #d97706;
+    }
+
+    .toast-custom .toast-close {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 1.2rem;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+    }
+    .toast-custom .toast-progress {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 4px;
+        width: 100%;
+        border-radius: 0 0 10px 10px;
+        transition: width 2s linear;
+    }
+    .toast-custom.toast-success .toast-progress {
+        background: #198754;
+    }
+    .toast-custom.toast-error .toast-progress {
+        background: #e53e3e;
+    }
+    .toast-custom.toast-warning .toast-progress {
+        background: #d97706;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="workflows-content" style="display: none;">
+    <div class="page-header">
+        <div class="page-header-info">
+            <h1>Workflows</h1>
+            <p>Design and manage approval processes for your organization.</p>
+        </div>
+        <div class="page-header-actions">
+            <button class="btn btn-primary" onclick="openCreateModal()">
+                <i data-lucide="plus" style="width: 18px; height: 18px;"></i> Create Workflow
+            </button>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px;">
+            <div style="position: relative; flex: 1;">
+                <i data-lucide="search" style="position: absolute; left: 12px; top: 11px; color: var(--text-dim); width: 16px; height: 16px;"></i>
+                <input id="search-input" placeholder="Search workflows..." style="padding-left: 36px; height: 38px;" oninput="filterWorkflows()">
+            </div>
+            <button class="btn btn-secondary">
+                <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i> Filters
+            </button>
+        </div>
+
+        <table class="workflows-table">
+            <thead>
+                <tr>
+                    <th>Workflow Name</th>
+                    <th>Stages</th>
+                    <th>Status</th>
+                    <th>Last Modified</th>
+                    <th style="width: 80px;"></th>
+                </tr>
+            </thead>
+            <tbody id="workflow-list-body">
+                <!-- Workflows will be dynamically loaded here -->
+            </tbody>
+        </table>
+
+        <div class="empty" id="workflow-empty-state" style="display: none;">
+            <i data-lucide="layers" class="empty-icon" style="width: 48px; height: 48px;"></i>
+            <h3>No Workflows Yet</h3>
+            <p>Start by creating your first approval process.</p>
+            <button class="btn btn-primary mt-4" onclick="openCreateModal()">
+                <i data-lucide="plus" style="width: 18px; height: 18px;"></i> Create Workflow
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading state -->
+<div class="skeleton-page" id="workflows-loading">
+    <div class="skeleton skeleton-header"></div>
+    <div class="skeleton" style="height: 300px; border-radius: 12px;"></div>
+</div>
+
+<!-- Workflow Modal (Create / Edit) -->
+<div class="overlay" id="workflow-modal" style="display: none;">
+    <div class="custom-modal" style="width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="flex-between modal-header">
+            <h2 id="modal-workflow-title">Create Workflow</h2>
+            <button class="btn-icon" onclick="closeWorkflowModal()"><i data-lucide="x" style="width: 18px; height: 18px;"></i></button>
+        </div>
+
+        <div class="form-group">
+            <label>Workflow Name</label>
+            <input id="wf-name" placeholder="e.g., Procurement Approval">
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Workflow Category</label>
+                <select id="wf-type">
+                    <option value="approval">Approval</option>
+                    <option value="review">Review</option>
+                    <option value="acknowledgement">Acknowledgement</option>
+                    <option value="signature">Signature</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description (Optional)</label>
+                <input id="wf-desc" placeholder="Brief description...">
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Notification Channel</label>
+                <select id="wf-notif">
+                    <option value="email">Email</option>
+                    <option value="slack">Slack</option>
+                    <option value="both">Email + Slack</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Rejection Behavior</label>
+                <select id="wf-reject-behavior">
+                    <option value="stop">Stop (reject immediately)</option>
+                    <option value="restart">Restart from stage 1</option>
+                    <option value="escalate">Escalate</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="form-group">
+                <label>Escalation After (hours)</label>
+                <input type="number" min="1" id="wf-escalate-hours" placeholder="e.g., 24" value="24">
+            </div>
+            <div class="form-group">
+                <label>Auto-approve Threshold (amount)</label>
+                <input type="number" min="0" id="wf-threshold" placeholder="e.g., 5000 — leave blank to disable">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Auto-approve Conditions (JSON)</label>
+            <textarea id="wf-conditions" placeholder='e.g., [{"field": "department", "operator": "eq", "value": "Finance"}]' rows="3" style="font-family: monospace; font-size: 13px;"></textarea>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <div class="flex-between" style="margin-bottom: 16px;">
+                <div>
+                    <label style="margin: 0;">Workflow Stages</label>
+                    <p class="text-dim" style="font-size: 12px; margin-top: 2px;">Define the sequence of approvals for this workflow.</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="addNewStageRow()">
+                    <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i> Add Stage
+                </button>
+            </div>
+
+            <!-- Stage Rows Container -->
+            <div style="display: flex; flex-direction: column; gap: 16px;" id="stages-container">
+                <!-- Stages will be added dynamically here -->
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeWorkflowModal()">Cancel</button>
+            <button class="btn btn-primary" id="btn-save-workflow" onclick="saveWorkflow()">Create Workflow</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+
+    const API_BASE = '/api';
+const USER_ID = "{{ request.user.id|default:'1' }}";
+
+
+
+    const api = {
+        getWorkflows: async () => {
+            const resp = await fetch(`${API_BASE}/workflows?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch workflows');
+            return resp.json();
+        },
+        getGroups: async () => {
+            const resp = await fetch(`${API_BASE}/stages/approver-groups?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch groups');
+            return resp.json();
+        },
+        getUsers: async () => {
+            const resp = await fetch(`${API_BASE}/stages/users?user_id=${USER_ID}`);
+            if (!resp.ok) throw new Error('Failed to fetch users');
+            return resp.json();
+        },
+        createWorkflow: async (payload) => {
+            const resp = await fetch(`${API_BASE}/workflows?user_id=${USER_ID}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!resp.ok) throw new Error('Create workflow failed');
+            return resp.json();
+        },
+        updateWorkflow: async (id, payload) => {
+            const resp = await fetch(`${API_BASE}/workflows/${id}?user_id=${USER_ID}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!resp.ok) throw new Error('Update workflow failed');
+            return resp.json();
+        },
+        deleteWorkflow: async (id) => {
+            const resp = await fetch(`${API_BASE}/workflows/${id}?user_id=${USER_ID}`, { method: 'DELETE' });
+            if (!resp.ok) throw new Error('Delete workflow failed');
+            return resp.json();
+        }
+    };
+
+
+
+    let allWorkflows = [];
+    let allGroups = [];
+    let editingWorkflowId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadWorkflowsPage();
+    });
+
+    async function loadWorkflowsPage() {
+        try {
+            const [workflows, groups] = await Promise.all([
+                api.getWorkflows(),
+                api.getGroups()
+            ]);
+            
+            allWorkflows = workflows || [];
+            allGroups = groups || [];
+
+            renderWorkflowsTable();
+
+            document.getElementById('workflows-loading').style.display = 'none';
+            document.getElementById('workflows-content').style.display = 'block';
+
+        } catch (err) {
+            toast.error("Failed to load workflows: " + err.message);
+        }
+    }
+
+    function renderWorkflowsTable() {
+        const tbody = document.getElementById('workflow-list-body');
+        const emptyState = document.getElementById('workflow-empty-state');
+        
+        if (allWorkflows.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        let html = '';
+        allWorkflows.forEach(w => {
+            const dateStr = new Date(w.updated_at || w.created_at).toLocaleDateString();
+            const statusClass = w.is_active ? 'badge-approved' : 'badge-pending';
+            const statusLabel = w.is_active ? 'Active' : 'Draft';
+            const numStages = w.stages ? w.stages.length : 0;
+            
+            html += `
+                <tr id="wf-row-${w.id}">
+                    <td>
+                        <div style="font-weight: 600;">${escapeHtml(w.name)}</div>
+                        <div class="text-dim" style="font-size: 12px;">${escapeHtml(w.description || "No description")}</div>
+                    </td>
+                    <td>
+                        <div class="flex-center gap-2" style="justify-content: flex-start;">
+                            <i data-lucide="layers" class="text-dim" style="width: 14px; height: 14px;"></i>
+                            <span>${numStages} Stages</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${statusClass}">${statusLabel}</span>
+                    </td>
+                    <td class="text-dim">
+                        ${dateStr}
+                    </td>
+                    <td>
+                        <div class="flex-center gap-2">
+                            <button class="btn-icon" onclick="openEditModal(${w.id})">
+                                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                            </button>
+                            <button class="btn-icon text-danger" onclick="deleteWorkflow(${w.id})">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function filterWorkflows() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        allWorkflows.forEach(w => {
+            const row = document.getElementById(`wf-row-${w.id}`);
+            if (row) {
+                const name = w.name.toLowerCase();
+                const desc = (w.description || '').toLowerCase();
+                if (name.includes(query) || desc.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    }
+
+    function openCreateModal() {
+        editingWorkflowId = null;
+        document.getElementById('modal-workflow-title').innerText = "Create Workflow";
+        document.getElementById('btn-save-workflow').innerText = "Create Workflow";
+
+        // Reset fields
+        document.getElementById('wf-name').value = '';
+        document.getElementById('wf-desc').value = '';
+        document.getElementById('wf-type').value = 'approval';
+        document.getElementById('wf-notif').value = 'email';
+        document.getElementById('wf-reject-behavior').value = 'stop';
+        document.getElementById('wf-escalate-hours').value = 24;
+        document.getElementById('wf-threshold').value = '';
+        document.getElementById('wf-conditions').value = '';
+
+        const stagesContainer = document.getElementById('stages-container');
+        stagesContainer.innerHTML = '';
+        
+        // Add initial stage
+        addNewStageRow({
+            name: 'Review',
+            type: 'approval',
+            approver_group_id: '',
+            voting_rule: 'any',
+            sla_hours: 48,
+            is_optional: false,
+            instructions: ''
+        });
+
+        document.getElementById('workflow-modal').style.display = 'flex';
+    }
+
+    function openEditModal(id) {
+        const w = allWorkflows.find(x => x.id === id);
+        if (!w) return;
+
+        editingWorkflowId = id;
+        document.getElementById('modal-workflow-title').innerText = "Edit Workflow";
+        document.getElementById('btn-save-workflow').innerText = "Update Workflow";
+
+        document.getElementById('wf-name').value = w.name || '';
+        document.getElementById('wf-desc').value = w.description || '';
+        document.getElementById('wf-type').value = w.type || 'approval';
+        document.getElementById('wf-notif').value = w.notification_channel || 'email';
+        document.getElementById('wf-reject-behavior').value = w.rejection_behavior || 'stop';
+        document.getElementById('wf-escalate-hours').value = w.escalation_hours || 24;
+        document.getElementById('wf-threshold').value = w.amount_threshold || '';
+        
+        const cond = w.auto_approve_conditions;
+        document.getElementById('wf-conditions').value = cond ? JSON.stringify(cond, null, 2) : '';
+
+        const stagesContainer = document.getElementById('stages-container');
+        stagesContainer.innerHTML = '';
+        
+        if (w.stages && w.stages.length > 0) {
+            w.stages.forEach(s => addNewStageRow(s));
+        } else {
+            addNewStageRow();
+        }
+
+        document.getElementById('workflow-modal').style.display = 'flex';
+    }
+
+    function closeWorkflowModal() {
+        document.getElementById('workflow-modal').style.display = 'none';
+        editingWorkflowId = null;
+    }
+
+    function addNewStageRow(data = {}) {
+        const container = document.getElementById('stages-container');
+        const rows = container.querySelectorAll('.stage-card');
+        const index = rows.length;
+
+        const stageName = data.name || `Stage ${index + 1}`;
+        const stageType = data.type || 'approval';
+        const groupId = data.approver_group_id || '';
+        const votingRule = data.voting_rule || 'any';
+        const slaHours = data.sla_hours || 48;
+        const isOptional = data.is_optional || false;
+        const instructions = data.instructions || '';
+
+        let groupOptions = '<option value="">Select Group...</option>';
+        allGroups.forEach(g => {
+            groupOptions += `<option value="${g.id}" ${g.id == groupId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`;
+        });
+
+        const card = document.createElement('div');
+        card.className = 'card stage-card';
+        card.style.padding = '16px';
+        card.style.border = '1px solid var(--border)';
+        card.innerHTML = `
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div class="flex-center text-dim stage-index" style="width: 24px; font-weight: 700;">
+                    ${index + 1}
+                </div>
+                <div class="flex-1">
+                    <input class="stage-name" value="${escapeHtml(stageName)}" placeholder="Stage Name" style="background: var(--surface-elevated); height: 38px;">
+                </div>
+                <div style="width: 150px;">
+                    <select class="stage-group" style="background: var(--surface-elevated); height: 38px;">
+                        ${groupOptions}
+                    </select>
+                </div>
+                <div style="width: 120px;">
+                    <select class="stage-type" style="background: var(--surface-elevated); height: 38px;">
+                        <option value="approval" ${stageType === 'approval' ? 'selected' : ''}>Approval</option>
+                        <option value="review" ${stageType === 'review' ? 'selected' : ''}>Review</option>
+                        <option value="acknowledgement" ${stageType === 'acknowledgement' ? 'selected' : ''}>Acknowledge</option>
+                        <option value="signature" ${stageType === 'signature' ? 'selected' : ''}>Signature</option>
+                    </select>
+                </div>
+                <div style="width: 110px;">
+                    <select class="stage-voting" style="background: var(--surface-elevated); height: 38px;">
+                        <option value="any" ${votingRule === 'any' ? 'selected' : ''}>Any (1)</option>
+                        <option value="all" ${votingRule === 'all' ? 'selected' : ''}>All</option>
+                        <option value="sequential" ${votingRule === 'sequential' ? 'selected' : ''}>Ordered</option>
+                    </select>
+                </div>
+                <div style="width: 90px;">
+                    <input type="number" min="1" class="stage-sla" placeholder="SLA hrs" value="${slaHours}" style="background: var(--surface-elevated); height: 38px;">
+                </div>
+                <button class="btn-icon text-danger btn-remove-stage" onclick="removeStageRow(buttonEl(this))" style="width: 38px; height: 38px; border: none; background: none;">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                </button>
+            </div>
+            
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <div style="width: 24px;"></div>
+                <div class="flex-1">
+                    <textarea class="stage-instructions" placeholder="Instructions for approvers in this stage..." rows="1" style="background: var(--surface-elevated); font-size: 13px; min-height: 38px;">${escapeHtml(instructions)}</textarea>
+                </div>
+                <label class="flex-center gap-2" style="height: 38px; margin: 0; cursor: pointer; font-size: 13px; user-select: none;">
+                    <input type="checkbox" class="stage-optional" ${isOptional ? 'checked' : ''}>
+                    Optional Stage
+                </label>
+            </div>
+        `;
+
+        container.appendChild(card);
+        
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        updateStageRowNumbers();
+    }
+
+    // Helper function to handle 'this' inside inline onclick attributes
+    function buttonEl(el) {
+        return el;
+    }
+
+    function removeStageRow(button) {
+        const card = button.closest('.stage-card');
+        const container = document.getElementById('stages-container');
+        if (container.querySelectorAll('.stage-card').length <= 1) {
+            toast.warning("A workflow must have at least 1 stage.");
+            return;
+        }
+        card.remove();
+        updateStageRowNumbers();
+    }
+
+    function updateStageRowNumbers() {
+        const cards = document.getElementById('stages-container').querySelectorAll('.stage-card');
+        cards.forEach((card, idx) => {
+            card.querySelector('.stage-index').innerText = idx + 1;
+        });
+    }
+
+    async function saveWorkflow() {
+        const name = document.getElementById('wf-name').value.trim();
+        const description = document.getElementById('wf-desc').value.trim();
+        const type = document.getElementById('wf-type').value;
+        const notificationChannel = document.getElementById('wf-notif').value;
+        const rejectionBehavior = document.getElementById('wf-reject-behavior').value;
+        const escalationHours = parseInt(document.getElementById('wf-escalate-hours').value) || 24;
+        
+        const threshVal = document.getElementById('wf-threshold').value;
+        const amountThreshold = threshVal ? parseFloat(threshVal) : undefined;
+
+        if (!name) {
+            toast.error("Workflow name is required.");
+            return;
+        }
+
+        // Parse stages
+        const stageCards = document.getElementById('stages-container').querySelectorAll('.stage-card');
+        const stages = [];
+        let stageValidationError = false;
+
+        stageCards.forEach((card, idx) => {
+            const sName = card.querySelector('.stage-name').value.trim();
+            const sGroup = card.querySelector('.stage-group').value;
+            const sType = card.querySelector('.stage-type').value;
+            const sVoting = card.querySelector('.stage-voting').value;
+            const sSla = parseInt(card.querySelector('.stage-sla').value) || 48;
+            const sOptional = card.querySelector('.stage-optional').checked;
+            const sInst = card.querySelector('.stage-instructions').value.trim();
+
+            if (!sName || !sGroup) {
+                stageValidationError = true;
+            }
+
+            stages.push({
+                name: sName,
+                type: sType,
+                approver_group_id: parseInt(sGroup),
+                voting_rule: sVoting,
+                sla_hours: sSla,
+                is_optional: sOptional,
+                instructions: sInst,
+                order: idx
+            });
+        });
+
+        if (stageValidationError) {
+            toast.error("All stages must have a name and an assigned approver group.");
+            return;
+        }
+
+        let autoApproveConditions = null;
+        const condVal = document.getElementById('wf-conditions').value.trim();
+        if (condVal) {
+            try {
+                autoApproveConditions = JSON.parse(condVal);
+            } catch (e) {
+                toast.error("Invalid JSON format in Auto-approve Conditions.");
+                return;
+            }
+        }
+
+        const payload = {
+            name,
+            description,
+            type,
+            notification_channel: notificationChannel,
+            rejection_behavior: rejectionBehavior,
+            escalation_hours: escalationHours,
+            amount_threshold: amountThreshold,
+            auto_approve_conditions: autoApproveConditions,
+            stages
+        };
+
+        const btnSave = document.getElementById('btn-save-workflow');
+        btnSave.disabled = true;
+        btnSave.innerText = "Saving...";
+
+        try {
+            if (editingWorkflowId) {
+                await api.updateWorkflow(editingWorkflowId, payload);
+                toast.success("Workflow updated successfully!");
+            } else {
+                await api.createWorkflow(payload);
+                toast.success("Workflow created successfully!");
+            }
+            closeWorkflowModal();
+            loadWorkflowsPage();
+        } catch (err) {
+            toast.error("Failed to save workflow: " + err.message);
+        } finally {
+            btnSave.disabled = false;
+            btnSave.innerText = editingWorkflowId ? "Update Workflow" : "Create Workflow";
+        }
+    }
+
+    async function deleteWorkflow(id) {
+        if (!confirm("Are you sure you want to delete this workflow template?")) return;
+        try {
+            await api.deleteWorkflow(id);
+            toast.success("Workflow deleted successfully!");
+            loadWorkflowsPage();
+        } catch (err) {
+            toast.error("Failed to delete workflow: " + err.message);
+        }
+    }
+
+    // Simple helpers
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+</script>
+{% endblock %}

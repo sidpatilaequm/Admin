@@ -1,0 +1,244 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Quotation Detail - {{ qtn_id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Minimalist Header -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; border-left: 5px solid #0acf97 !important;" id="block-header-information">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col">
+                    <p class="text-muted fs-10 fw-bold text-uppercase ls-1 mb-1">{{ quotation.quotation_header.quotation_number|default:qtn_id }}</p>
+                    <h2 class="fw-bold text-dark mb-1">
+                        {{ quotation.remarks.cover_note|default:"Quotation" }}
+                    </h2>
+                    <p class="text-muted fs-12 mb-3">
+                        {% if quotation.pr_id %}
+                            Linked to PR: {{ quotation.pr_id }} · {{ quotation.line_items|length }} line item(s) · Created {{ quotation.quotation_header.quotation_date }}
+                        {% else %}
+                            Standalone Quotation · {{ quotation.line_items|length }} line item(s) · Created {{ quotation.quotation_header.quotation_date }}
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-flex flex-wrap gap-2">
+                        {% if quotation.status == 'AWARDED' %}
+                            <span class="badge bg-soft-success text-success border border-success border-opacity-25 px-3 py-2 fw-bold"><i class="ri-star-fill me-1"></i> Awarded</span>
+                        {% elif quotation.status == 'DRAFT' %}
+                            <span class="badge bg-soft-warning text-warning border border-warning border-opacity-25 px-3 py-2 fw-bold"><i class="ri-edit-line me-1"></i> Draft</span>
+                        {% elif quotation.status == 'REJECTED' %}
+                            <span class="badge bg-soft-danger text-danger border border-danger border-opacity-25 px-3 py-2 fw-bold"><i class="ri-close-circle-fill me-1"></i> Rejected</span>
+                        {% else %}
+                            <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-3 py-2 fw-bold"><i class="ri-send-plane-fill me-1"></i> {{ quotation.status|default:"SUBMITTED"|title }}</span>
+                        {% endif %}
+                        
+                        <span class="badge bg-light text-muted px-3 py-2 fw-normal">Currency <strong class="text-dark">{{ quotation.quotation_header.currency|default:'INR' }}</strong></span>
+                        <span class="badge bg-light text-muted px-3 py-2 fw-normal">Valid Until <strong class="text-dark">{{ quotation.quotation_header.valid_until }}</strong></span>
+                        <span class="badge bg-light text-muted px-3 py-2 fw-normal">Incoterms <strong class="text-dark">{{ quotation.delivery_details.incoterm|default:'EXW' }} {{ quotation.delivery_details.named_place|default:'' }}</strong></span>
+                        <span class="badge bg-light text-muted px-3 py-2 fw-normal">Grand Total <strong class="text-dark">{% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ quotation.grand_total|floatformat:2 }}</strong></span>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="d-flex flex-column gap-2">
+                        {% if quotation.status == 'DRAFT' %}
+                            <button class="btn btn-success px-4"><i class="ri-edit-line me-1"></i> Edit / Revise</button>
+                            <button class="btn btn-warning text-dark px-4 fw-bold">Submit Quotation <i class="ri-arrow-right-line ms-1"></i></button>
+                        {% else %}
+                            <button class="btn btn-white px-4 border" disabled><i class="ri-history-line me-1"></i> Revise (Read-Only)</button>
+                        {% endif %}
+                        <a href="{% url 'pages:quotations' %}" class="btn btn-link text-muted text-decoration-none text-center"><i class="ri-arrow-left-line me-1"></i> Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VERSION HISTORY -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+            <i class="ri-history-line me-2 text-primary"></i>
+            <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Version History</h6>
+        </div>
+        <div class="card-body">
+            <div class="list-group list-group-flush gap-3">
+                <!-- Version 1 -->
+                <div class="list-group-item border rounded p-3 d-flex align-items-center bg-light bg-opacity-25">
+                    <div class="fw-bold text-muted me-4 fs-14">v1</div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 fs-13">08 Apr 2026 · Priya Sharma</h6>
+                        <p class="text-muted fs-12 mb-0 italic">Initial draft</p>
+                    </div>
+                    <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-3 py-1 rounded-pill"><i class="ri-refresh-line me-1"></i> Revised</span>
+                </div>
+                <!-- Version 2 -->
+                <div class="list-group-item border rounded p-3 d-flex align-items-center bg-light bg-opacity-25">
+                    <div class="fw-bold text-muted me-4 fs-14">v2</div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 fs-13">09 Apr 2026 · Priya Sharma</h6>
+                        <p class="text-muted fs-12 mb-0 italic">Added GST breakup, updated validity to 30 days</p>
+                    </div>
+                    <span class="badge bg-soft-info text-info border border-info border-opacity-25 px-3 py-1 rounded-pill"><i class="ri-refresh-line me-1"></i> Revised</span>
+                </div>
+                <!-- Version 3 (Active) -->
+                <div class="list-group-item border border-success border-opacity-50 rounded p-3 d-flex align-items-center bg-success bg-opacity-5">
+                    <div class="fw-bold text-success me-4 fs-14">v3</div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 fs-13">10 Apr 2026 · Rajiv Kumar</h6>
+                        <p class="text-muted fs-12 mb-0 italic">Final price confirmed by management. Submitted.</p>
+                    </div>
+                    <span class="badge bg-warning text-dark border border-warning border-opacity-25 px-3 py-1 rounded-pill fw-bold"><i class="ri-star-fill me-1"></i> Awarded</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LINE ITEMS -->
+    <div class="card border-0 shadow-sm mb-4" id="block-line-item-details">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+            <i class="ri-pushpin-line me-2 text-danger"></i>
+            <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Line Items</h6>
+            <span class="ms-auto badge bg-light text-muted fw-normal px-2">{{ quotation.line_items|length }} items</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 fs-11">
+                    <thead class="bg-light text-muted text-uppercase fs-10 fw-bold">
+                        <tr class="text-center">
+                            <th style="width: 60px;">Line</th>
+                            <th style="width: 100px;">Item Code</th>
+                            <th class="text-start">Description</th>
+                            <th>Qty / UOM</th>
+                            <th>Unit Price</th>
+                            <th>GST</th>
+                            <th>Delivery</th>
+                            <th class="text-end">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        {% for item in quotation.line_items %}
+                        <tr>
+                            <td><span class="badge bg-soft-primary text-primary fs-9 px-2">{{ item.pr_line_id|default:forloop.counter }}</span></td>
+                            <td>{{ item.item_code }}</td>
+                            <td class="text-start fw-medium">{{ item.description }}</td>
+                            <td class="fw-bold">{{ item.quoted_qty|floatformat:2 }} <span class="text-muted">{{ item.uom|default:"EA" }}</span></td>
+                            <td class="fw-bold">{% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ item.unit_price|floatformat:2 }}</td>
+                            <td class="text-muted">{{ item.gst_percent }}%</td>
+                            <td>{{ item.delivery_date|default:quotation.delivery_details.quoted_delivery_date }}</td>
+                            <td class="text-end fw-bold fs-12">
+                                {% if item.line_total is not None %}
+                                    {% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ item.line_total|floatformat:2 }}
+                                {% else %}
+                                    <!-- Approximate calculation for display if backend line total is absent -->
+                                    {% widthratio item.quoted_qty 1 item.unit_price as linetotal %}
+                                    {% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ linetotal|floatformat:2 }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="bg-light bg-opacity-50 fw-bold">
+                        <tr>
+                            <td colspan="6"></td>
+                            <td class="text-end text-muted fs-10">SUBTOTAL</td>
+                            <td class="text-end">{% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ quotation.subtotal|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6"></td>
+                            <td class="text-end text-muted fs-10">FREIGHT</td>
+                            <td class="text-end">{% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ quotation.freight_details.freight_amount|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="6"></td>
+                            <td class="text-end text-muted fs-10">GRAND TOTAL</td>
+                            <td class="text-end fs-14 text-success">{% if quotation.quotation_header.currency == 'USD' %}${% else %}₹{% endif %} {{ quotation.grand_total|floatformat:2 }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TERMS & CONDITIONS -->
+    <div class="card border-0 shadow-sm mb-5" id="block-vendor-information">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center">
+            <i class="ri-book-read-line me-2 text-warning"></i>
+            <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1">Terms & Conditions</h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-11 fw-bold text-uppercase mb-2 d-block">Payment Terms</label>
+                    <h6 class="fw-bold mb-0">ID: {{ quotation.payment_terms.payment_terms_id|default:"1" }}</h6>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-11 fw-bold text-uppercase mb-2 d-block">Incoterms</label>
+                    <h6 class="fw-bold mb-0">{{ quotation.delivery_details.incoterm|default:'EXW' }} {{ quotation.delivery_details.named_place }}</h6>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-11 fw-bold text-uppercase mb-2 d-block">Validity</label>
+                    <h6 class="fw-bold mb-0">{{ quotation.quotation_header.valid_until }}</h6>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-11 fw-bold text-uppercase mb-2 d-block">Quoted Delivery</label>
+                    <h6 class="fw-bold mb-0">{{ quotation.delivery_details.quoted_delivery_date }} ({{ quotation.delivery_details.lead_time_days }} days)</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .fs-9 { font-size: 9px; }
+    .fs-10 { font-size: 10px; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-14 { font-size: 14px; }
+    .fw-bold { font-weight: 700 !important; }
+    .italic { font-style: italic; }
+    
+    .bg-soft-primary { background-color: rgba(114, 124, 245, 0.1) !important; }
+    .bg-soft-info { background-color: rgba(63, 179, 255, 0.1) !important; }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    .bg-soft-success { background-color: rgba(10, 207, 151, 0.1) !important; }
+    
+    .btn-white { background-color: #fff; color: #313a46; border: 1px solid #dee2e6; }
+    .btn-white:hover { background-color: #f8f9fa; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const permissionCodeMapping = {
+            'QUOTE_HEADER': 'block-header-information',
+            'QUOTE_VENDOR_INFO': 'block-vendor-information',
+            'QUOTE_LINE_ITEM': 'block-line-item-details'
+        };
+
+        fetch('/api/vendor-permissions/my-permissions/')
+            .then(response => response.json())
+            .then(response => {
+                if (response.status === "200") {
+                    const permissions = response.data.result.permissions;
+                    applyPermissions(permissions);
+                }
+            })
+            .catch(err => console.error('Error enforcing permissions:', err));
+
+        function applyPermissions(permissions) {
+            permissions.forEach(p => {
+                const blockId = permissionCodeMapping[p.permissionCode];
+                if (blockId) {
+                    const element = document.getElementById(blockId);
+                    if (element && p.view === false) {
+                        element.style.display = 'none';
+                    }
+                }
+                if (p.children && p.children.length) {
+                    applyPermissions(p.children);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

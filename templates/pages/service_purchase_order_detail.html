@@ -1,0 +1,447 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Service Purchase Order — 4600001122{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-12">
+                    <li class="breadcrumb-item"><a href="#">SupplierHub</a></li>
+                    <li class="breadcrumb-item"><a href="#">Purchase Orders</a></li>
+                    <li class="breadcrumb-item active">Service PO</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Minimalist Header Section -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div class="d-flex align-items-center gap-3">
+                <h3 class="fw-bold mb-0">Service Purchase Order — {{ po.service_po_number|default:'4600001122' }}</h3>
+                <span class="badge bg-soft-{{ po.status_badge|default:'warning' }} text-{{ po.status_badge|default:'warning' }} border border-{{ po.status_badge|default:'warning' }} border-opacity-25 fs-10 fw-bold px-2 py-1">
+                    <i class="ri-time-line me-1"></i> {{ po.po_status_display|default:'SES PENDING'|upper }}
+                </span>
+            </div>
+            <div class="mt-2 d-flex gap-4 text-muted fs-11">
+                <span><i class="ri-calendar-line me-1"></i> Period: {{ po.service_period_from|default:'01-Apr-2025' }} to {{ po.service_period_to|default:'30-Jun-2025' }}</span>
+                <span><i class="ri-building-line me-1"></i> {{ po.company_code|default:'1000' }} — {{ po.company_name|default:'Acme India Pvt. Ltd.' }}</span>
+                <span><i class="ri-money-dollar-circle-line me-1"></i> {{ po.currency|default:'INR' }}</span>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm border-light-subtle shadow-sm px-3"><i class="ri-printer-line me-1"></i> Print</button>
+                <!-- <button class="btn btn-primary btn-sm shadow-sm px-3" style="background-color: #2563eb; border-color: #2563eb;"><i class="ri-add-line me-1"></i> Submit SES</button> -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Entry Sheet Workflow Stepper -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-header bg-white border-bottom-0 py-3">
+            <h6 class="fw-bold mb-0 text-uppercase fs-10 ls-1 text-muted">Service Entry Sheet Workflow</h6>
+        </div>
+        <div class="card-body py-4">
+            <div class="d-flex justify-content-between stepper-container overflow-auto px-4">
+                <div class="step-item active-completed">
+                    <div class="step-icon"><i class="ri-check-line"></i></div>
+                    <div class="step-text">PO Issued</div>
+                    <div class="fs-8 text-muted mt-1">01-Apr-2025</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step-item active-completed">
+                    <div class="step-icon"><i class="ri-check-line"></i></div>
+                    <div class="step-text">Acknowledged</div>
+                    <div class="fs-8 text-muted mt-1">02-Apr-2025</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step-item active-completed">
+                    <div class="step-icon"><i class="ri-check-line"></i></div>
+                    <div class="step-text">Service Rendered</div>
+                    <div class="fs-8 text-muted mt-1">Apr 2025</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item active">
+                    <div class="step-icon">4</div>
+                    <div class="step-text">SES Submitted</div>
+                    <div class="fs-8 text-info mt-1">Submit now</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-icon">5</div>
+                    <div class="step-text">SES Approved</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step-item">
+                    <div class="step-icon">6</div>
+                    <div class="step-text">Invoice & Payment</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Information Cards -->
+        <div class="col-lg-8">
+            <!-- PO Header Information -->
+            <div class="card border-0 shadow-sm mb-4 accordion-card" id="block-header-information">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-file-info-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">PO Header Information</h6>
+                    <span class="ms-auto fs-10 fw-bold" style="color: #059669;">SAP TABLE: EKKO (SERVICE PO)</span>
+                </div>
+                <div class="card-body pt-4">
+                    <div class="row g-4 text-start">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Service PO Number <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13 text-primary">{{ po.service_po_number|default:'4600001122' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PO Type <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">ZSER — Service PO</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PO Date <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.po_date_formatted|default:'01 April 2025' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Service Period From <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.service_period_from|default:'01 April 2025' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Service Period To <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.service_period_to|default:'30 June 2025' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Company Code <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.company_code|default:'1000' }} — {{ po.company_name|default:'Acme India Pvt. Ltd.' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Currency <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.currency|default:'INR' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Payment Terms <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.payment_terms|default:'NT30 — Net 30 Days' }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Provider Information -->
+            <div class="card border-0 shadow-sm mb-4 accordion-card">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-user-star-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Service Provider Information</h6>
+                </div>
+                <div class="card-body pt-4 text-start">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Vendor Number <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold text-primary mb-0 fs-13">{{ po.vendor_code|default:'VEND-00312' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Vendor Name <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.vendor_name|default:'TechServ Solutions Pvt. Ltd.' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Address <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-11">{{ po.vendor_address|default:'B-204, Cyber Hub, Gurugram — 122002' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">GST Number <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold text-danger mb-0 fs-13">{{ po.gst_number|default:'06AABCT1234K1Z7' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PAN Number <span class="badge bg-soft-secondary text-secondary fs-7 ms-1">OPTIONAL</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.pan_number|default:'AABCT1234K' }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Line Details -->
+            <div class="card border-0 shadow-sm mb-4 accordion-card" id="block-service-details">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-list-settings-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Service Line Details</h6>
+                    <span class="ms-auto fs-10 fw-bold" style="color: #059669;">3 SERVICE LINES</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 fs-11">
+                            <thead class="text-muted text-uppercase fs-10 fw-bold" style="background-color: #f9fafb;">
+                                <tr>
+                                    <th class="ps-3 py-3">Line</th>
+                                    <th>Service No.</th>
+                                    <th>Service Description</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-center">UoM</th>
+                                    <th class="text-end">Rate</th>
+                                    <th class="text-end">Net Value</th>
+                                    <th class="pe-3">Cost Centre</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-start">
+                                {% for line in po.service_lines %}
+                                <tr>
+                                    <td class="ps-3 fw-bold text-primary">{{ line.line_no }}</td>
+                                    <td class="fw-bold">{{ line.service_no }}</td>
+                                    <td class="fw-bold">{{ line.description }}</td>
+                                    <td class="text-center fw-bold">{{ line.quantity }}</td>
+                                    <td class="text-center">{{ line.uom }}</td>
+                                    <td class="text-end fw-bold">₹ {{ line.rate }}</td>
+                                    <td class="text-end fw-bold">₹ {{ line.net_value }}</td>
+                                    <td class="pe-3 text-muted">{{ line.cost_centre }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">No service lines found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="border-top-0">
+                                <tr style="background-color: #f8fafc;">
+                                    <td colspan="6" class="text-end py-3 fw-bold text-muted">Total Net Value</td>
+                                    <td colspan="2" class="text-start ps-4 fw-bold text-primary fs-14">₹ {{ po.total_net_value|default:'18,50,000' }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Service Entry Sheet (SES) -->
+                <!-- <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-edit-2-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Submit Service Entry Sheet (SES)</h6>
+                    <span class="ms-auto badge bg-white text-muted border fs-9 fw-bold px-2 py-1">EDITABLE</span>
+                </div>
+                <div class="card-body pt-4 text-start">
+                    <form>
+                        ...
+                    </form>
+                </div> -->
+        </div>
+
+        <!-- Right Column: History & Actions -->
+        <div class="col-lg-4">
+            <!-- SES History Card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;" id="block-ses-history">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-history-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">SES History</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush border-0">
+                        {% for ses in po.ses_history %}
+                        <div class="list-group-item {% if not forloop.first %}border-top{% else %}border-0{% endif %} py-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="fw-bold mb-0 fs-12">{{ ses.ses_number }}</h6>
+                                <span class="fs-10 text-muted">{{ ses.ses_month }}</span>
+                            </div>
+                            <span class="badge bg-soft-{{ ses.badge_color }} text-{{ ses.badge_color }} fs-9 border border-{{ ses.badge_color }} border-opacity-25 px-2">{{ ses.ses_status }}</span>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item border-0 py-4 text-center text-muted">
+                            No SES History.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendor Actions Card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <i class="ri-flashlight-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Vendor Actions</h6>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <!-- <button class="btn btn-primary fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center" style="background-color: #2563eb; border-color: #2563eb; border-radius: 8px;">
+                        <i class="ri-add-line me-2 fs-16"></i> Submit SES
+                    </button> -->
+                    <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark" style="border-radius: 8px; border-color: #e2e8f0;">
+                        <i class="ri-time-line me-2 fs-14"></i> Upload Timesheets
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark" style="border-radius: 8px; border-color: #e2e8f0;">
+                        <i class="ri-file-list-3-line me-2 fs-14"></i> Upload Invoice
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark" style="border-radius: 8px; border-color: #e2e8f0;">
+                        <i class="ri-bank-card-line me-2 fs-14"></i> Track Payment
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark mt-1" style="border-radius: 8px; border-color: #e2e8f0;">
+                        <i class="ri-question-line me-2 fs-14"></i> Raise Query
+                    </button>
+                </div>
+            </div>
+
+            <!-- Upload Documents Card -->
+            <div class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-upload-cloud-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Upload Documents</h6>
+                </div>
+                <div class="card-body">
+                    <div class="upload-zone border-dashed rounded-3 p-4 text-center cursor-pointer hover-bg-light transition-all" style="border: 2px dashed #e2e8f0;">
+                        <i class="ri-file-add-line fs-32 text-muted mb-2"></i>
+                        <p class="mb-1 fw-bold fs-12 text-primary">Click to upload <span class="text-muted">or drag & drop</span></p>
+                        <p class="text-muted fs-10 mb-0">Timesheets, Completion Cert, Invoice</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .fs-7 { font-size: 7px; }
+    .fs-8 { font-size: 8px; }
+    .fs-9 { font-size: 9px; }
+    .fs-10 { font-size: 10px; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .fs-14 { font-size: 14px; }
+    .fs-18 { font-size: 18px; }
+    .fs-32 { font-size: 32px; }
+    .fw-bold { font-weight: 700 !important; }
+
+    .bg-soft-warning { background-color: #fffbeb !important; color: #d97706 !important; }
+    .bg-soft-primary { background-color: #eff6ff !important; color: #3b82f6 !important; }
+    .bg-soft-success { background-color: #f0fdf4 !important; color: #16a34a !important; }
+    .bg-soft-secondary { background-color: #f8fafc !important; color: #64748b !important; }
+
+    .text-success { color: #059669 !important; }
+    .text-primary { color: #2563eb !important; }
+    .text-warning { color: #d97706 !important; }
+
+    /* Stepper Styling */
+    .stepper-container {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 120px;
+        text-align: center;
+    }
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f8fafc;
+        color: #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+        margin-bottom: 5px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+    .step-text {
+        font-size: 9px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .step-item.active .step-icon {
+        background: #fff;
+        border-color: #0acf97;
+        color: #0acf97;
+        box-shadow: 0 4px 10px rgba(10, 207, 151, 0.2);
+    }
+    .step-item.active .step-text {
+        color: #0acf97;
+    }
+    .step-item.active-completed .step-icon {
+        background: #0acf97;
+        color: #fff;
+        border-color: #0acf97;
+    }
+    .step-item.active-completed .step-text {
+        color: #0acf97;
+    }
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e2e8f0;
+        margin-top: -24px;
+        min-width: 30px;
+    }
+    .step-line.active {
+        background: #0acf97;
+    }
+
+    .accordion-card {
+        border-radius: 12px !important;
+        overflow: hidden;
+        border: 1px solid #f1f5f9 !important;
+    }
+    
+    .hover-bg-light:hover {
+        background-color: #f8fafc;
+    }
+    
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        font-size: 10px;
+        padding-top: 2px;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8fafc;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const permissionCodeMapping = {
+            'SPO_HEADER': 'block-header-information',
+            'SPO_SERVICE_DETAILS': 'block-service-details',
+            'SPO_SES_HISTORY': 'block-ses-history'
+        };
+
+        fetch('/api/vendor-permissions/my-permissions/')
+            .then(response => response.json())
+            .then(response => {
+                if (response.status === "200") {
+                    const permissions = response.data.result.permissions;
+                    applyPermissions(permissions);
+                }
+            })
+            .catch(err => console.error('Error enforcing permissions:', err));
+
+        function applyPermissions(permissions) {
+            permissions.forEach(p => {
+                const blockId = permissionCodeMapping[p.permissionCode];
+                if (blockId) {
+                    const element = document.getElementById(blockId);
+                    if (element && p.view === false) {
+                        element.style.display = 'none';
+                    }
+                }
+                if (p.children && p.children.length) {
+                    applyPermissions(p.children);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

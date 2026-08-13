@@ -1,0 +1,510 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Subcon Purchase Order — 4700000891{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0 fs-12">
+                    <li class="breadcrumb-item"><a href="#">SupplierHub</a></li>
+                    <li class="breadcrumb-item"><a href="#">Purchase Orders</a></li>
+                    <li class="breadcrumb-item active">Subcontracting PO</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Minimalist Header Section -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div class="d-flex align-items-center gap-3">
+                <h3 class="fw-bold mb-0">Subcon Purchase Order — {{ po.subcon_po_number }}</h3>
+                <span class="badge bg-soft-{{ po.status_badge|default:'info' }} text-{{ po.status_badge|default:'info' }} border border-{{ po.status_badge|default:'info' }} border-opacity-25 fs-10 fw-bold px-2 py-1">
+                    <i class="ri-loader-4-line me-1"></i> {{ po.po_status_display|default:'IN PROCESS'|upper }}
+                </span>
+            </div>
+            <div class="mt-2 d-flex gap-4 text-muted fs-11">
+                <span><i class="ri-calendar-line me-1"></i> PO Date: {{ po.po_date_formatted|default:'10 April 2025' }}</span>
+                <span><i class="ri-building-line me-1"></i> {{ po.company_code|default:'1000' }} — {{ po.company_name|default:'Acme India Pvt. Ltd.' }}</span>
+                <span><i class="ri-money-dollar-circle-line me-1"></i> {{ po.currency|default:'INR' }}</span>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-secondary btn-sm border-light-subtle shadow-sm px-3"><i class="ri-printer-line me-1"></i> Print</button>
+                <button class="btn btn-outline-secondary btn-sm border-light-subtle shadow-sm px-3"><i class="ri-file-pdf-line me-1"></i> Export PDF</button>
+                <!-- <button class="btn btn-success btn-sm shadow-sm px-3" style="background-color: #10b981; border-color: #10b981;"><i class="ri-checkbox-circle-line me-1"></i> Acknowledge PO</button> -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Alert -->
+    <div class="alert alert-danger border-0 shadow-sm mb-4 d-flex align-items-center" style="border-radius: 12px; background-color: #fef2f2;">
+        <i class="ri-error-warning-fill fs-20 text-danger me-3"></i>
+        <div class="flex-grow-1">
+            <p class="mb-0 fs-11 fw-bold text-danger">Component MAT-RM-002 (Aluminium Alloy Bar) stock at vendor is below minimum requirement. Please confirm availability before proceeding.</p>
+        </div>
+        <button type="button" class="btn-close fs-10" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Subcontracting Process Flow Stepper -->
+    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+        <div class="card-header bg-white border-bottom-0 py-3">
+            <h6 class="fw-bold mb-0 text-uppercase fs-10 ls-1 text-muted">Subcontracting Process Flow</h6>
+        </div>
+        <div class="card-body py-4">
+            <div class="d-flex justify-content-between stepper-container overflow-auto px-4">
+                <div class="step-item active-completed">
+                    <div class="step-icon"><i class="ri-check-line"></i></div>
+                    <div class="step-text">Buyer Issues PO</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step-item active-completed">
+                    <div class="step-icon"><i class="ri-check-line"></i></div>
+                    <div class="step-text">Mvt 541: Issue Components</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step-item active">
+                    <div class="step-icon">3</div>
+                    <div class="step-text">Vendor Processes</div>
+                </div>
+                <div class="step-line active"></div>
+                <div class="step-item active">
+                    <div class="step-icon">3</div>
+                    <div class="step-text">Vendor Processes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Column: Information Cards -->
+        <div class="col-lg-8">
+            <!-- PO Header Information -->
+            <div class="card border-0 shadow-sm mb-4 accordion-card" id="block-header-information">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-file-info-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">PO Header Information</h6>
+                    <span class="ms-auto fs-10 fw-bold" style="color: #059669;">7 FIELDS</span>
+                </div>
+                <div class="card-body pt-4">
+                    <div class="row g-4 text-start">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Subcon PO Number <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13 text-primary">{{ po.subcon_po_number|default:'4700000891' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PO Type <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">ZSUBC — Subcontracting PO</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">PO Date <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.po_date_formatted|default:'10 April 2025' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Company Code <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.company_code|default:'1000' }} — {{ po.company_name|default:'Acme India Pvt. Ltd.' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Currency <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.currency|default:'INR' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Payment Terms <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.payment_terms|default:'NT30 — Net 30 Days' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Incoterms <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.incoterms|default:'EXW — Ex Works (Vendor Site)' }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finished Goods (FG) Details -->
+            <div class="card border-0 shadow-sm mb-4 accordion-card" id="block-fg-details">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-box-3-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Finished Goods (FG) Details</h6>
+                    <span class="ms-auto fs-10 fw-bold" style="color: #059669;">8 FIELDS</span>
+                </div>
+                <div class="card-body pt-4 text-start">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Line Item No. <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold text-primary mb-0 fs-13">{{ po.fg_line_item_no|default:'10' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">FG Material Number <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.fg_material_number|default:'MAT-FG-1001' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">FG Description <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-11">{{ po.fg_description|default:'Machined Aluminium Housing Assembly' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Ordered Qty (FG) <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13 text-danger">{{ po.fg_ordered_qty|default:'200' }} {{ po.fg_uom|default:'EA' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Unit of Measure <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">{{ po.fg_uom|default:'EA — Each' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Processing Charge <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13">₹ {{ po.processing_charge_per_unit|default:'4,500.00' }} / {{ po.fg_uom|default:'EA' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Total Processing Value <span class="badge bg-soft-primary text-primary fs-7 ms-1">REQUIRED</span></label>
+                            <h6 class="fw-bold mb-0 fs-13 text-primary">₹ {{ po.total_processing_value|default:'9,00,000' }}</h6>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted fs-10 fw-bold text-uppercase mb-1">Required Delivery Date <span class="badge bg-soft-primary text-primary fs-7 ms-1">EDITABLE</span></label>
+                            <div class="input-group input-group-sm mt-1" style="max-width: 160px;">
+                                <span class="input-group-text border-0" style="background-color: #f0f9ff;"><i class="ri-calendar-event-line text-info"></i></span>
+                                <input type="text" class="form-control border-light fs-11 fw-bold" value="{{ po.required_delivery_date_formatted|default:'30-Apr-2025' }}" style="background-color: #f0f9ff; color: #0369a1;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Component (BOM) Details — Stock at Vendor -->
+            <div class="card border-0 shadow-sm mb-4 accordion-card" id="block-component-details">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-bubble-chart-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Component (BOM) Details — Stock at Vendor</h6>
+                    <span class="ms-auto fs-10 fw-bold" style="color: #059669;">3 COMPONENTS</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 fs-11">
+                            <thead class="text-muted text-uppercase fs-10 fw-bold" style="background-color: #f9fafb;">
+                                <tr>
+                                    <th class="ps-3 py-3">Line</th>
+                                    <th>Material No.</th>
+                                    <th>Component Description</th>
+                                    <th class="text-center">Reqd Qty / Unit</th>
+                                    <th class="text-center">Total Issued</th>
+                                    <th>Stock at Vendor</th>
+                                    <th class="text-center">UoM</th>
+                                    <th class="pe-3">Scrap %</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-start">
+                                {% for comp in po.components %}
+                                <tr>
+                                    <td class="ps-3 fw-bold text-muted">{{ comp.line_no }}</td>
+                                    <td class="fw-bold text-primary">{{ comp.material_no }}</td>
+                                    <td class="fw-bold">{{ comp.description }}</td>
+                                    <td class="text-center">{{ comp.req_qty_per_unit }} {{ comp.uom }}</td>
+                                    <td class="text-center fw-bold">{{ comp.total_issued }} {{ comp.uom }}</td>
+                                    <td style="width: 200px;">
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: 90%;"></div>
+                                            </div>
+                                            <span class="ms-2 fs-9 fw-bold text-success">{{ comp.stock_at_vendor }} / {{ comp.stock_capacity }} {{ comp.uom }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ comp.uom }}</td>
+                                    <td class="pe-3 fw-bold text-muted">{{ comp.scrap }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">No components found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goods Movement History -->
+            <div class="card border-0 shadow-sm mb-5 accordion-card" id="block-movement-history">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-history-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Goods Movement History</h6>
+                    <span class="ms-auto fs-10 fw-bold" style="color: #059669;">MOVEMENT DOCS</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 fs-11">
+                            <thead class="text-muted text-uppercase fs-10 fw-bold" style="background-color: #f9fafb;">
+                                <tr>
+                                    <th class="ps-3 py-3">Mat. Doc.</th>
+                                    <th>Mvt Type</th>
+                                    <th>Description</th>
+                                    <th>Material</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="pe-3">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-start">
+                                {% for mvt in po.movements %}
+                                <tr>
+                                    <td class="ps-3 fw-bold text-primary">{{ mvt.doc_number }}</td>
+                                    <td>
+                                        {% if mvt.type|stringformat:"s" == '101' %}
+                                        <span class="badge bg-soft-success text-success px-2 py-1 fs-9 fw-bold">101</span>
+                                        {% else %}
+                                        <span class="badge bg-soft-primary text-primary px-2 py-1 fs-9 fw-bold">{{ mvt.type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted">{{ mvt.description }}</td>
+                                    <td class="fw-bold {% if mvt.type|stringformat:'s' == '101' %}text-success{% endif %}">{{ mvt.material }}</td>
+                                    <td class="text-center fw-bold {% if mvt.type|stringformat:'s' == '101' %}text-success{% else %}text-dark{% endif %}">{{ mvt.qty }}</td>
+                                    <td class="pe-3">{{ mvt.date_formatted }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">No movement history found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: KPIs & Actions -->
+        <div class="col-lg-4">
+            <!-- Order KPIs Card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-bar-chart-2-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Order KPIs</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 text-center border border-light-subtle rounded-3" style="background-color: #f8fafc;">
+                                <h4 class="fw-bold text-dark mb-0 fs-18">200</h4>
+                                <span class="fs-9 text-muted fw-bold text-uppercase">FG Ordered</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 text-center border border-light-subtle rounded-3" style="background-color: #f8fafc;">
+                                <h4 class="fw-bold text-success mb-0 fs-18">80</h4>
+                                <span class="fs-9 text-muted fw-bold text-uppercase">FG Received</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 text-center border border-light-subtle rounded-3" style="background-color: #f8fafc;">
+                                <h4 class="fw-bold text-primary mb-0 fs-18">120</h4>
+                                <span class="fs-9 text-muted fw-bold text-uppercase">FG Open</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 text-center border border-light-subtle rounded-3" style="background-color: #f8fafc;">
+                                <h4 class="fw-bold text-info mb-0 fs-18">3</h4>
+                                <span class="fs-9 text-muted fw-bold text-uppercase">Components</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendor Actions Card -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <i class="ri-flashlight-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Vendor Actions</h6>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <!-- <button class="btn fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center text-white" style="background-color: #d84315; border-color: #d84315; border-radius: 8px;">
+                        <i class="ri-checkbox-circle-line me-2 fs-16"></i> Acknowledge PO
+                    </button>
+                    <button class="btn fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center text-white" style="background-color: #00695c; border-color: #00695c; border-radius: 8px;">
+                        <i class="ri-bubble-chart-line me-2 fs-16"></i> Report Component Usage
+                    </button>
+                    <button class="btn fw-bold py-2 shadow-sm d-flex align-items-center justify-content-center text-white" style="background-color: #bf360c; border-color: #bf360c; border-radius: 8px;">
+                        <i class="ri-check-double-line me-2 fs-16"></i> Confirm FG Ready
+                    </button> -->
+                    <div class="mt-2 d-grid gap-2">
+                        <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark" style="border-radius: 8px; border-color: #e2e8f0;">
+                            <i class="ri-shield-star-line me-2 fs-14"></i> Upload Quality Cert
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark" style="border-radius: 8px; border-color: #e2e8f0;">
+                            <i class="ri-file-list-3-line me-2 fs-14"></i> Upload Invoice
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm fw-bold py-2 d-flex align-items-center justify-content-center text-dark mt-1" style="border-radius: 8px; border-color: #e2e8f0;">
+                            <i class="ri-question-line me-2 fs-14"></i> Raise Query
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Documents Card -->
+            <div class="card border-0 shadow-sm mb-4 overflow-hidden" style="border-radius: 12px;">
+                <div class="card-header py-3 d-flex align-items-center" style="background-color: #ecfdf5;">
+                    <i class="ri-upload-cloud-line me-2 text-success fs-18"></i>
+                    <h6 class="fw-bold mb-0 text-uppercase fs-11 ls-1" style="color: #065f46;">Upload Documents</h6>
+                </div>
+                <div class="card-body">
+                    <div class="upload-zone border-dashed rounded-3 p-4 text-center cursor-pointer hover-bg-light transition-all" style="border: 2px dashed #e2e8f0;">
+                        <i class="ri-file-upload-line fs-32 text-muted mb-2"></i>
+                        <p class="mb-1 fw-bold fs-12 text-primary">Click to upload <span class="text-muted">or drag & drop</span></p>
+                        <p class="text-muted fs-10 mb-0">Invoice, Quality Cert, COC, Packing List</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ls-1 { letter-spacing: 1px; }
+    .fs-7 { font-size: 7px; }
+    .fs-8 { font-size: 8px; }
+    .fs-9 { font-size: 9px; }
+    .fs-10 { font-size: 10px; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .fs-14 { font-size: 14px; }
+    .fs-18 { font-size: 18px; }
+    .fs-20 { font-size: 20px; }
+    .fs-32 { font-size: 32px; }
+    .fw-bold { font-weight: 700 !important; }
+
+    .bg-soft-primary { background-color: #eff6ff !important; color: #3b82f6 !important; }
+    .bg-soft-success { background-color: #f0fdf4 !important; color: #16a34a !important; }
+    .bg-soft-info { background-color: #f0f9ff !important; color: #0ea5e9 !important; }
+    .bg-soft-danger { background-color: #fef2f2 !important; color: #dc2626 !important; }
+
+    .text-success { color: #059669 !important; }
+    .text-primary { color: #2563eb !important; }
+    .text-info { color: #0284c7 !important; }
+    .text-danger { color: #dc2626 !important; }
+
+    /* Stepper Styling */
+    .stepper-container {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 140px;
+        text-align: center;
+    }
+    .step-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f8fafc;
+        color: #cbd5e1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+        margin-bottom: 5px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+    }
+    .step-text {
+        font-size: 9px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .step-item.active .step-icon {
+        background: #fff;
+        border-color: #0acf97;
+        color: #0acf97;
+        box-shadow: 0 4px 10px rgba(10, 207, 151, 0.2);
+    }
+    .step-item.active .step-text {
+        color: #0acf97;
+    }
+    .step-item.active-completed .step-icon {
+        background: #0acf97;
+        color: #fff;
+        border-color: #0acf97;
+    }
+    .step-item.active-completed .step-text {
+        color: #0acf97;
+    }
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e2e8f0;
+        margin-top: -18px;
+        min-width: 30px;
+    }
+    .step-line.active {
+        background: #0acf97;
+    }
+
+    .accordion-card {
+        border-radius: 12px !important;
+        overflow: hidden;
+        border: 1px solid #f1f5f9 !important;
+    }
+    
+    .hover-bg-light:hover {
+        background-color: #f8fafc;
+    }
+    
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        font-size: 10px;
+        padding-top: 2px;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const permissionCodeMapping = {
+            'SPO_HEADER': 'block-header-information',
+            'SPO_FG_DETAILS': 'block-fg-details',
+            'SPO_COMPONENT': 'block-component-details',
+            'SPO_MOVEMENT': 'block-movement-history'
+        };
+
+        fetch('/api/vendor-permissions/my-permissions/')
+            .then(response => response.json())
+            .then(response => {
+                if (response.status === "200") {
+                    const permissions = response.data.result.permissions;
+                    applyPermissions(permissions);
+                }
+            })
+            .catch(err => console.error('Error enforcing permissions:', err));
+
+        function applyPermissions(permissions) {
+            permissions.forEach(p => {
+                const blockId = permissionCodeMapping[p.permissionCode];
+                if (blockId) {
+                    const element = document.getElementById(blockId);
+                    if (element && p.view === false) {
+                        element.style.display = 'none';
+                    }
+                }
+                if (p.children && p.children.length) {
+                    applyPermissions(p.children);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

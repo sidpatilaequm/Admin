@@ -1,0 +1,181 @@
+{% extends "pages/base.html" %}
+{% load static %}
+
+{% block title %}Indents{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row align-items-center mb-4">
+        <div class="col-sm">
+            <div>
+                <h4 class="fw-bold text-uppercase mb-1">Indents</h4>
+                <p class="text-muted mb-0">Manage and track your indents and invoice requests</p>
+            </div>
+        </div>
+        <div class="col-sm-auto">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Hidden Upload Form -->
+                <form id="uploadIndentForm" method="POST" action="#" enctype="multipart/form-data" style="display: none;">
+                    {% csrf_token %}
+                    <input type="file" id="indentFile" name="indent_file" accept=".xlsx, .xls" onchange="alert('Upload functionality to be implemented')">
+                </form>
+
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('indentFile').click();">
+                    <i class="ri-file-upload-line me-1"></i> Upload Indent
+                </button>
+
+                <!-- Status Filter Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-white border dropdown-toggle" type="button" id="statusFilter" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="ri-filter-2-line me-1"></i> Status: All Indents
+                    </button>
+                    <ul class="dropdown-menu shadow" aria-labelledby="statusFilter">
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIndents('all', 'All Indents')">All Indents</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIndents('approved', 'Approved')">Approved</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIndents('pending', 'Pending')">Pending</a></li>
+                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="filterIndents('rejected', 'Rejected')">Rejected</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indent List Section -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0">All Indents</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-nowrap align-middle mb-0 fs-13" id="indentsTable">
+                            <thead class="bg-light text-muted text-uppercase fs-11">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title / Invoice</th>
+                                    <th>Requestor</th>
+                                    <th>Department</th>
+                                    <th>Plant & Loc</th>
+                                    <th>Year</th>
+                                    <th class="text-end">Value w/o Tax</th>
+                                    <th class="text-end">Total Amount</th>
+                                    <th class="text-end">Balance Budget</th>
+                                    <th>Justification / GSTIN</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for indent in indents %}
+                                <tr class="indent-item cursor-pointer" data-status="{{ indent.status }}">
+                                    <td class="fw-bold text-primary">REQ-{{ indent.id }}</td>
+                                    <td>
+                                        <div class="fw-bold text-truncate" style="max-width: 200px;" title="{{ indent.title }}">{{ indent.title }}</div>
+                                        <div class="fs-11 text-muted">{{ indent.created_at|slice:":10" }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-xs me-2">
+                                                <span class="avatar-title bg-soft-primary text-primary rounded-circle fs-12">
+                                                    {{ indent.request_metadata.indent_fields.requestor|default:"U"|slice:":1"|upper }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-13">{{ indent.request_metadata.indent_fields.requestor|default:"Unknown" }}</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>{{ indent.request_metadata.indent_fields.department|default:"N/A" }}</div>
+                                        <div class="fs-11 text-muted">Owner: {{ indent.request_metadata.indent_fields.budgetOwnerDepartment|default:"N/A" }}</div>
+                                    </td>
+                                    <td>
+                                        <div>{{ indent.request_metadata.indent_fields.plantId|default:"-" }}</div>
+                                        <div class="fs-11 text-muted">{{ indent.request_metadata.indent_fields.locationId|default:"-" }}</div>
+                                    </td>
+                                    <td>{{ indent.request_metadata.indent_fields.year|default:"-" }}</td>
+                                    <td class="text-end fw-medium text-muted">₹ {{ indent.request_metadata.indent_fields.itemValueWithoutTax|default:"0.00" }}</td>
+                                    <td class="text-end fw-bold">₹ {{ indent.amount|default:"0.00" }}</td>
+                                    <td class="text-end fw-medium {% if indent.request_metadata.indent_fields.balanceAmount and indent.request_metadata.indent_fields.balanceAmount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                        ₹ {{ indent.request_metadata.indent_fields.balanceAmount|default:"0.00" }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ indent.request_metadata.indent_fields.businessJustificationCode|default:"-" }}</span>
+                                    </td>
+                                    <td>
+                                        {% if indent.status == 'approved' %}
+                                            <span class="badge bg-soft-success text-success"><i class="ri-checkbox-circle-line me-1"></i>Approved</span>
+                                        {% elif indent.status == 'rejected' %}
+                                            <span class="badge bg-soft-danger text-danger"><i class="ri-close-circle-line me-1"></i>Rejected</span>
+                                        {% elif indent.status == 'cancelled' %}
+                                            <span class="badge bg-soft-secondary text-secondary"><i class="ri-forbid-line me-1"></i>Cancelled</span>
+                                        {% else %}
+                                            <span class="badge bg-soft-warning text-warning"><i class="ri-time-line me-1"></i>Pending</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="11" class="text-center p-5 text-muted">
+                                        <i class="ri-file-list-3-line fs-24 mb-2 d-block"></i>
+                                        <h6>No Indents Found</h6>
+                                        <p class="fs-12 mb-0">There are no indents matching your criteria.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-soft-success { background-color: rgba(25, 135, 84, 0.1) !important; }
+    .bg-soft-warning { background-color: rgba(255, 193, 7, 0.1) !important; }
+    .bg-soft-info { background-color: rgba(13, 202, 240, 0.1) !important; }
+    .bg-soft-secondary { background-color: rgba(108, 117, 125, 0.1) !important; }
+    .bg-soft-danger { background-color: rgba(220, 53, 69, 0.1) !important; }
+    .bg-soft-primary { background-color: rgba(13, 110, 253, 0.1) !important; }
+    
+    .cursor-pointer { cursor: pointer; }
+    
+    .fw-bold { font-weight: 700 !important; }
+    .fs-11 { font-size: 11px; }
+    .fs-12 { font-size: 12px; }
+    .fs-13 { font-size: 13px; }
+    .fs-16 { font-size: 16px; }
+
+    .avatar-xs {
+        height: 2rem;
+        width: 2rem;
+    }
+    .avatar-title {
+        align-items: center;
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        width: 100%;
+    }
+</style>
+
+<script>
+    function filterIndents(status, label) {
+        // Update button text
+        document.getElementById('statusFilter').innerHTML = '<i class="ri-filter-2-line me-1"></i> Status: ' + label;
+        
+        // Filter items
+        const items = document.querySelectorAll('.indent-item');
+        items.forEach(item => {
+            if (status === 'all' || item.getAttribute('data-status') === status) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
